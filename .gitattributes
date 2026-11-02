@@ -1,0 +1,6 @@
+# Normalize line endings in the repository; let Git decide per file which are text.
+* text=auto
+
+# Binary assets
+*.png binary
+*.ico binary

@@ -1,0 +1,22 @@
+<Project>
+  <!-- Discovery projects retain their original build policy and output paths. -->
+  <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Spike'))">
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>14.0</LangVersion>
+    <Deterministic>true</Deterministic>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>10.0</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- These two folders also contain a discovery project and its lockfile. -->
+    <NuGetLockFilePath Condition="'$(MSBuildProjectName)' == 'Lunar.Desktop' Or '$(MSBuildProjectName)' == 'Lunar.Windows'">$(MSBuildProjectDirectory)\$(MSBuildProjectName).packages.lock.json</NuGetLockFilePath>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <!-- Production and discovery share directories, never generated files. -->
+    <BaseIntermediateOutputPath>obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

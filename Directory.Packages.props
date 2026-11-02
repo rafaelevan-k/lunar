@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Spike'))">
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('.Spike'))">
+    <!-- Test-only packages; verified versions/licenses in BE-01 evidence. -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+    <!-- Product package (Desktop composition root only), MIT; approved in ADR-0006, checked in BE-04 evidence. -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <!-- Product packages for Infrastructure logging, Apache-2.0; approved in ADR-0009, checked in BE-07 evidence. -->
+    <PackageVersion Include="Serilog" Version="4.3.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+</Project>

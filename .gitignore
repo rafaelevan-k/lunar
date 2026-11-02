@@ -1,0 +1,13 @@
+# Local toolchains and build artifacts
+.tools/
+**/bin/
+**/obj/
+.vs/
+TestResults/
+artifacts/
+*.user
+*.suo
+# Never commit conversion inputs, temporary output, or private diagnostics
+local-inputs/
+local-output/
+*.private.log
