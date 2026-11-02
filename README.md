@@ -19,6 +19,9 @@ $env:NUGET_PACKAGES = Join-Path $PWD '.tools/nuget'
 & .\.tools\dotnet\dotnet.exe format Lunar.sln --verify-no-changes --no-restore
 ```
 
+The same checks as scripts (what CI runs; see [docs/CI.md](docs/CI.md)): `./scripts/build.ps1`, then
+`./scripts/test.ps1 -Suite Gate -NoBuild`, and `./scripts/package.ps1 -NoBuild` for an unsigned build-output archive.
+
 For a system-installed matching SDK, use `dotnet` and omit `DOTNET_ROOT` above.
 `Lunar.sln` contains the six canonical production projects and six test projects.
 Production output is `bin/<project>/Release/<tfm>/`; intermediate files are isolated
