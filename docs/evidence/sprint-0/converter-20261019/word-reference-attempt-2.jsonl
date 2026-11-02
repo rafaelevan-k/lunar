@@ -1,0 +1,1 @@
+{"Timestamp":"2026-10-18T18:39:25.7674898+00:00","Experiment":"DOCX-WordReferenceExport","Status":"FAIL","Details":{"ExistingProcessReused":false,"HResult":"0x80131501","ErrorType":"RuntimeException","SafeReason":"Automation exception; no raw message logged","InitialDocumentCount":null,"IsolatedNewProcess":false,"Phase":"CheckIsolation"}}

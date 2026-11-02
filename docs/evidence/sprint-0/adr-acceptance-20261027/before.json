@@ -1,0 +1,38 @@
+﻿[
+    {
+        "Path":  "AGENTS.md",
+        "SHA256":  "48b9257467e985e3d146f52a501b49a10bc80c01e8837bfb530df10aded97386"
+    },
+    {
+        "Path":  "PRD.md",
+        "SHA256":  "117e2a7271e33fefe1a5e5b5744abd872bbd2167582eb26a1cb5ccf0c2a1896c"
+    },
+    {
+        "Path":  "ARCHITECTURE.md",
+        "SHA256":  "c36f909533005294d424063cdf3a73a1a98d373e49d1255ecc5dc97a5f909f7f"
+    },
+    {
+        "Path":  "FE_TASK.md",
+        "SHA256":  "da47f4cad389b08c6433663551f9eba493cf16208fab8f5791475efad249912f"
+    },
+    {
+        "Path":  "BE_TASK.md",
+        "SHA256":  "33fd1773e8cf84efd2bd89f8c00b1086ae92557e05495e3a82c813947952632e"
+    },
+    {
+        "Path":  "docs/ADR/ADR-0001-wpf-prototype-boundary.md",
+        "SHA256":  "6998b95a521698bdd80bf7c1ce50411d9bbba12a90cb12de39ea320fa41d172e"
+    },
+    {
+        "Path":  "docs/ADR/ADR-0002-windows-capabilities.md",
+        "SHA256":  "6f87e2a42db20d83f1d210b597f89c964e5e3fed22a1838bd59406d272b283b9"
+    },
+    {
+        "Path":  "docs/ADR/ADR-0003-conversion-strategy.md",
+        "SHA256":  "6e4422e9b2cb4d1c619bc322fb06041d2cb171a00a564bf7a4d2a08ec626b5e6"
+    },
+    {
+        "Path":  "docs/ADR/ADR-0004-packaging-strategy.md",
+        "SHA256":  "8d1e8d7b3612ec67abc2d19d8080127a9bd48d0142e8f628ff5d8dd4a15d3869"
+    }
+]

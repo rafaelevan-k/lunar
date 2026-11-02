@@ -1,0 +1,4 @@
+{"Timestamp":"2026-10-18T18:17:14.3710028+00:00","Operation":"WindowRendered","Result":{"AllowsTransparency":true,"Topmost":true,"ShowInTaskbar":false,"ShowActivated":false,"Width":160,"Height":44,"Left":688,"Top":8,"DpiX":120,"DpiY":120,"IsActive":false,"RenderTier":2}}
+{"Timestamp":"2026-10-18T18:17:19.3962884+00:00","Operation":"WpfRenderSnapshot","Result":{"PixelWidth":200,"PixelHeight":55}}
+{"Timestamp":"2026-10-18T18:17:19.399635+00:00","Operation":"SmokeIntervalElapsed","Result":{"Seconds":5}}
+{"Timestamp":"2026-10-18T18:17:19.4392468+00:00","Operation":"Exit","Result":{"ApplicationExitCode":0,"TrayDisposed":true}}

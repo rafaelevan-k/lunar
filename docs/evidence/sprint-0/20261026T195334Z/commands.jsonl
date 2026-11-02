@@ -1,0 +1,5 @@
+﻿{"Timestamp":"2026-10-26T19:53:35.0013373+00:00","Command":"dotnet --info","ExitCode":0,"Artifact":"sdk-info.log"}
+{"Timestamp":"2026-10-26T19:53:39.2979724+00:00","Command":"dotnet restore src/Lunar.Windows/Lunar.Windows.Spike.csproj","ExitCode":0,"Artifact":"restore-Windows.log"}
+{"Timestamp":"2026-10-26T19:53:42.5181691+00:00","Command":"dotnet build src/Lunar.Windows/Lunar.Windows.Spike.csproj -c Release --no-restore","ExitCode":0,"Artifact":"build-Windows.log"}
+{"Timestamp":"2026-10-26T19:53:44.0472220+00:00","Command":"dotnet restore src/Lunar.Desktop/Lunar.Desktop.Spike.csproj","ExitCode":0,"Artifact":"restore-Desktop.log"}
+{"Timestamp":"2026-10-26T19:53:45.9424222+00:00","Command":"dotnet build src/Lunar.Desktop/Lunar.Desktop.Spike.csproj -c Release --no-restore","ExitCode":0,"Artifact":"build-Desktop.log"}

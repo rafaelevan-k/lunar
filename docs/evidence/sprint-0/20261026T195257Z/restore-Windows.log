@@ -1,0 +1,2 @@
+﻿<repo>\.tools\dotnet\sdk\10.0.402\Microsoft.Common.CurrentVersion.targets(93,5): error MSB4184: The expression "[Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation(Windows, 10.0.19041.0)" cannot be evaluated. Access to the path '<profile>\AppData\Local\Microsoft SDKs' is denied. [<repo>\src\Lunar.Windows\Lunar.Windows.Spike.csproj]
+

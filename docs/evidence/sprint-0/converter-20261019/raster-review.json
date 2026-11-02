@@ -1,0 +1,170 @@
+﻿[
+    {
+        "Fixture":  "pdf-150-page-001.png",
+        "SHA256":  "cbe8792c267af589dc5cbc6348bdc771324a40e04dde608f4ea12d8784672320",
+        "PixelWidth":  1275,
+        "PixelHeight":  1650,
+        "IntendedPixelGeometryDpi":  150,
+        "EncodedDpiX":  119.989594,
+        "EncodedDpiY":  119.989594,
+        "Samples":  [
+                        {
+                            "Label":  "Transparent image stripe composites white",
+                            "ActualRGB":  [
+                                              255,
+                                              255,
+                                              255
+                                          ],
+                            "ExpectedRGB":  [
+                                                255,
+                                                255,
+                                                255
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        }
+                    ],
+        "VisualReview":  "PASS for synthetic fixture: text, quadrant placement, clear alpha stripe and deliberate vector overlap; not arbitrary PDF fidelity"
+    },
+    {
+        "Fixture":  "pdf-150-page-002.png",
+        "SHA256":  "7cb9fcfbd475c82393e43c9427a1887d1d414ae6388fe23c9ae860fd2610b571",
+        "PixelWidth":  1275,
+        "PixelHeight":  1650,
+        "IntendedPixelGeometryDpi":  150,
+        "EncodedDpiX":  119.989594,
+        "EncodedDpiY":  119.989594,
+        "Samples":  [
+                        {
+                            "Label":  "Blue vector",
+                            "ActualRGB":  [
+                                              0,
+                                              0,
+                                              255
+                                          ],
+                            "ExpectedRGB":  [
+                                                0,
+                                                0,
+                                                255
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        },
+                        {
+                            "Label":  "Half-alpha red over blue",
+                            "ActualRGB":  [
+                                              128,
+                                              0,
+                                              127
+                                          ],
+                            "ExpectedRGB":  [
+                                                128,
+                                                0,
+                                                127
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        },
+                        {
+                            "Label":  "Half-alpha red over white",
+                            "ActualRGB":  [
+                                              255,
+                                              127,
+                                              127
+                                          ],
+                            "ExpectedRGB":  [
+                                                255,
+                                                127,
+                                                127
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        }
+                    ],
+        "VisualReview":  "PASS for synthetic fixture: text, quadrant placement, clear alpha stripe and deliberate vector overlap; not arbitrary PDF fidelity"
+    },
+    {
+        "Fixture":  "pdf-300-page-001.png",
+        "SHA256":  "72c23d416ea014aedef25671b0338911081bd0c95fc050c11c4289138e306d65",
+        "PixelWidth":  2550,
+        "PixelHeight":  3300,
+        "IntendedPixelGeometryDpi":  300,
+        "EncodedDpiX":  119.989594,
+        "EncodedDpiY":  119.989594,
+        "Samples":  [
+                        {
+                            "Label":  "Transparent image stripe composites white",
+                            "ActualRGB":  [
+                                              255,
+                                              255,
+                                              255
+                                          ],
+                            "ExpectedRGB":  [
+                                                255,
+                                                255,
+                                                255
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        }
+                    ],
+        "VisualReview":  "PASS for synthetic fixture: text, quadrant placement, clear alpha stripe and deliberate vector overlap; not arbitrary PDF fidelity"
+    },
+    {
+        "Fixture":  "pdf-300-page-002.png",
+        "SHA256":  "8c02c0bb9e5eacd1fed33d8739b4027d2b768b2bdac668781068ec113ee9f10a",
+        "PixelWidth":  2550,
+        "PixelHeight":  3300,
+        "IntendedPixelGeometryDpi":  300,
+        "EncodedDpiX":  119.989594,
+        "EncodedDpiY":  119.989594,
+        "Samples":  [
+                        {
+                            "Label":  "Blue vector",
+                            "ActualRGB":  [
+                                              0,
+                                              0,
+                                              255
+                                          ],
+                            "ExpectedRGB":  [
+                                                0,
+                                                0,
+                                                255
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        },
+                        {
+                            "Label":  "Half-alpha red over blue",
+                            "ActualRGB":  [
+                                              128,
+                                              0,
+                                              127
+                                          ],
+                            "ExpectedRGB":  [
+                                                128,
+                                                0,
+                                                127
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        },
+                        {
+                            "Label":  "Half-alpha red over white",
+                            "ActualRGB":  [
+                                              255,
+                                              127,
+                                              127
+                                          ],
+                            "ExpectedRGB":  [
+                                                255,
+                                                127,
+                                                127
+                                            ],
+                            "Tolerance":  8,
+                            "Outcome":  "PASS"
+                        }
+                    ],
+        "VisualReview":  "PASS for synthetic fixture: text, quadrant placement, clear alpha stripe and deliberate vector overlap; not arbitrary PDF fidelity"
+    }
+]

@@ -1,0 +1,8 @@
+﻿{
+    "Timestamp":  "2026-10-26T19:57:31.7769781+00:00",
+    "ExitCode":  "TIMEOUT",
+    "TimeoutSeconds":  60,
+    "Cleanup":  "Stopped exact owned process",
+    "OriginalDocxUnchanged":  true,
+    "ReferencePdfExists":  false
+}

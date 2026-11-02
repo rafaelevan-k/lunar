@@ -1,0 +1,10 @@
+﻿CSC : error WFO0003: Remove high DPI settings from <repo>\src\Lunar.Desktop\app.manifest and configure via Application.SetHighDpiMode API or 'ApplicationHighDpiMode' project property (https://aka.ms/winforms-warnings/wfo0003) [<repo>\src\Lunar.Desktop\Lunar.Desktop.Spike.csproj]
+
+Build FAILED.
+
+CSC : error WFO0003: Remove high DPI settings from <repo>\src\Lunar.Desktop\app.manifest and configure via Application.SetHighDpiMode API or 'ApplicationHighDpiMode' project property (https://aka.ms/winforms-warnings/wfo0003) [<repo>\src\Lunar.Desktop\Lunar.Desktop.Spike.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:03.09
+

@@ -1,0 +1,54 @@
+﻿[
+    {
+        "Path":  "src/Lunar.Desktop/app.manifest",
+        "SHA256":  "2adeec85270438a5bf7b24382ad35c397a96d418106b1bfa97fa8df16909f9ec"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/App.xaml",
+        "SHA256":  "2fe1dedaebeb24af1acfdb77316caf66e13426a1a877bf2bd20f49e920e73659"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/App.xaml.cs",
+        "SHA256":  "8025163ab268219e0ebcd3a443409de562bd9ef47fa8c2a3d2632bf830ead11a"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Lunar.Desktop.Spike.csproj",
+        "SHA256":  "5cf7c5ddd7d28b3a64931b901404ce6211467e0808667d0b6ff610750044e5c9"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/packages.lock.json",
+        "SHA256":  "531d4cf71e5420c1c03da4c06778ba2a212c7058a3882e7a3a873ae2f811511e"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/SpikeWindow.xaml",
+        "SHA256":  "188fb47529e96934f2edfc4c7a81c65ae7bd1aee5b78c0b0f7d535a2579f8d3c"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/SpikeWindow.xaml.cs",
+        "SHA256":  "adab4c37cf697b943d14c9f2e74c3734a9473c2ed2cea35d1498d356e3154652"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/TrayController.cs",
+        "SHA256":  "fe0fd0b1ccac1af7931ea504159e45f1e0c110de498eb676f631745f9a0fc5e3"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Lunar.Windows.Spike.csproj",
+        "SHA256":  "736ced30a522445ea16a9b1dca2b4a0a49c5394fc3f90c5a5e67892867352e9a"
+    },
+    {
+        "Path":  "src/Lunar.Windows/packages.lock.json",
+        "SHA256":  "6d68a9226aeef5493d7459517549d4973f96e781be1d4a31dc29963e13f505fc"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Spike/NativeProbes.cs",
+        "SHA256":  "34d5230941e2b74cc899a4958de6d099f389758621870c93980535766377906f"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Spike/Program.cs",
+        "SHA256":  "510a4f967a180ef04548b2819c63f0ec76bbae0ef1c201e9f614e86d55f606c0"
+    },
+    {
+        "Path":  "scripts/Invoke-Sprint0.ps1",
+        "SHA256":  "4ee2d50424f024c3873a663e668842bedaa9ff9bba1d8f4eac59fd339afba4ba"
+    }
+]

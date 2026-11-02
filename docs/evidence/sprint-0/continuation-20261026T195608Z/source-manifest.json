@@ -1,0 +1,118 @@
+﻿[
+    {
+        "Path":  "src/Lunar.Conversion/Spike/Directory.Packages.props",
+        "SHA256":  "F0999293E13D61A0C829FEA23E901509A465D4391915AFB5BE2BB5C6D335AF4C"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/DocxExperiment.cs",
+        "SHA256":  "4B9681DDA37BBC808669D35B324E08F7ACF97D68C2D3D76D1CE228646E22079D"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/ImageExperiments.cs",
+        "SHA256":  "F8F202AC090467B7D3F39579A8C29C543AC420B9409CAAAEAC71ACFB7E9FA048"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/Lunar.Conversion.Spike.csproj",
+        "SHA256":  "A126A058F285117570DD1C51AA66E69679ECB57F737C6F28164C899AD3CDE9D7"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/packages.lock.json",
+        "SHA256":  "BA5C7B2FE98B5B337FEC84F74944919879A49F5AE7B458E90018ADEE22D119E0"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/PdfExperiments.cs",
+        "SHA256":  "AD6DFD5D611096F2D4123B90A2CEFBA4E77D012F98B5BEAE9C49340320273EB7"
+    },
+    {
+        "Path":  "src/Lunar.Conversion/Spike/Program.cs",
+        "SHA256":  "21A6E234B6344317A8CBE4532DB22263DBCC9E4401AEA3DB0AE63C13F7A7082F"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/app.manifest",
+        "SHA256":  "2ADEEC85270438A5BF7B24382AD35C397A96D418106B1BFA97FA8DF16909F9EC"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/App.xaml",
+        "SHA256":  "2FE1DEDAEBEB24AF1ACFDB77316CAF66E13426A1A877BF2BD20F49E920E73659"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/App.xaml.cs",
+        "SHA256":  "8025163AB268219E0EBCD3A443409DE562BD9EF47FA8C2A3D2632BF830EAD11A"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Lunar.Desktop.Spike.csproj",
+        "SHA256":  "5CF7C5DDD7D28B3A64931B901404CE6211467E0808667D0B6FF610750044E5C9"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/packages.lock.json",
+        "SHA256":  "531D4CF71E5420C1C03DA4C06778BA2A212C7058A3882E7A3A873AE2F811511E"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/SpikeWindow.xaml",
+        "SHA256":  "188FB47529E96934F2EDFC4C7A81C65AE7BD1AEE5B78C0B0F7D535A2579F8D3C"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/SpikeWindow.xaml.cs",
+        "SHA256":  "ADAB4C37CF697B943D14C9F2E74C3734A9473C2ED2CEA35D1498D356E3154652"
+    },
+    {
+        "Path":  "src/Lunar.Desktop/Shell/TrayController.cs",
+        "SHA256":  "FE0FD0B1CCAC1AF7931EA504159E45F1E0C110DE498EB676F631745F9A0FC5E3"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Lunar.Windows.Spike.csproj",
+        "SHA256":  "736CED30A522445EA16A9B1DCA2B4A0A49C5394FC3F90C5A5E67892867352E9A"
+    },
+    {
+        "Path":  "src/Lunar.Windows/packages.lock.json",
+        "SHA256":  "6D68A9226AEEF5493D7459517549D4973F96E781BE1D4A31DC29963E13F505FC"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Spike/NativeProbes.cs",
+        "SHA256":  "34D5230941E2B74CC899A4958DE6D099F389758621870C93980535766377906F"
+    },
+    {
+        "Path":  "src/Lunar.Windows/Spike/Program.cs",
+        "SHA256":  "510A4F967A180EF04548B2819C63F0EC76BBAE0EF1C201E9F614E86D55F606C0"
+    },
+    {
+        "Path":  "scripts/Export-WordDiscoveryReference.ps1",
+        "SHA256":  "B2E3923C6D313EDF9B8CE1D317C2EF0233589C9B0CC9A28CE817CA84FF21E775"
+    },
+    {
+        "Path":  "scripts/Invoke-Sprint0.ps1",
+        "SHA256":  "4EE2D50424F024C3873A663E668842BEDAA9FF9BBA1D8F4EAC59FD339AFBA4BA"
+    },
+    {
+        "Path":  "scripts/Invoke-Sprint0Continuation.ps1",
+        "SHA256":  "DAD5593D736ECA1E35B9F167B84FEB3B5B797D7AAD3B81B5CAF4E9FCB38780DA"
+    },
+    {
+        "Path":  "scripts/Test-Sprint0Evidence.ps1",
+        "SHA256":  "A42D7E24362027AFE939AD911023918BC507B8E05246FDEEF73265E30912B115"
+    },
+    {
+        "Path":  "AGENTS.md",
+        "SHA256":  "48B9257467E985E3D146F52A501B49A10BC80C01E8837BFB530DF10ADED97386"
+    },
+    {
+        "Path":  "PRD.md",
+        "SHA256":  "944DEE4E9382F7E99F6CE95B0B1F543CEF034B6B486162168200792D78305538"
+    },
+    {
+        "Path":  "ARCHITECTURE.md",
+        "SHA256":  "12A96DD441013C443642D6CF5BF9C1B4625CE930F51A35C2A7CB86142AB22B2E"
+    },
+    {
+        "Path":  "FE_TASK.md",
+        "SHA256":  "DA47F4CAD389B08C6433663551F9EBA493CF16208FAB8F5791475EFAD249912F"
+    },
+    {
+        "Path":  "BE_TASK.md",
+        "SHA256":  "33FD1773E8CF84EFD2BD89F8C00B1086AE92557E05495E3A82C813947952632E"
+    },
+    {
+        "Path":  "global.json",
+        "SHA256":  "81AE2087DBFB46027FD94748351FB4B1AB24145FBB52544A2822BF128E2E48F1"
+    }
+]

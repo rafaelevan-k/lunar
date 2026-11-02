@@ -1,0 +1,38 @@
+﻿PASS: Recorded baseline commands succeeded
+PASS: Windows Release build has zero warnings/errors
+PASS: Desktop Release build has zero warnings/errors
+PASS: Five real read-only API components Available on this host
+PASS: WPF runtime/render/cleanup proof (not interaction proof)
+PASS: Converter assertions pass with four density-normalization records
+PASS: Synthetic PNG 150-DPI density/pixel proof
+PASS: Synthetic PNG 150-DPI density/pixel proof
+PASS: Synthetic PNG 300-DPI density/pixel proof
+PASS: Synthetic PNG 300-DPI density/pixel proof
+PASS: Word timeout is explicit, no PDF/PASS fabricated; original preserved and owned process cleaned
+PASS: Synthetic artifact hash: fixture-100-pages.pdf
+PASS: Synthetic artifact hash: fixture-alpha-é-测试.png
+PASS: Synthetic artifact hash: fixture-layout.docx
+PASS: Synthetic artifact hash: fixture-orientation-6.jpg
+PASS: Synthetic artifact hash: fixture-two-pages.pdf
+PASS: Synthetic artifact hash: output-alpha-white.jpg
+PASS: Synthetic artifact hash: output-oriented.png
+PASS: Synthetic artifact hash: pdf-150-page-001-normalized.png
+PASS: Synthetic artifact hash: pdf-150-page-001.png
+PASS: Synthetic artifact hash: pdf-150-page-002-normalized.png
+PASS: Synthetic artifact hash: pdf-150-page-002.png
+PASS: Synthetic artifact hash: pdf-300-page-001-normalized.png
+PASS: Synthetic artifact hash: pdf-300-page-001.png
+PASS: Synthetic artifact hash: pdf-300-page-002-normalized.png
+PASS: Synthetic artifact hash: pdf-300-page-002.png
+PASS: PowerShell syntax: Export-WordDiscoveryReference.ps1
+PASS: PowerShell syntax: Invoke-Sprint0.ps1
+PASS: PowerShell syntax: Invoke-Sprint0Continuation.ps1
+PASS: PowerShell syntax: Test-Sprint0Evidence.ps1
+PASS: Disposable spike has no cross-project references: Lunar.Conversion.Spike.csproj
+PASS: Disposable spike has no cross-project references: Lunar.Desktop.Spike.csproj
+PASS: Disposable spike has no cross-project references: Lunar.Windows.Spike.csproj
+PASS: All 56 numbered tasks remain TODO
+PASS: Root architecture is sole canonical copy and relative link is correct
+PASS: Gate amendment remains Proposed, no self-approval
+PASS: 172 relative Markdown file links resolve (anchor targets not tested)
+No manual UI/target OS/fidelity acceptance is inferred by this evidence check.

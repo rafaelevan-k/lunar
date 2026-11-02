@@ -1,0 +1,13 @@
+﻿Command: inline PowerShell assertions of approved documentation rules
+Date: 2026-10-19 Asia/Jakarta
+PASS: No duplicate docs architecture
+PASS: Docs README relative architecture link
+PASS: No Sprint 0-1 backlog label
+PASS: BE-01 index Sprint 1 TODO
+PASS: BE-01 prompt Sprint 1
+PASS: FE index 26 unchanged TODO
+PASS: BE index 30 TODO
+PASS: AGENTS prototype reuse rule
+PASS: Architecture prototype reuse rule
+PASS: PRD prototype reuse rule
+PASS: PRD no duplicate creation requirement
