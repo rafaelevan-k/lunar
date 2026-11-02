@@ -1,0 +1,38 @@
+﻿{
+    "Timestamp":  "2026-11-02T18:15:25.2599504Z",
+    "ExeStarted":  true,
+    "Window":  {
+                   "VisibleTopLevelWindows":  1,
+                   "Left":  688,
+                   "Top":  8,
+                   "Width":  160,
+                   "Height":  44,
+                   "Dpi":  120,
+                   "ExStyleHex":  "0x80008",
+                   "TopMost":  true,
+                   "ToolWindow":  false,
+                   "NoActivate":  false,
+                   "AppWindow":  false,
+                   "Layered":  true,
+                   "IsForeground":  false
+               },
+    "Pixels":  {
+                   "Center":  "#202020",
+                   "OuterCornerTopLeft":  "#202020",
+                   "OuterCornerBottomRight":  "#191919"
+               },
+    "Foreground":  {
+                       "BeforePid":  46136,
+                       "AfterStartIsSameWindow":  true
+                   },
+    "Click":  {
+                  "ForegroundUnchanged":  false,
+                  "PillIsForeground":  false,
+                  "ProcessStillRunning":  true
+              },
+    "Close":  {
+                  "ExitedWithin10s":  true,
+                  "ExitCode":  0
+              },
+    "ProcessGone":  true
+}

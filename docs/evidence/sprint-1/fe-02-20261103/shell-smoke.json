@@ -1,0 +1,65 @@
+﻿{
+    "Timestamp":  "2026-11-02T18:21:16.9558994Z",
+    "ExeStarted":  true,
+    "Window":  {
+                   "VisibleTopLevelWindows":  1,
+                   "Left":  860,
+                   "Top":  10,
+                   "Width":  200,
+                   "Height":  55,
+                   "Dpi":  120,
+                   "ExStyleHex":  "0x8080008",
+                   "TopMost":  true,
+                   "ToolWindow":  false,
+                   "NoActivate":  true,
+                   "AppWindow":  false,
+                   "Layered":  true,
+                   "IsForeground":  false,
+                   "HasOwnerWindow":  true,
+                   "Class":  "HwndWrapper[Lunar.Desktop;;82a423d9-ed26-4210-bf41-5041a3ff1b83]"
+               },
+    "Pixels":  {
+                   "Center":  "#0B0C10",
+                   "OuterCornerTopLeft":  "#0D0F16",
+                   "OuterCornerBottomRight":  "#0D0F16"
+               },
+    "HitTest":  {
+                    "CenterBelongsToPill":  true,
+                    "OuterCornerBelongsToPill":  false
+                },
+    "Foreground":  {
+                       "BeforePid":  13064,
+                       "BeforeClass":  "Chrome_WidgetWin_1",
+                       "AfterStartIsSameWindow":  true
+                   },
+    "ForegroundSamplesAfterClick":  [
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True",
+                                        "13064:Chrome_WidgetWin_1:True"
+                                    ],
+    "Click":  {
+                  "HitTestTargetIsPill":  true,
+                  "ClickSent":  true,
+                  "ForegroundUnchanged":  true,
+                  "PillIsForeground":  false,
+                  "ForegroundAfterClass":  "Chrome_WidgetWin_1",
+                  "ProcessStillRunning":  true
+              },
+    "Close":  {
+                  "ExitedWithin10s":  true,
+                  "ExitCode":  0
+              },
+    "ProcessGone":  true
+}

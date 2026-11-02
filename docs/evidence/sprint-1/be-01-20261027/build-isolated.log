@@ -1,0 +1,18 @@
+  Lunar.Domain -> <repo>\src\Lunar.Domain\bin\Lunar.Domain\Release\net10.0\Lunar.Domain.dll
+  Lunar.Domain.Tests -> <repo>\tests\Lunar.Domain.Tests\bin\Lunar.Domain.Tests\Release\net10.0\Lunar.Domain.Tests.dll
+  Lunar.Application -> <repo>\src\Lunar.Application\bin\Lunar.Application\Release\net10.0\Lunar.Application.dll
+  Lunar.Windows -> <repo>\src\Lunar.Windows\bin\Lunar.Windows\Release\net10.0-windows\Lunar.Windows.dll
+  Lunar.Infrastructure -> <repo>\src\Lunar.Infrastructure\bin\Lunar.Infrastructure\Release\net10.0\Lunar.Infrastructure.dll
+  Lunar.Conversion -> <repo>\src\Lunar.Conversion\bin\Lunar.Conversion\Release\net10.0\Lunar.Conversion.dll
+  Lunar.Application.Tests -> <repo>\tests\Lunar.Application.Tests\bin\Lunar.Application.Tests\Release\net10.0\Lunar.Application.Tests.dll
+  Lunar.Infrastructure.Tests -> <repo>\tests\Lunar.Infrastructure.Tests\bin\Lunar.Infrastructure.Tests\Release\net10.0\Lunar.Infrastructure.Tests.dll
+  Lunar.Desktop -> <repo>\src\Lunar.Desktop\bin\Lunar.Desktop\Release\net10.0-windows\Lunar.Desktop.dll
+  Lunar.Conversion.Tests -> <repo>\tests\Lunar.Conversion.Tests\bin\Lunar.Conversion.Tests\Release\net10.0\Lunar.Conversion.Tests.dll
+  Lunar.Windows.IntegrationTests -> <repo>\tests\Lunar.Windows.IntegrationTests\bin\Lunar.Windows.IntegrationTests\Release\net10.0-windows\Lunar.Windows.IntegrationTests.dll
+  Lunar.Desktop.UITests -> <repo>\tests\Lunar.Desktop.UITests\bin\Lunar.Desktop.UITests\Release\net10.0-windows\Lunar.Desktop.UITests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.86

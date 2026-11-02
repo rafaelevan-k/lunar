@@ -1,0 +1,4 @@
+﻿2026-11-03T02:04:55.5177969+07:00 [INF] app.start.primary App.Start code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T02:04:57.6688278+07:00 [DBG] app.activation.requested App.Activate code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T02:04:57.6770938+07:00 [INF] app.start.secondary App.Start code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T02:04:57.7209141+07:00 [INF] app.exit App.Exit code=- ms=256 ex=- v=1.0.0.0 os=10.0.26300.0

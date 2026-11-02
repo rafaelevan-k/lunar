@@ -1,0 +1,29 @@
+dotnet.exe : <repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(13,39): error 
+WHITESPACE: Fix whitespace formatting. Replace 9 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+At line:2 char:1114
++ ... Args; $output=& ./.tools/dotnet/dotnet.exe @cliArguments 2>&1; $code= ...
++                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<repo>...n.Tests.csproj]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(14,39): error WHITESPACE: Fix 
+whitespace formatting. Replace 9 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(15,10): error WHITESPACE: Fix 
+whitespace formatting. Replace 13 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(16,41): error WHITESPACE: Fix 
+whitespace formatting. Replace 13 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(17,14): error WHITESPACE: Fix 
+whitespace formatting. Replace 17 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(18,35): error WHITESPACE: Fix 
+whitespace formatting. Replace 17 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(19,53): error WHITESPACE: Fix 
+whitespace formatting. Replace 17 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(20,50): error WHITESPACE: Fix 
+whitespace formatting. Replace 17 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(21,57): error WHITESPACE: Fix 
+whitespace formatting. Replace 13 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(22,15): error WHITESPACE: Fix 
+whitespace formatting. Replace 13 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+<repo>\tests\Lunar.Application.Tests\ArchitectureRuleTests.cs(23,75): error WHITESPACE: Fix 
+whitespace formatting. Replace 9 characters with '\r\n\s\s\s\s\s\s\s\s\s\s\s\s'. [<repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj]
+

@@ -1,0 +1,14 @@
+  Determining projects to restore...
+  Restored <repo>\src\Lunar.Application\Lunar.Application.csproj (in 172 ms).
+  Restored <repo>\src\Lunar.Infrastructure\Lunar.Infrastructure.csproj (in 172 ms).
+  Restored <repo>\src\Lunar.Desktop\Lunar.Desktop.csproj (in 172 ms).
+  Restored <repo>\src\Lunar.Conversion\Lunar.Conversion.csproj (in 172 ms).
+  Restored <repo>\src\Lunar.Domain\Lunar.Domain.csproj (in 3 ms).
+  Restored <repo>\src\Lunar.Windows\Lunar.Windows.csproj (in 5 ms).
+  Restored <repo>\tests\Lunar.Domain.Tests\Lunar.Domain.Tests.csproj (in 7.9 sec).
+  Restored <repo>\tests\Lunar.Windows.IntegrationTests\Lunar.Windows.IntegrationTests.csproj (in 7.64 sec).
+  Restored <repo>\tests\Lunar.Desktop.UITests\Lunar.Desktop.UITests.csproj (in 7.9 sec).
+  Restored <repo>\tests\Lunar.Infrastructure.Tests\Lunar.Infrastructure.Tests.csproj (in 7.63 sec).
+  Restored <repo>\tests\Lunar.Application.Tests\Lunar.Application.Tests.csproj (in 7.9 sec).
+  Restored <repo>\tests\Lunar.Conversion.Tests\Lunar.Conversion.Tests.csproj (in 7.9 sec).
+

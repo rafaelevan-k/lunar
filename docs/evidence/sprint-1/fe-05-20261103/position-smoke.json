@@ -1,0 +1,22 @@
+﻿{
+    "Timestamp":  "2026-11-02T21:12:50.8072405Z",
+    "WindowRect":  {
+                       "Left":  860,
+                       "Top":  10,
+                       "Width":  200,
+                       "Height":  55
+                   },
+    "WindowDpi":  120,
+    "PrimaryWorkArea":  {
+                            "Left":  0,
+                            "Top":  0,
+                            "Width":  1920,
+                            "Height":  1020
+                        },
+    "LeftMarginPx":  860,
+    "RightMarginPx":  860,
+    "TopMarginPx":  10,
+    "ExitedAfterClose":  true,
+    "ExitCode":  0,
+    "Note":  "Read-only inspection; no system setting changed."
+}

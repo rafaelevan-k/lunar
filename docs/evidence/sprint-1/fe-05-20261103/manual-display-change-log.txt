@@ -1,0 +1,19 @@
+# User-run manual check, 2026-11-03 ~04:18 (UTC+7). Output of: findstr island "%LOCALAPPDATA%\Lunar\Logs\lunar-20261103.log"
+# Pasted by the user in chat; the first line is the startup placement, the rest are four real display changes.
+2026-11-03T04:18:08.0413432+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:31.4003410+07:00 [DBG] island.window.dpi.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:31.6062086+07:00 [DBG] island.display.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:32.9071691+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:33.0875011+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:42.9065185+07:00 [DBG] island.window.dpi.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:43.1584580+07:00 [DBG] island.display.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:44.0534303+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:44.0763192+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:49.9605298+07:00 [DBG] island.window.dpi.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:50.1012966+07:00 [DBG] island.display.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:51.1384327+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:51.1613908+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:54.3294374+07:00 [DBG] island.window.dpi.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:54.4791331+07:00 [DBG] island.display.changed IslandPosition.Notify code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:55.4932551+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0
+2026-11-03T04:18:55.5217067+07:00 [DBG] island.position.applied IslandPosition.Apply code=- ms=- ex=- v=1.0.0.0 os=10.0.26300.0

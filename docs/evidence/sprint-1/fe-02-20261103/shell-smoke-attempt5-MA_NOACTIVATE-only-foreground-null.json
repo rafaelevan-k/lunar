@@ -1,0 +1,61 @@
+﻿{
+    "Timestamp":  "2026-11-02T18:16:36.1708082Z",
+    "ExeStarted":  true,
+    "Window":  {
+                   "VisibleTopLevelWindows":  1,
+                   "Left":  860,
+                   "Top":  10,
+                   "Width":  200,
+                   "Height":  55,
+                   "Dpi":  120,
+                   "ExStyleHex":  "0x80008",
+                   "TopMost":  true,
+                   "ToolWindow":  false,
+                   "NoActivate":  false,
+                   "AppWindow":  false,
+                   "Layered":  true,
+                   "IsForeground":  false,
+                   "HasOwnerWindow":  true,
+                   "Class":  "HwndWrapper[Lunar.Desktop;;18b9b2fe-6a93-4d6a-9711-dab9d72e9772]"
+               },
+    "Pixels":  {
+                   "Center":  "#0B0C10",
+                   "OuterCornerTopLeft":  "#451D1D",
+                   "OuterCornerBottomRight":  "#000E2B"
+               },
+    "Foreground":  {
+                       "BeforePid":  13064,
+                       "BeforeClass":  "Chrome_WidgetWin_1",
+                       "AfterStartIsSameWindow":  true
+                   },
+    "ForegroundSamplesAfterClick":  [
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False",
+                                        "0::False"
+                                    ],
+    "Click":  {
+                  "HitTestTargetIsPill":  true,
+                  "ClickSent":  true,
+                  "ForegroundUnchanged":  false,
+                  "PillIsForeground":  false,
+                  "ForegroundAfterClass":  "",
+                  "ProcessStillRunning":  true
+              },
+    "Close":  {
+                  "ExitedWithin10s":  true,
+                  "ExitCode":  0
+              },
+    "ProcessGone":  true
+}

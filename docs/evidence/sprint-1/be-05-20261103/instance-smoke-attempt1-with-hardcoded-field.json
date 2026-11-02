@@ -1,0 +1,48 @@
+﻿{
+    "Timestamp":  "2026-11-02T18:52:29.5249090Z",
+    "Primary":  {
+                    "WindowShown":  true,
+                    "VisibleWindows":  1
+                },
+    "SecondLaunches":  [
+                           {
+                               "Launch":  1,
+                               "ExitedWithin10s":  true,
+                               "ExitCode":  0,
+                               "Milliseconds":  299
+                           },
+                           {
+                               "Launch":  2,
+                               "ExitedWithin10s":  true,
+                               "ExitCode":  0,
+                               "Milliseconds":  309
+                           }
+                       ],
+    "AfterSecondLaunch":  {
+                              "LunarProcessCount":  1,
+                              "PrimaryStillRunning":  true,
+                              "PrimaryVisibleWindows":  1,
+                              "PrimaryIsForeground":  true
+                          },
+    "CloseWm":  {
+                    "ExitedWithin10s":  true,
+                    "ExitCode":  0
+                },
+    "ProcessGoneAfterClose":  true,
+    "Restart":  {
+                    "PrimaryAfterCleanExit":  true,
+                    "PrimaryAfterKill":  true
+                },
+    "RestartClose":  {
+                         "ExitedWithin10s":  true,
+                         "ExitCode":  0
+                     },
+    "UnreachablePrimary":  {
+                               "MutexCreatedByScript":  true,
+                               "ExitedWithin15s":  true,
+                               "ExitCode":  3,
+                               "Milliseconds":  3306,
+                               "WindowCreated":  false
+                           },
+    "LeftoverProcesses":  0
+}

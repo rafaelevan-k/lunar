@@ -1,0 +1,414 @@
+﻿{
+    "Note":  "Excludes its own two manifest artifacts from hashing to avoid self-reference. .gitignore and historical Sprint 0 evidence were not changed.",
+    "SelfArtifacts":  [
+                          "docs/evidence/sprint-1/be-01-20261027/changed-files.json",
+                          "docs/evidence/sprint-1/be-01-20261027/changed-files.txt"
+                      ],
+    "Files":  [
+                  {
+                      "Path":  ".editorconfig",
+                      "Change":  "Created",
+                      "Sha256":  "29656AB34B5DC0CDEF5C9C47CE399D6007B64A1DF00132AD10F8A9952325A0B9"
+                  },
+                  {
+                      "Path":  "BE_TASK.md",
+                      "Change":  "Modified",
+                      "Sha256":  "DCFEB2169ABC0CD44489CF7E81ABA95E820283BE5B41A6FA799102BF86091CCE"
+                  },
+                  {
+                      "Path":  "CHANGELOG.md",
+                      "Change":  "Modified",
+                      "Sha256":  "F24CAC98DEC999E19D68BEDF1B828E311DE3BB0A788E09CE733503326A22CEBB"
+                  },
+                  {
+                      "Path":  "Directory.Build.props",
+                      "Change":  "Created",
+                      "Sha256":  "AEB4BC225CFAF314296E74C3986F15F407898D59242383F8F0CFE5218B279AD1"
+                  },
+                  {
+                      "Path":  "Directory.Packages.props",
+                      "Change":  "Created",
+                      "Sha256":  "F7D5EBF90251DCEABDC0C38AEBE8A9F2DBD9AAFE729D4A23B1319D39E467A106"
+                  },
+                  {
+                      "Path":  "docs/API_CONTRACTS.md",
+                      "Change":  "Modified",
+                      "Sha256":  "F374D567151A95756F2A69D1A123D016F786CB5A78C38236E6DFB6509ACD5A61"
+                  },
+                  {
+                      "Path":  "docs/DEPENDENCY_REVIEW.md",
+                      "Change":  "Modified",
+                      "Sha256":  "108FC3E13DD2C0F30C5EA3193515F1F5AE35295FDA4566EF94279F6A0FFF5DFE"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/BE-01.md",
+                      "Change":  "Created",
+                      "Sha256":  "0A3B11CD46E3CA41D0A0499898B58B2CA8CF7BF28153646ED47C589BC3D82AE3"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/baseline.json",
+                      "Change":  "Created",
+                      "Sha256":  "41A8A7D2B07047FFD6A6417E938F3E24E41485D5A56824C29F44F4F0948D9699"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/build-01.log",
+                      "Change":  "Created",
+                      "Sha256":  "42EE304AD897651AA7B34734AA3DC4BB057A207D21DE927111292154CCCE104E"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/build-final.log",
+                      "Change":  "Created",
+                      "Sha256":  "29C05BA51D4ECC43EB7D6BE8FA046C1EED53D2971F7D42684972708C6D84A0DA"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/build-final-source.log",
+                      "Change":  "Created",
+                      "Sha256":  "BF581590E8418C728AB781F4BFE55CF8D1CF7BFCF40D2D4BCF6387640FE6E1AF"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/build-isolated.log",
+                      "Change":  "Created",
+                      "Sha256":  "7BDFCC160F6B2C1E2527BDBFC349DC30BE581D2CDB09942DCBE7C8373F3B6329"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/build-verified.log",
+                      "Change":  "Created",
+                      "Sha256":  "806E5B9A679818612EA731FFF6BD7537890F381D9597C5055C8FFE47A701EE80"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/commands.jsonl",
+                      "Change":  "Created",
+                      "Sha256":  "5D38CDFC481F3B086935A1D2BB55568DF9CF686B859E852F0388B77B5F75E5F0"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/evaluated-projects.json",
+                      "Change":  "Created",
+                      "Sha256":  "7EB08005608C9C199DBB22DC0AE2A3372A4205D991A06B13AA66F602A51D77DC"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/evaluated-projects-final.json",
+                      "Change":  "Created",
+                      "Sha256":  "29469DDC3FB1F91C732C23CB5D31054B06EB9A147A878559F10EE62856D878F8"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/format.log",
+                      "Change":  "Created",
+                      "Sha256":  "2AA93928738E440EFA936CE4F325D60161922C53C4CE2419B691E4FBF725C03C"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/format-final.log",
+                      "Change":  "Created",
+                      "Sha256":  "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/format-fix.log",
+                      "Change":  "Created",
+                      "Sha256":  "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/mutation-reference.log",
+                      "Change":  "Created",
+                      "Sha256":  "B7772C09391476AA011F6DD785D763702C360C5BA1A631C75C48FF8065CD614D"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/nuget-audit.log",
+                      "Change":  "Created",
+                      "Sha256":  "AC436456C23FD0EC938E6208BEF21650DBB82E0A9DC84F02B109F0D523860571"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/packages.json",
+                      "Change":  "Created",
+                      "Sha256":  "B35C1E7ABE1FEBAD2B84AB3F2D9B937F874B7B6C5D48E48A24A87086DFAC1B66"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/preservation.json",
+                      "Change":  "Created",
+                      "Sha256":  "5093E1679DDAC4D410B24608B8956095F6D622982C2C4D0A7D41E9BC504F537F"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/regression-Conversion.log",
+                      "Change":  "Created",
+                      "Sha256":  "17E8B5F5414B5477BF39E01FE8F774335FA7E75D519D4C2B5681594EFB40FCEC"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/regression-Desktop.log",
+                      "Change":  "Created",
+                      "Sha256":  "F28F2FF6CC747B9B2A1D863D0DC8CE9C16FEEBD60EB07B3575035B3DA5D732CB"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/regression-Windows.log",
+                      "Change":  "Created",
+                      "Sha256":  "2F61CB884311B597CAC7D3167315B50129B2A63D926C1F8031777CCF03118B2F"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore.log",
+                      "Change":  "Created",
+                      "Sha256":  "293AD0A1E876935869CDA503472F54E5BF972D17C8D300ED8894ED5FCF787955"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-final.log",
+                      "Change":  "Created",
+                      "Sha256":  "33432B1D353246A5BED1C5ECB622F4C331D01AABE56FD235B68904D782F807A4"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-isolated.log",
+                      "Change":  "Created",
+                      "Sha256":  "BE102AE9AB0571A6E68BAD127E699A2EA8C5840C5746D2DCE62341D7BE67EB08"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-locked.log",
+                      "Change":  "Created",
+                      "Sha256":  "E805E0F40BD99A78799A481ABB65CD59918F5FD50AB011F5D8237C397C8F398D"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-spike-Desktop.log",
+                      "Change":  "Created",
+                      "Sha256":  "AD55B6EEFAD846BECAF15A2B2D99E047B1E6AE2216E602555F719EEA7FFB8632"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-spike-locked-Desktop.log",
+                      "Change":  "Created",
+                      "Sha256":  "BE2CA28E2D41F073A48A19B81589090ABBFFDEB36ECCED3EEA6221C5D80C501E"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-spike-locked-Windows.log",
+                      "Change":  "Created",
+                      "Sha256":  "F02AE524364A2E267DA2504747991DDA28BE9F141245817A8239132CCA16B71E"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/restore-spike-Windows.log",
+                      "Change":  "Created",
+                      "Sha256":  "8833659474A8044B9D4CE826A19856573CA19623CB09944B4514D8D8B365A871"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/sdk-info.log",
+                      "Change":  "Created",
+                      "Sha256":  "630728C3DCC7BAAF1FBE58229367233A18BDD60BBF25840683CC823600CF322E"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/test-final.log",
+                      "Change":  "Created",
+                      "Sha256":  "00C64E7F2377705682D9A8E188AA1771474D0BA41D0BDC07B4F12A635A3A7C2D"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/test-final-source.log",
+                      "Change":  "Created",
+                      "Sha256":  "77193C0A84037564AFC9E4F8FFEDF536911A7EB8D66F6D9B8EFDA40BC4B2334A"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/test-isolated.log",
+                      "Change":  "Created",
+                      "Sha256":  "DD0CB1D48FDB88A5903CD30DA9859E356DCCB709CB4248CAE139C137C5ED6033"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/test-summary.json",
+                      "Change":  "Created",
+                      "Sha256":  "A3F46BCBEF54BDDF6A1C279B9D809BBD2783D9D99218F035B6F99D5D8666FA43"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/test-verified.log",
+                      "Change":  "Created",
+                      "Sha256":  "A3F196B3DC657DA16269F256703DAA672B8B777211C002292A5B0890C7D593DD"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Application.Tests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "2F024345FDF419ACED9FEEEE208A9087B5F5B960FCC38D9A9E6F7D8C0AD67292"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Conversion.Tests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "8C46D2DCC8BC27A4DFCD6B9FC0B66E92BF202FBEF4ACB0A91F70050051C0A54D"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Desktop.UITests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "70D58F4FFFC6744D386E562A35622CB026A3F9D79D03939A3F6BED9D74D8A259"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Domain.Tests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "7AC734DDC0CA8BD85410B2AB8B37F026238850639DD48594FC3DE00FF57F5628"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Infrastructure.Tests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "C62D72F8DCB5325519D7C7EED854828CF924EE9759CBB1B02C293CE43B310828"
+                  },
+                  {
+                      "Path":  "docs/evidence/sprint-1/be-01-20261027/trx/Lunar.Windows.IntegrationTests.trx",
+                      "Change":  "Created",
+                      "Sha256":  "781B67ED4B1168E33946BDD468351BE0AEBA941E3A0E8950959611A09ED699D0"
+                  },
+                  {
+                      "Path":  "docs/README.md",
+                      "Change":  "Modified",
+                      "Sha256":  "22B6532186E71AB66017190C3CF4E4D107DD27F43CFFFFC955998FC3221254CC"
+                  },
+                  {
+                      "Path":  "docs/SPRINT_STATUS.md",
+                      "Change":  "Modified",
+                      "Sha256":  "F8E6FFC9021596CB5F11399AFE405A69DE83D9E29132ADFC6EC329C1A4877509"
+                  },
+                  {
+                      "Path":  "Lunar.sln",
+                      "Change":  "Created",
+                      "Sha256":  "173C307ED1A415CC5E68B5C7F8E0250E00CF841C5C197D52031726B1ADBC66B2"
+                  },
+                  {
+                      "Path":  "README.md",
+                      "Change":  "Modified",
+                      "Sha256":  "C1BCC03C8317F35F3CBDE5504EA097954C9B86BDD7701A7D1DF90B9417A5E76A"
+                  },
+                  {
+                      "Path":  "src/Lunar.Application/Lunar.Application.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "7DDBE76931875F92D50C7775C784FBDA71F1EC9A7AF890ECFF123A222026E770"
+                  },
+                  {
+                      "Path":  "src/Lunar.Application/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "99F714479AC3AFF5BD6D7357CED4C8FAAE367FEEB4C51097E21C07AB7170F54B"
+                  },
+                  {
+                      "Path":  "src/Lunar.Conversion/Lunar.Conversion.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "E7EEE9FD817B3B3116F5141EB9692E40AA1D58C870EA42AA85D3D3C52EEAD4EF"
+                  },
+                  {
+                      "Path":  "src/Lunar.Conversion/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "A2B0B2536996C3C20DD30991E3DB79790D254CA2677762F3832E1FDC515D1BD5"
+                  },
+                  {
+                      "Path":  "src/Lunar.Desktop/Lunar.Desktop.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "2681C0C92A3F3707D42CD8FCEEDA3A645CA520A75FAEB09079E9684C7B61B530"
+                  },
+                  {
+                      "Path":  "src/Lunar.Desktop/Lunar.Desktop.packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "0CDB388BF326B3B60F0196FF74C2088A0AECA6D50E889174C0C3E1AF437EC535"
+                  },
+                  {
+                      "Path":  "src/Lunar.Desktop/Lunar.Desktop.Spike.csproj",
+                      "Change":  "Modified",
+                      "Sha256":  "4412788BD2E75D2CCBEFEDB97133F35D6AC7EFA2D181A0EFC3D583B797D08235"
+                  },
+                  {
+                      "Path":  "src/Lunar.Domain/Lunar.Domain.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "E2C08643E21EBA9123E4B319840FEC508EFC44B473A7CAB491D6188E5F6905CA"
+                  },
+                  {
+                      "Path":  "src/Lunar.Domain/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "2241481B7E74DCDCD600303146B730ECC12CBD8E49AA55755EF95EE499FE229A"
+                  },
+                  {
+                      "Path":  "src/Lunar.Infrastructure/Lunar.Infrastructure.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "E5941DED1EBF9E9983F7E814F9E16D74963A932BB4F3D8ACB744EA34A45A8A0C"
+                  },
+                  {
+                      "Path":  "src/Lunar.Infrastructure/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "A2B0B2536996C3C20DD30991E3DB79790D254CA2677762F3832E1FDC515D1BD5"
+                  },
+                  {
+                      "Path":  "src/Lunar.Windows/Lunar.Windows.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "046A008997448DB2BD9E0C3BF08434BB1AB22FD8233320F489F05F0192C3D1F8"
+                  },
+                  {
+                      "Path":  "src/Lunar.Windows/Lunar.Windows.packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "B1A27A315C44464C1F2DCD5C386C78FA00AA496938FD76B50A253127B62ACBCC"
+                  },
+                  {
+                      "Path":  "src/Lunar.Windows/Lunar.Windows.Spike.csproj",
+                      "Change":  "Modified",
+                      "Sha256":  "56F40884FDD56A9965E010F77E0D0D087C3C3B2C8CE5C16FCD99135C2AC73F77"
+                  },
+                  {
+                      "Path":  "tests/LayerBoundaryTests.cs",
+                      "Change":  "Created",
+                      "Sha256":  "CCB5084B08ACC8496031BDC5D681FE4C865F8E9CADFB7B6368ADDF9DFDB21C8D"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Application.Tests/ArchitectureRuleTests.cs",
+                      "Change":  "Created",
+                      "Sha256":  "7848B00FD7554D8DF7A65ACFF6A79F33B7B8F96BBEC53B380265D9EA345D4346"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Application.Tests/Lunar.Application.Tests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "DD349930888DF447E7B6EFBE75E2A3F281D3E934A80EDA9EFF7EB6AB3F96C0EA"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Application.Tests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "158391D20486C9681ED59D430894F39F4821874222D8312F07164066DE7051D8"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Conversion.Tests/Lunar.Conversion.Tests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "0297E2154F8F43E286B7E8F60CB7427825B484C703F84A0B7CDA6CAB93D6BC8B"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Conversion.Tests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "10E7D8501B9D857F3A9605413176E25208CE38084F94D250A2940F9DBF1E23D4"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Desktop.UITests/Lunar.Desktop.UITests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "78904BB551EBCBC5C477858B2D9E7F15C7B66D84EDF82BF6E6CE3107033A78BB"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Desktop.UITests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "C1F6C97C8BFF2C2DE8CB2E71F96E3E5EAD826D54B385AB5C120561E64DB616E9"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Domain.Tests/Lunar.Domain.Tests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "D10D839846335CB3C3D5C6E7BB59F81F8F75B517B93915BADF26C947D89135E3"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Domain.Tests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "EAFFD0E4778B8B446EA94255673D4605B097BF60EF260CF5F2AAEBB3C9CDAF32"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Infrastructure.Tests/Lunar.Infrastructure.Tests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "2BB84CE4077B279FB4A8372D17F429BC376FF801102ED054887FDB059FADF1BB"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Infrastructure.Tests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "00F4F537B0944366FBD39A6A1694EFCBD44FF903A8C30946EF8B2FFB3C76F1A7"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Windows.IntegrationTests/Lunar.Windows.IntegrationTests.csproj",
+                      "Change":  "Created",
+                      "Sha256":  "694A564EC58A3B47425A98141EF7DC4CD38CD38B6C32CE563569E53CA8517F97"
+                  },
+                  {
+                      "Path":  "tests/Lunar.Windows.IntegrationTests/packages.lock.json",
+                      "Change":  "Created",
+                      "Sha256":  "4EC93071081EAF20EAB59340167ED44EDE99B1E52178817513494BA337948FE0"
+                  },
+                  {
+                      "Path":  "tests/README.md",
+                      "Change":  "Created",
+                      "Sha256":  "9E0E50B870A5F730A2F69559571173CBB907809016D6417293EBB4DBA715470B"
+                  },
+                  {
+                      "Path":  "THIRD_PARTY_NOTICES.md",
+                      "Change":  "Modified",
+                      "Sha256":  "FBC4FE24A7E2680C63D17542F8F6D4459ACA5039D424E40C0A0B9336D66B2E86"
+                  }
+              ]
+}

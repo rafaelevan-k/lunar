@@ -1,0 +1,13 @@
+﻿{
+    "Timestamp":  "2026-11-02T21:26:04.0378524Z",
+    "WindowName":  "Lunar",
+    "ItemStatusElements":  [
+                               {
+                                   "ControlType":  "ControlType.Window",
+                                   "ItemStatus":  "Collapsed"
+                               }
+                           ],
+    "ExitedAfterClose":  true,
+    "ExitCode":  0,
+    "Note":  "Read-only inspection of this process only; no system setting changed."
+}

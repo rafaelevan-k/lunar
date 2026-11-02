@@ -1,0 +1,31 @@
+Test run for <repo>\tests\Lunar.Desktop.UITests\bin\Lunar.Desktop.UITests\Release\net10.0-windows\Lunar.Desktop.UITests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Test run for <repo>\tests\Lunar.Application.Tests\bin\Lunar.Application.Tests\Release\net10.0\Lunar.Application.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for <repo>\tests\Lunar.Conversion.Tests\bin\Lunar.Conversion.Tests\Release\net10.0\Lunar.Conversion.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for <repo>\tests\Lunar.Infrastructure.Tests\bin\Lunar.Infrastructure.Tests\Release\net10.0\Lunar.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for <repo>\tests\Lunar.Domain.Tests\bin\Lunar.Domain.Tests\Release\net10.0\Lunar.Domain.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for <repo>\tests\Lunar.Windows.IntegrationTests\bin\Lunar.Windows.IntegrationTests\Release\net10.0-windows\Lunar.Windows.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032909.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 102 ms - Lunar.Desktop.UITests.dll (net10.0)
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032910.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 106 ms - Lunar.Infrastructure.Tests.dll (net10.0)
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032911.trx
+
+Passed!  - Failed:     0, Passed:    53, Skipped:     0, Total:    53, Duration: 132 ms - Lunar.Application.Tests.dll (net10.0)
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032912.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 127 ms - Lunar.Domain.Tests.dll (net10.0)
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032913.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 99 ms - Lunar.Conversion.Tests.dll (net10.0)
+Results File: <repo>\artifacts\be-01\test-results-verified\BE-01-verified_net10.0_20261027032914.trx
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 85 ms - Lunar.Windows.IntegrationTests.dll (net10.0)
+

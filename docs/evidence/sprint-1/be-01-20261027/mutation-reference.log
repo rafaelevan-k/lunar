@@ -1,0 +1,20 @@
+Test run for <repo>\tests\Lunar.Windows.IntegrationTests\bin\Lunar.Windows.IntegrationTests\Release\net10.0-windows\Lunar.Windows.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+dotnet.exe : [xUnit.net 00:00:01.09]     
+Lunar.Architecture.Tests.LayerBoundaryTests.DeclaredProjectReferencesRespectLayerOwnership [FAIL]
+At line:2 char:644
++ ... ; $output = & ./.tools/dotnet/dotnet.exe test tests/Lunar.Windows.Int ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...wnership [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Failed Lunar.Architecture.Tests.LayerBoundaryTests.DeclaredProjectReferencesRespectLayerOwnership [24 ms]
+  Error Message:
+   Lunar.Windows -> Lunar.Infrastructure is forbidden.
+  Stack Trace:
+     at Lunar.Architecture.Tests.LayerBoundaryTests.DeclaredProjectReferencesRespectLayerOwnership() in <repo>\tests\LayerBoundaryTests.cs:line 42
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 54 ms - Lunar.Windows.IntegrationTests.dll (net10.0)
+

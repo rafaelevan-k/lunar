@@ -1,0 +1,220 @@
+﻿[
+    {
+        "Project":  "src/Lunar.Domain/Lunar.Domain.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Domain\\",
+                           "BaseOutputPath":  "bin\\Lunar.Domain\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  ""
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    },
+    {
+        "Project":  "src/Lunar.Application/Lunar.Application.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Application\\",
+                           "BaseOutputPath":  "bin\\Lunar.Application\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  ""
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+                                  "..\\Lunar.Domain\\Lunar.Domain.csproj"
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    },
+    {
+        "Project":  "src/Lunar.Windows/Lunar.Windows.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0-windows",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Windows\\",
+                           "BaseOutputPath":  "bin\\Lunar.Windows\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  ""
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+                                  "..\\Lunar.Application\\Lunar.Application.csproj",
+                                  "..\\Lunar.Domain\\Lunar.Domain.csproj"
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    },
+    {
+        "Project":  "src/Lunar.Conversion/Lunar.Conversion.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Conversion\\",
+                           "BaseOutputPath":  "bin\\Lunar.Conversion\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  ""
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+                                  "..\\Lunar.Application\\Lunar.Application.csproj",
+                                  "..\\Lunar.Domain\\Lunar.Domain.csproj"
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    },
+    {
+        "Project":  "src/Lunar.Infrastructure/Lunar.Infrastructure.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Infrastructure\\",
+                           "BaseOutputPath":  "bin\\Lunar.Infrastructure\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  ""
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+                                  "..\\Lunar.Application\\Lunar.Application.csproj",
+                                  "..\\Lunar.Domain\\Lunar.Domain.csproj"
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    },
+    {
+        "Project":  "src/Lunar.Desktop/Lunar.Desktop.csproj",
+        "Properties":  {
+                           "TargetFramework":  "net10.0-windows",
+                           "OutputType":  "Library",
+                           "Nullable":  "enable",
+                           "LangVersion":  "14.0",
+                           "EnableNETAnalyzers":  "true",
+                           "AnalysisLevel":  "10.0",
+                           "TreatWarningsAsErrors":  "true",
+                           "Deterministic":  "true",
+                           "BaseIntermediateOutputPath":  "obj\\Lunar.Desktop\\",
+                           "BaseOutputPath":  "bin\\Lunar.Desktop\\",
+                           "ManagePackageVersionsCentrally":  "true",
+                           "UseWPF":  "true"
+                       },
+        "Compile":  [
+
+                    ],
+        "ProjectReferences":  [
+                                  "..\\Lunar.Application\\Lunar.Application.csproj",
+                                  "..\\Lunar.Domain\\Lunar.Domain.csproj",
+                                  "..\\Lunar.Windows\\Lunar.Windows.csproj",
+                                  "..\\Lunar.Conversion\\Lunar.Conversion.csproj",
+                                  "..\\Lunar.Infrastructure\\Lunar.Infrastructure.csproj"
+                              ],
+        "PackageReferences":  [
+
+                              ],
+        "FrameworkReferences":  [
+                                    "Microsoft.NETCore.App",
+                                    "Microsoft.WindowsDesktop.App.WPF"
+                                ],
+        "ApplicationDefinition":  [
+
+                                  ],
+        "Page":  [
+
+                 ]
+    }
+]

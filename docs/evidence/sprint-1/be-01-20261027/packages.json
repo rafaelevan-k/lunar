@@ -1,0 +1,130 @@
+﻿[
+    {
+        "Id":  "Microsoft.NET.Test.Sdk",
+        "Version":  "18.10.0",
+        "Type":  "Direct",
+        "License":  "MIT",
+        "ContentHash":  "0CZZ688UBvpQFB9HKo7wrNJNVe+AOM4UtipgwpER3TTM+d2DDM6QyKkIJZTR3mpbn9/zFbZEtAgVIz4SPTjQZQ==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.runner.visualstudio",
+        "Version":  "4.0.1",
+        "Type":  "Direct",
+        "License":  "Apache-2.0",
+        "ContentHash":  "8CoAaZkniVekR1ycJyxn+hOz+6ZQCDPcoIsIs6ujd4WyFcBMlxGNU15Qb8Uxd4iO4UmOuETb0M6vzBbwX/mfLA==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.mtp-off",
+        "Version":  "4.0.2",
+        "Type":  "Direct",
+        "License":  "Apache-2.0",
+        "ContentHash":  "AD40mPViEyfFKfYH2JKFnqIkwjvqdey+ZeBH/gV91Sq2MRF4UwQMGdymD8m7JLw6Pz4J4yJ3zn+QI+Ja8gNlyg==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "Microsoft.Bcl.AsyncInterfaces",
+        "Version":  "6.0.0",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "UcSjPsst+DfAdJGVDsu346FX0ci0ah+lw3WRtn18NUwEqRt70HaOQ7lI72vy3+1LxtqI3T5GWwV39rQSrCzAeg==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "Microsoft.CodeCoverage",
+        "Version":  "18.10.0",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "zo1hqV+Nz6FlIwdc+aPfrvGzqfKAPPaZ6OPj1W8C0QQE2xH951AZwTUytL3K7XX8brVBUFd7MhrLDl3CtK3U/A==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "Microsoft.TestPlatform.ObjectModel",
+        "Version":  "18.10.0",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "aXA7DDbnt6MYu3eLBEDksNdl09QxJ/PpMzrFcSxqEOk3RvRGJzhKI5mezVCEOcvveRhjfw/mvn6xVXC/rTaOog==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "Microsoft.TestPlatform.TestHost",
+        "Version":  "18.10.0",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "Spu6C7bgz1PmWN+Y7wS0PfGCw9Kwv5RvJbCwyQaEWjcwpMire+qYMrcZ7qk8agjy6nd0sdHLc3ugCSrGuSbZdw==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "Microsoft.Win32.Registry",
+        "Version":  "5.0.0",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "dDoKi0PnDz31yAyETfRntsLArTlVAVzUzCIvvEDsDsucrl33Dl8pIJG06ePTJTI3tGpeyHS9Cq7Foc/s4EeKcg==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "System.Security.AccessControl",
+        "Version":  "6.0.1",
+        "Type":  "Transitive",
+        "License":  "MIT",
+        "ContentHash":  "IQ4NXP/B3Ayzvw0rDQzVTYsCKyy0Jp9KI6aYcK7UnGVlR9+Awz++TIPCQtPYfLJfOpm8ajowMR09V7quD3sEHw==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.analyzers",
+        "Version":  "2.2.0",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "dXMIIztipcAyL3a19gtUrih/RLrE33/4VJdICoinYqIXXo1KLtsMPsaQ9dO2pE8xajDguwE2kqVbBqE5/EoJ0Q==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.assert",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "5PKRexYlvufWFdXenRcRGKqvaJBBZFJZpqUGlUs9p13eKEgVdOrLpkPknjzUvLY5kEUicK9871DIUDcCPA6AXA==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.common",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "++CtT8daIf6qfieQev/8V88U3zViIDWou5cj+oWps1/Hf73UoaY/L0hKyi3v7Zlt3BmbU0pUc73zCB1GiB4nYA==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.core.mtp-off",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "QqkEU6CYkwCH4pDTtaROkugIZlcxNPcWvDf2jKu13JnaopIgneiltOWsd49QzZj1f/ncAYdSpqCEhi8UrdJO6w==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.extensibility.core",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "ARTt+pGyd86mdtiFBkKpyBQvRC3u0rr8oidBlII2GsAg7D6TfOsDFCsoQtFij83V5pE57m3whUIqT4xjiARXbQ==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.runner.common",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "YlYKVhTJVcwEgJ6rm59Pjf71lQqKwKxEHqVRxWUuwrwm/nxB/mNFP/lP4vlntDO3GclNnLT9BjYOpJH9gViGQg==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    },
+    {
+        "Id":  "xunit.v3.runner.inproc.console",
+        "Version":  "4.0.2",
+        "Type":  "Transitive",
+        "License":  "Apache-2.0",
+        "ContentHash":  "cg4XNpCN4Ry9nswutknpreN3ckSUBwtjMRmEQSNK/sIKPo6KN5tDGGGCaHDm5HGA4yFVVtTJX65tLCsZArUNfQ==",
+        "Source":  "https://api.nuget.org/v3/index.json"
+    }
+]

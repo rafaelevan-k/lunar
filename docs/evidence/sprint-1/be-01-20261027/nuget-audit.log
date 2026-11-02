@@ -1,0 +1,18 @@
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+
+The given project `Lunar.Application` has no vulnerable packages given the current sources.
+The given project `Lunar.Domain` has no vulnerable packages given the current sources.
+The given project `Lunar.Conversion` has no vulnerable packages given the current sources.
+The given project `Lunar.Desktop` has no vulnerable packages given the current sources.
+The given project `Lunar.Windows` has no vulnerable packages given the current sources.
+The given project `Lunar.Infrastructure` has no vulnerable packages given the current sources.
+The given project `Lunar.Application.Tests` has no vulnerable packages given the current sources.
+The given project `Lunar.Conversion.Tests` has no vulnerable packages given the current sources.
+The given project `Lunar.Desktop.UITests` has no vulnerable packages given the current sources.
+The given project `Lunar.Domain.Tests` has no vulnerable packages given the current sources.
+The given project `Lunar.Infrastructure.Tests` has no vulnerable packages given the current sources.
+The given project `Lunar.Windows.IntegrationTests` has no vulnerable packages given the current sources.
+
