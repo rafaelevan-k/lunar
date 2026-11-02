@@ -2,6 +2,8 @@
 
 ## Unreleased — 2026-11-03
 
+- BE-02: PowerShell `build.ps1`, `test.ps1` and `package.ps1`, a GitHub Actions workflow on `windows-2022` and `windows-latest` (gate job plus a non-blocking Windows-session job, 14-day artifacts), a pull request template and `docs/CI.md`. The gate suite (291 tests incl. architecture checks) and a failing-test/architecture-violation check pass locally and from a clean clone. Status IN_REVIEW: the workflow has not run on GitHub and merge blocking needs branch protection. Also: UI tests now run sequentially to stop an intermittent concurrent-XAML-parse failure. Repository initialised on `main` with grouped commits.
+
 - FE-03: `IslandLayout` sizing rules (idle 160×44; expanded at least 380×320, growing to fit content, capped to the work area minus margins), content measurement and sizing folded into `IslandPositionController`, `IslandViewModel.IsExpandedLayout`, corner radius 999/24 by layout. 437 tests pass including a 96–192 DPI matrix; real exe geometry unchanged. Status DONE by user decision: real windows checked at 125% only, expanded layout not reachable in the app before Sprint 3, so real 100/150/200% on-screen confirmation remains unverified. No package change, no new native call.
 
 - FE-04: `IslandViewModel` (Idle, Expanding, Expanded, Collapsing, Busy; background-busy flag; inline error that never changes the state) with `RelayCommand`, transient DI registration, and the window's UI Automation ItemStatus bound to the state text. 410 tests pass; real exe exposes "Collapsed". The validated state machine remains BE-09. No package change, no new native call.

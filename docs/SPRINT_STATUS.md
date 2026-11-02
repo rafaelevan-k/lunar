@@ -1,5 +1,16 @@
 # Lunar sprint status
 
+## Latest update — Git setup and BE-02 (2026-11-03)
+
+- Authorization: user asked for Git setup (`origin` https://github.com/rafaelevan-k/lunar.git, work on `main`, commits grouped by related change, push to `main` only after BE-02 is confirmed) and assigned BE-02. Sprint 1 gate OPEN.
+- Git: repository initialised on `main`; 14 baseline commits of the existing work plus 3 BE-02 commits; nothing pushed yet.
+- Task / owner / status: BE-02 / Claude (sole integrator) / **IN_REVIEW**. Dependencies: BE-01 DONE.
+- Scope: `scripts/build.ps1`, `test.ps1`, `package.ps1` (+ `_common.ps1`), `.github/workflows/ci.yml` (Windows matrix, gate job, non-blocking Windows-session job, 14-day artifacts), `.github/pull_request_template.md`, `docs/CI.md`.
+- Evidence: [BE-02 evidence](evidence/sprint-1/BE-02.md). Locally and from a clean clone: build.ps1 exit 0 (locked restore, 0 warnings, format clean), Gate suite 291 tests exit 0, package.ps1 exit 0; a failing test and a Domain `System.IO` violation each make the gate exit 1.
+- Finding: an intermittent UI-test failure (XAML parsed concurrently by parallel test threads, about 1 run in 7) existed since FE-03/FE-04; fixed by disabling parallelization in that test assembly (0 failures in 40 runs afterwards).
+- Not verified: the workflow on GitHub (not pushed); branch protection (owner setting) so a failed check actually blocks a merge.
+- Done tasks: BE-01, BE-03, BE-04, BE-05, BE-06, BE-07, BE-08, FE-01, FE-02, FE-03, FE-04, FE-05, FE-06. IN_REVIEW: BE-02. Next authorized action: WAIT for the user's confirmation of BE-02, then push to `main`.
+
 ## Latest update — FE-03 (2026-11-03)
 
 - Authorization: user assigned FE-03. Only FE-03 was implemented; no ADR (Desktop-only). Sprint 1 gate OPEN.

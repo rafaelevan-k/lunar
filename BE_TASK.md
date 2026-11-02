@@ -24,7 +24,7 @@
 | ID | Sprint | Task | Status |
 |---|---|---|---|
 | BE-01 | Sprint 1 | Solution scaffold and architecture guardrails | DONE |
-| BE-02 | Sprint 1 | CI, scripts and quality gates | TODO |
+| BE-02 | Sprint 1 | CI, scripts and quality gates | IN_REVIEW |
 | BE-03 | Sprint 1 | Domain primitives and result contracts | DONE |
 | BE-04 | Sprint 1 | Application interfaces and DI composition | DONE |
 | BE-05 | Sprint 1 | App lifecycle and single-instance policy | DONE |
@@ -86,7 +86,7 @@ Completion output: (1) task status, (2) files created/changed and reason, (3) im
 - **Expected location:** `scripts; .github/workflows/ci.yml`
 - **Objective:** Create PowerShell build/test/package scripts, Windows CI matrix, formatting, analyzers and artifact retention.
 - **Acceptance criteria:** PR build blocks failing tests and architecture checks.
-- **Status:** TODO
+- **Status:** IN_REVIEW — [evidence](docs/evidence/sprint-1/BE-02.md), 2026-11-03. Scripts verified locally and from a clean clone, including that a failing test and an architecture violation make the gate exit 1. The workflow has not run on GitHub yet, and blocking merges needs branch protection set by the owner ([docs/CI.md](docs/CI.md)).
 
 **Prompt for AI coding agent**
 
