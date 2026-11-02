@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lunar.Infrastructure.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <ProjectReference Include="..\Lunar.Application\Lunar.Application.csproj" />
+    <ProjectReference Include="..\Lunar.Domain\Lunar.Domain.csproj" />
+  </ItemGroup>
+</Project>
