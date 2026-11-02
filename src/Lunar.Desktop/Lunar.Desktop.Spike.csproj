@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Temporary Sprint 0 window, not the BE-01 production scaffold. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- WPF owns startup/DPI via app.manifest; WinForms is used only for NotifyIcon.
+         Its ApplicationConfiguration bootstrap is not the WPF entry point. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <ApplicationManifest>Spike\app.manifest</ApplicationManifest>
+    <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Spike\App.xaml.cs;Spike\Shell\SpikeWindow.xaml.cs;Spike\Shell\TrayController.cs" />
+    <ApplicationDefinition Include="Spike\App.xaml" />
+    <Page Include="Spike\Shell\SpikeWindow.xaml" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,13 @@
+<Window x:Class="Lunar.Desktop.Shell.SpikeWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Lunar — Sprint 0 prototype" Width="160" Height="44"
+ WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+ ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False" ShowActivated="False"
+ UseLayoutRounding="True" WindowStartupLocation="Manual">
+ <Border CornerRadius="22" Background="#0B0C10" Padding="12,4">
+  <TextBlock Text="Lunar · spike" Foreground="#F6F7FB" FontFamily="Segoe UI"
+   HorizontalAlignment="Center" VerticalAlignment="Center"
+   AutomationProperties.Name="Lunar Sprint zero window prototype" />
+ </Border>
+</Window>
