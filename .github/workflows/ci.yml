@@ -1,0 +1,110 @@
+name: CI
+
+# Builds and tests the Windows/WPF solution on Windows runners only (ARCHITECTURE section 12).
+# The required gate is the "build-and-test" job. The Windows-session tests run in a separate, non-blocking job
+# because they need a real interactive desktop; their results are evidence, not a merge gate.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  build-and-test:
+    name: build-and-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-latest]
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the SDK pinned in global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/*packages.lock.json'
+
+      # Locked restore, Release build (analyzers and warnings are errors), formatting verification.
+      - name: Build, analyzers and formatting
+        shell: pwsh
+        run: ./scripts/build.ps1
+
+      # Unit and architecture tests. A failing test or a layer-boundary violation fails this step and the job.
+      - name: Tests (pull-request gate)
+        shell: pwsh
+        run: ./scripts/test.ps1 -Suite Gate -NoBuild
+
+      - name: Package build output
+        shell: pwsh
+        run: ./scripts/package.ps1 -NoBuild
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.os }}
+          path: |
+            artifacts/package/*.zip
+            artifacts/package/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  windows-session-tests:
+    name: windows-session-tests (non-blocking)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    # Display enumeration and real WPF windows depend on the runner's desktop session, so a failure here is
+    # reported but never blocks a merge. Hardware-dependent behavior is verified manually (docs/CI.md).
+    continue-on-error: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the SDK pinned in global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/*packages.lock.json'
+
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build.ps1 -SkipFormat
+
+      - name: Windows-session tests
+        shell: pwsh
+        run: ./scripts/test.ps1 -Suite Hardware -NoBuild
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-session-test-results
+          path: artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 14
