@@ -1,0 +1,66 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    Shared brushes and base styles. Brushes are defined once here and follow the active Colors.*.xaml through
+    DynamicResource, so swapping the color dictionary re-themes every consumer. Views must use these keys and
+    never repeat a literal color. Load order in App.xaml: Colors.*, Typography, Spacing, Components.
+  -->
+  <SolidColorBrush x:Key="Lunar.Brush.Background" Color="{DynamicResource Lunar.Color.Background}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Surface" Color="{DynamicResource Lunar.Color.Surface}" />
+  <SolidColorBrush x:Key="Lunar.Brush.TextPrimary" Color="{DynamicResource Lunar.Color.TextPrimary}" />
+  <SolidColorBrush x:Key="Lunar.Brush.TextSecondary" Color="{DynamicResource Lunar.Color.TextSecondary}" />
+  <SolidColorBrush x:Key="Lunar.Brush.TextDisabled" Color="{DynamicResource Lunar.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Accent" Color="{DynamicResource Lunar.Color.Accent}" />
+  <SolidColorBrush x:Key="Lunar.Brush.OnAccent" Color="{DynamicResource Lunar.Color.OnAccent}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Focus" Color="{DynamicResource Lunar.Color.Focus}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Border" Color="{DynamicResource Lunar.Color.Border}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Error" Color="{DynamicResource Lunar.Color.Error}" />
+  <SolidColorBrush x:Key="Lunar.Brush.Success" Color="{DynamicResource Lunar.Color.Success}" />
+
+  <!-- Visible keyboard focus indicator for every focusable control (PRD §3.5). -->
+  <Style x:Key="Lunar.Style.FocusVisual" TargetType="Control">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Control">
+          <Rectangle Margin="-2" RadiusX="6" RadiusY="6" StrokeThickness="2"
+                     Stroke="{DynamicResource Lunar.Brush.Focus}" SnapsToDevicePixels="True" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="Lunar.Text.Body" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
+    <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Body}" />
+    <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Secondary" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Body}">
+    <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextSecondary}" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Secondary}">
+    <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Caption}" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Subtitle" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Body}">
+    <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Subtitle}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Title" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Body}">
+    <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Title}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Display" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Body}">
+    <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family.Display}" />
+    <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Display}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style x:Key="Lunar.Text.Error" TargetType="TextBlock" BasedOn="{StaticResource Lunar.Text.Body}">
+    <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.Error}" />
+  </Style>
+</ResourceDictionary>

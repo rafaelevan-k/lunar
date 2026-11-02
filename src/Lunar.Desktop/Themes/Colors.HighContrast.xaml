@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    High contrast: every token maps to a user-chosen Windows system color, so contrast is whatever the user's
+    high-contrast theme provides. Values are read when this dictionary is loaded; the theme switcher (FE-23/24)
+    must reload it when SystemParameters.HighContrast or the system colors change.
+    Status colors cannot rely on hue, so they use text/highlight colors; components must also show an icon or text.
+  -->
+  <x:Static x:Key="Lunar.Color.Background" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Lunar.Color.Surface" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Lunar.Color.TextPrimary" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.TextSecondary" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.TextDisabled" Member="SystemColors.GrayTextColor" />
+  <x:Static x:Key="Lunar.Color.Accent" Member="SystemColors.HighlightColor" />
+  <x:Static x:Key="Lunar.Color.OnAccent" Member="SystemColors.HighlightTextColor" />
+  <x:Static x:Key="Lunar.Color.Focus" Member="SystemColors.HotTrackColor" />
+  <x:Static x:Key="Lunar.Color.Border" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.Error" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.Success" Member="SystemColors.WindowTextColor" />
+</ResourceDictionary>

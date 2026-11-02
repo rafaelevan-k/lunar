@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- Production entry point (FE-02). Single-instance and lifecycle policy follow in BE-05. -->
+    <OutputType>WinExe</OutputType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WinForms is used only for NotifyIcon (the tray). WPF owns startup and DPI through app.manifest,
+         so WinForms' ApplicationConfiguration bootstrap warning does not apply. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Keep WPF type names unambiguous: no implicit WinForms/Drawing imports. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <EmbeddedResource Include="Resources\Lunar.ico" LogicalName="Lunar.Desktop.Resources.Lunar.ico" />
+    <InternalsVisibleTo Include="Lunar.Desktop.UITests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Sprint 0 discovery sources live in Spike/ and belong to Lunar.Desktop.Spike.csproj only. -->
+    <Compile Remove="Spike\**" />
+    <ApplicationDefinition Remove="Spike\**" />
+    <Page Remove="Spike\**" />
+    <None Remove="Spike\**" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <ProjectReference Include="..\Lunar.Application\Lunar.Application.csproj" />
+    <ProjectReference Include="..\Lunar.Domain\Lunar.Domain.csproj" />
+    <!-- Adapter references are reserved for Composition/ServiceRegistration.cs. -->
+    <ProjectReference Include="..\Lunar.Windows\Lunar.Windows.csproj" />
+    <ProjectReference Include="..\Lunar.Conversion\Lunar.Conversion.csproj" />
+    <ProjectReference Include="..\Lunar.Infrastructure\Lunar.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

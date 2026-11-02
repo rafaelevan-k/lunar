@@ -1,0 +1,13 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <!-- Segoe UI Variable with Segoe UI fallback (PRD §3.5). Sizes are DIPs so they scale with DPI. -->
+  <FontFamily x:Key="Lunar.Font.Family">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="Lunar.Font.Family.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
+
+  <sys:Double x:Key="Lunar.Font.Size.Caption">12</sys:Double>
+  <sys:Double x:Key="Lunar.Font.Size.Body">14</sys:Double>
+  <sys:Double x:Key="Lunar.Font.Size.Subtitle">16</sys:Double>
+  <sys:Double x:Key="Lunar.Font.Size.Title">20</sys:Double>
+  <sys:Double x:Key="Lunar.Font.Size.Display">28</sys:Double>
+</ResourceDictionary>

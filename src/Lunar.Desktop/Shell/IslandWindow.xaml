@@ -1,0 +1,32 @@
+<Window x:Class="Lunar.Desktop.Shell.IslandWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        Title="Lunar"
+        Width="160" Height="44"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False" ShowActivated="False"
+        WindowStartupLocation="Manual" UseLayoutRounding="True"
+        automation:AutomationProperties.Name="Lunar"
+        automation:AutomationProperties.ItemStatus="{Binding StatusText, Mode=OneWay}">
+  <!-- The pill. Width and Height are the idle size; IslandPositionController sets size limits (FE-03) and position (FE-05). -->
+  <Border x:Name="Pill"
+          Background="{DynamicResource Lunar.Brush.Background}"
+          BorderBrush="{DynamicResource Lunar.Brush.Border}"
+          BorderThickness="1"
+          SnapsToDevicePixels="True">
+    <!-- Pill radius while idle, panel radius in every expanded layout (PRD §3.5). -->
+    <Border.Style>
+      <Style TargetType="Border">
+        <Setter Property="CornerRadius" Value="{DynamicResource Lunar.Radius.Pill}" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsExpandedLayout}" Value="True">
+            <Setter Property="CornerRadius" Value="{DynamicResource Lunar.Radius.Panel}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </Border.Style>
+    <!-- Single view host: later features (eyes, pages) are presented here. -->
+    <ContentControl x:Name="ViewHost" Focusable="False" IsTabStop="False" />
+  </Border>
+</Window>

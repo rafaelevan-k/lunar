@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Dark palette: PRD §3.5 values. Every Colors.*.xaml defines exactly the same keys. -->
+  <Color x:Key="Lunar.Color.Background">#0B0C10</Color>
+  <Color x:Key="Lunar.Color.Surface">#181A22</Color>
+  <Color x:Key="Lunar.Color.TextPrimary">#F6F7FB</Color>
+  <Color x:Key="Lunar.Color.TextSecondary">#A8ADBE</Color>
+  <Color x:Key="Lunar.Color.TextDisabled">#6F7488</Color>
+  <Color x:Key="Lunar.Color.Accent">#B6B2FF</Color>
+  <Color x:Key="Lunar.Color.OnAccent">#0B0C10</Color>
+  <Color x:Key="Lunar.Color.Focus">#B6B2FF</Color>
+  <Color x:Key="Lunar.Color.Border">#3A3E52</Color>
+  <Color x:Key="Lunar.Color.Error">#FF737E</Color>
+  <Color x:Key="Lunar.Color.Success">#86D7B0</Color>
+</ResourceDictionary>
