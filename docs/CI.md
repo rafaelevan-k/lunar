@@ -48,8 +48,7 @@ request checks entirely; CI then reports after the fact.
 
 ## Known limits
 
-- The workflow has not been run on GitHub yet when this was written; only the scripts were verified (locally and from a
-  clean clone), see [evidence](evidence/sprint-1/BE-02.md).
+- The first GitHub run found one test that assumed a screen larger than the runner's; it now uses a small fake display.
 - Actions are pinned by major version tag (`@v4`), not by commit SHA. Pinning by SHA, and keeping them updated, is a
   hardening step for a later decision.
 - `setup-dotnet` must find SDK 10.0.402 for `windows-2022`; if a runner image lacks it the setup step fails loudly (the

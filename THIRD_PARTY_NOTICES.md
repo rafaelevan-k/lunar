@@ -6,7 +6,7 @@ BE-01 development/test inventory (2026-10-27): `xunit.v3.mtp-off` 4.0.2 and
 `xunit.runner.visualstudio` 4.0.1 use Apache-2.0; `Microsoft.NET.Test.Sdk` 18.10.0
 uses MIT. All are test-only with `PrivateAssets=all`, not production dependencies.
 Exact direct/transitive versions, package hashes, source and nuspec license metadata
-are in [packages.json](docs/evidence/sprint-1/be-01-20261027/packages.json) and the
+are in `packages.json` (kept locally, not in the repository) and the
 six test lockfiles. [NuGet xUnit variant](https://www.nuget.org/packages/xunit.v3.mtp-off/4.0.2),
 [adapter](https://www.nuget.org/packages/xunit.runner.visualstudio/4.0.1),
 [Test SDK](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/18.10.0).
@@ -30,7 +30,7 @@ text and notices must ship with the release bundle (BE-28/29).
 
 | Observed component | Version | Purpose / source |
 |---|---|---|
-| .NET SDK | 10.0.402 | Portable development toolchain, ignored `.tools/`; [official provenance](docs/evidence/sprint-0/sdk-provenance.json) |
+| .NET SDK | 10.0.402 | Portable development toolchain, ignored `.tools/`; official provenance recorded locally |
 | Microsoft.NETCore.App / Microsoft.WindowsDesktop.App | 10.0.13 | Runtime/framework shipped within local SDK; [runtime license](https://github.com/dotnet/runtime/blob/main/LICENSE.TXT), [WPF license](https://github.com/dotnet/wpf/blob/main/LICENSE.TXT) |
 | Microsoft.Windows.SDK.NET.Ref | 10.0.19041.57 | SDK-managed targeting/reference pack restored from NuGet; package's Microsoft license URL: [Windows SDK terms](https://aka.ms/WinSDKLicenseURL). Nuspec requires license acceptance; do not classify entire pack as MIT based on CsWinRT alone |
 | Windows native APIs | Host build 26300.9711 | OS-provided Core Audio, WLAN, display/DPI, radios and GSMTC; no copied native binaries |

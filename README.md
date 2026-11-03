@@ -1,58 +1,107 @@
 # Lunar
 
-Windows Dynamic Island utility. Sprint 0 discovery was closed by the user on 2026-10-27 under accepted limitations; the subsequent BE-01 assignment starts the Sprint 1 solution scaffold. This is not a finished product. See [BE-01 evidence and manual checklist](docs/evidence/sprint-1/BE-01.md) for verified scope and [current status](docs/SPRINT_STATUS.md).
+Lunar is a floating "Dynamic Island" for Windows 10/11 (x64). A small always-on-top pill sits at the top centre of the
+screen, shows an animated pair of eyes while idle, and expands into quick controls for the system, media and file
+conversion. It is offline-first: no account, no telemetry, no network backend.
 
-Read [AGENTS.md](AGENTS.md), [PRD.md](PRD.md), the sole canonical [ARCHITECTURE.md](ARCHITECTURE.md), [FE_TASK.md](FE_TASK.md), [BE_TASK.md](BE_TASK.md), then [Sprint status](docs/SPRINT_STATUS.md).
+> **Status: early development.** The application shell exists and runs, but the features below are planned, not
+> built. Today the app shows an empty pill, a tray icon (Open / Exit), single-instance handling, settings storage and
+> logging. It is not a finished product and has no installer yet.
 
-## Build the BE-01 scaffold
+## What it is meant to do
 
-Install SDK **10.0.402** with WindowsDesktop support on Windows x64, or use the
-existing ignored portable SDK below. `global.json` rejects other SDK versions.
+| Area | Plan |
+|---|---|
+| Idle avatar | Vector eyes that blink and follow the pointer, with reduced-motion support |
+| System controls | Volume and mute, clock, Wi-Fi and Bluetooth status and actions (with Windows Settings fallbacks) |
+| Media | Discover and control Windows media sessions, with seeking where the app supports it |
+| File converter | Local PNG / JPG / PDF / DOCX conversions with honest fidelity labels; originals are never modified |
+| Quality | Multi-monitor and DPI aware, keyboard accessible, high-contrast themes, English first (Indonesian planned) |
 
-```powershell
-$env:DOTNET_ROOT = Join-Path $PWD '.tools/dotnet'
-$env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
-$env:NUGET_PACKAGES = Join-Path $PWD '.tools/nuget'
-& .\.tools\dotnet\dotnet.exe restore Lunar.sln --locked-mode
-& .\.tools\dotnet\dotnet.exe build Lunar.sln -c Release --no-restore
-& .\.tools\dotnet\dotnet.exe test Lunar.sln -c Release --no-build --no-restore
-& .\.tools\dotnet\dotnet.exe format Lunar.sln --verify-no-changes --no-restore
+Non-goals for v1: voice assistant, cloud features, OCR, automatic updates, PDF to editable DOCX reconstruction.
+
+## Built so far
+
+- WPF shell: transparent, topmost, non-activating pill window; tray icon; single instance; top-centre placement that
+  follows display, taskbar and DPI changes; idle 160×44 and expanded layouts; presentation state model.
+- Design tokens (dark, light, high-contrast).
+- Settings in `%LocalAppData%\Lunar\settings.json` (atomic writes, backup, corruption recovery, schema versioning).
+- Bounded rolling diagnostic logs with redaction (diagnostics are opt-in).
+- Application ports for system and media services, and a typed `Result` / error model.
+- Build, test and package scripts and a Windows CI workflow.
+
+## Tech stack
+
+C# on .NET 10, WPF (MVVM), `Microsoft.Extensions.DependencyInjection`, Serilog, xUnit v3. Packages are pinned through
+central package management and lock files. The SDK is pinned to **10.0.402** in `global.json`.
+
+## Architecture
+
+A modular monolith with dependencies pointing inward:
+
+```
+src/
+  Lunar.Domain          pure business rules, no UI / OS / I/O
+  Lunar.Application     use cases, models and ports (interfaces); depends only on Domain
+  Lunar.Windows         Windows API adapters (display, audio, network, media) implementing Application ports
+  Lunar.Conversion      file conversion adapters
+  Lunar.Infrastructure  settings, logging, single-instance coordination
+  Lunar.Desktop         WPF views, view models, themes, composition root (the executable)
+tests/                  one test project per layer; architecture tests enforce the reference rules
+scripts/                build.ps1, test.ps1, package.ps1
 ```
 
-The same checks as scripts (what CI runs; see [docs/CI.md](docs/CI.md)): `./scripts/build.ps1`, then
-`./scripts/test.ps1 -Suite Gate -NoBuild`, and `./scripts/package.ps1 -NoBuild` for an unsigned build-output archive.
+The adapter projects (`Windows`, `Conversion`, `Infrastructure`) do not reference `Desktop` or each other. View models
+never call native, file or persistence APIs directly. These rules are checked by tests in every test project.
 
-For a system-installed matching SDK, use `dotnet` and omit `DOTNET_ROOT` above.
-`Lunar.sln` contains the six canonical production projects and six test projects.
-Production output is `bin/<project>/Release/<tfm>/`; intermediate files are isolated
-under `obj/<project>/`. SDK analyzers, nullable checks, deterministic output and
-warning-as-error policy apply to the scaffold; tests use centrally pinned xUnit v3
-with MTP disabled, Test SDK and VSTest adapter packages.
+## Requirements
 
-Desktop is currently a **WPF library**, with no production entry point or shell.
-It deliberately excludes retained discovery App/window/tray sources. FE-02/BE-05
-will introduce the executable; MVVM/DI, shell, tray, positioning, settings and state
-machine implementation remain assigned tasks. The current tests enforce architecture
-and do not prove those behaviors. See [test scope](tests/README.md).
+- Windows 10 or 11, x64
+- .NET SDK **10.0.402** with Windows Desktop support. `global.json` rejects other SDK versions. A portable copy
+  placed in `.tools/dotnet` is picked up automatically by the scripts (that folder is git-ignored).
+- PowerShell 5.1 or later
 
-## Run the Sprint 0 spike
-
-Windows x64, interactive desktop, SDK **10.0.402** with WindowsDesktop support. The inspected system default SDK is 9.0.306. A verified portable SDK is available locally at `.tools/dotnet/dotnet.exe`; it is ignored and not part of source distribution. Other checkouts must supply this exact SDK or review an intentional pin update. Use an ordinary standard-user development shell; no elevated runtime is required.
+## Build, test and run
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-Sprint0.ps1 -WindowSmoke
+./scripts/build.ps1                          # locked restore, Release build (warnings are errors), format check
+./scripts/test.ps1 -Suite Gate -NoBuild      # unit tests plus architecture checks of every project
+./scripts/test.ps1 -Suite Hardware -NoBuild  # Windows integration and WPF UI tests (need an interactive desktop)
+./scripts/package.ps1 -NoBuild               # unsigned archive of the build output (not an installer)
 ```
 
-Restores SDK-managed dependencies, builds both temporary projects, reads Windows capabilities and shows a five-second WPF window. Omit `-WindowSmoke` for build/native probes only. The runner writes a fresh timestamped directory under `docs/evidence/sprint-0/`, redacts workspace/profile paths from build logs and does not change volume, radios, playback, startup or registry. Read each probe result; runner exit 0 alone does not prove every capability.
-
-For an interactive prototype after building:
+Run the app from the build output:
 
 ```powershell
-.\.tools\dotnet\dotnet.exe src\Lunar.Desktop\bin\Release\net10.0-windows\Lunar.Desktop.Spike.dll
+dotnet run --project src/Lunar.Desktop -c Release
 ```
 
-Tray offers Open prototype and Exit. It has no settings, animated eyes, controls, media UI or converter. Mouse/focus/tray/manual OS/DPI matrix cases remain unverified. The floating prototype remains until Exit or keyboard Escape after intentional activation; the smoke command exits itself.
+Raw `dotnet restore / build / test Lunar.sln` also works. Use `--locked-mode` for restore to honour the lock files.
 
-See [observed results and failures](docs/SPIKE_RESULTS.md), [documentation index](docs/README.md), [accepted ADRs](docs/ADR/README.md) and [limitations/manual matrix](docs/COMPATIBILITY.md). [User-approved ADR-0005 and Sprint 0 closure](docs/evidence/sprint-0/closure-20261027/APPROVAL.md) retain explicit later-task validation deadlines. The later BE-01 assignment authorizes only that task. Prototype reuse requires review/refactoring and acceptance verification.
+## Continuous integration
 
-The authorized Sprint 0 continuation added a disposable converter CLI, dependency/signature/advisory evidence and scoped synthetic image/PDF/DOCX-embedding experiments. See [converter results/reproduction](docs/CONVERTER_DISCOVERY.md) and [exit review](docs/SPRINT_0_EXIT_REVIEW.md). User accepted five ADRs and discovery closure on 2026-10-27; DOCX fidelity and target/manual shell evidence remain unverified with tracked deadlines. That closure was documentation/evidence-check maintenance only; the subsequent BE-01 assignment separately authorizes the current scaffold.
+GitHub Actions (`.github/workflows/ci.yml`) runs on `windows-2022` and `windows-latest`. The `build-and-test` jobs
+are the pull-request gate (build, analyzers, format, unit and architecture tests, packaging). A separate non-blocking
+job runs the tests that need a Windows desktop session. See [docs/CI.md](docs/CI.md). Blocking merges on failure
+requires a branch protection rule in the repository settings.
+
+## Privacy and security
+
+Everything runs locally. Lunar does not upload files, send telemetry or check for updates. Logs are code-only
+events, never file names, document contents, Wi-Fi details or listening history. See [docs/PRIVACY.md](docs/PRIVACY.md)
+and [docs/SECURITY.md](docs/SECURITY.md).
+
+## Roadmap
+
+1. Foundation: solution, shell, tray, settings, logging, CI (done)
+2. Eyes: animated vector eyes
+3. Island navigation: expand / collapse and swipeable pages
+4. System controls: volume, Wi-Fi, Bluetooth, clock
+5. Media sessions
+6. File conversion
+7. Accessibility, performance, installer and release
+
+## License
+
+No license has been chosen yet, so all rights are reserved by default. Third-party components and their licenses are
+listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
