@@ -5,6 +5,7 @@ using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Composition;
+using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,7 +85,7 @@ public partial class App : System.Windows.Application
         var settings = loaded.IsSuccess ? loaded.Value.Settings : LunarSettings.Defaults;
 
         var viewModel = _services.GetRequiredService<IslandViewModel>();
-        _window = new IslandWindow { DataContext = viewModel };
+        _window = new IslandWindow { DataContext = viewModel, ViewContent = new EyesView() };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
         _position.Start(); // placed before it is shown; a listener failure is logged inside and the window stays placed

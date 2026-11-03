@@ -1,0 +1,66 @@
+<UserControl x:Class="Lunar.Desktop.Features.Eyes.EyesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             Focusable="False" IsTabStop="False"
+             SnapsToDevicePixels="False" UseLayoutRounding="False"
+             automation:AutomationProperties.Name="Lunar eyes">
+  <!--
+    FE-07: the paired eyes as pure vector geometry (no bitmap, no GIF), so edges stay crisp at any DPI.
+    The artwork is drawn on a fixed 62x26 logical grid inside a Viewbox, so it scales with the pill. Colors come only
+    from the theme brushes (high contrast follows the palette swap).
+    Animation hooks for FE-08 / FE-09 (this task adds no motion): each eye has a Pupil translate (gaze) and an
+    Eyelid scale (blink; 0 = open, 1 = closed). Names are LeftEyelid / RightEyelid, LeftPupilOffset / RightPupilOffset.
+  -->
+  <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid Width="62" Height="26" Background="Transparent">
+      <Grid.Resources>
+        <!-- One eye outline, reused as the clip for the pupil and the eyelid so neither can draw outside the eye. -->
+        <EllipseGeometry x:Key="EyeOutline" Center="12,13" RadiusX="12" RadiusY="13" />
+      </Grid.Resources>
+
+      <!-- Left eye -->
+      <Grid Width="24" Height="26" HorizontalAlignment="Left">
+        <Ellipse Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
+        <Grid Clip="{StaticResource EyeOutline}">
+          <Grid Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+              <TranslateTransform x:Name="LeftPupilOffset" />
+            </Grid.RenderTransform>
+            <Ellipse Fill="{DynamicResource Lunar.Brush.Background}" />
+            <!-- Specular highlight: the "pupil highlight" that gives the eye life. -->
+            <Ellipse Width="4" Height="4" Margin="2,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
+          </Grid>
+          <Rectangle x:Name="LeftEyelid" Fill="{DynamicResource Lunar.Brush.Surface}" VerticalAlignment="Stretch"
+                     RenderTransformOrigin="0.5,0">
+            <Rectangle.RenderTransform>
+              <ScaleTransform ScaleY="0" />
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+      </Grid>
+
+      <!-- Right eye -->
+      <Grid Width="24" Height="26" HorizontalAlignment="Right">
+        <Ellipse Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
+        <Grid Clip="{StaticResource EyeOutline}">
+          <Grid Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+              <TranslateTransform x:Name="RightPupilOffset" />
+            </Grid.RenderTransform>
+            <Ellipse Fill="{DynamicResource Lunar.Brush.Background}" />
+            <Ellipse Width="4" Height="4" Margin="2,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
+          </Grid>
+          <Rectangle x:Name="RightEyelid" Fill="{DynamicResource Lunar.Brush.Surface}" VerticalAlignment="Stretch"
+                     RenderTransformOrigin="0.5,0">
+            <Rectangle.RenderTransform>
+              <ScaleTransform ScaleY="0" />
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+      </Grid>
+    </Grid>
+  </Viewbox>
+</UserControl>
