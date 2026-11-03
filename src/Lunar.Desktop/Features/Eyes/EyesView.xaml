@@ -7,12 +7,12 @@
              automation:AutomationProperties.Name="Lunar eyes">
   <!--
     FE-07: the paired eyes as pure vector geometry (no bitmap, no GIF), so edges stay crisp at any DPI.
-    The artwork is drawn on a fixed 62x26 logical grid inside a Viewbox, so it scales with the pill. Colors come only
+    The artwork is drawn on a fixed 62x26 logical grid inside a Viewbox, 20 DIP high, so the eyes stay well inside the 44 DIP pill (about 12 DIP of margin above and below) and scale crisply with DPI. Colors come only
     from the theme brushes (high contrast follows the palette swap).
     Animation hooks for FE-08 / FE-09 (this task adds no motion): each eye has a Pupil translate (gaze) and an
     Eyelid scale (blink; 0 = open, 1 = closed). Names are LeftEyelid / RightEyelid, LeftPupilOffset / RightPupilOffset.
   -->
-  <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Center" VerticalAlignment="Center">
+  <Viewbox Stretch="Uniform" StretchDirection="Both" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
     <Grid Width="62" Height="26" Background="Transparent">
       <Grid.Resources>
         <!-- One eye outline, reused as the clip for the pupil and the eyelid so neither can draw outside the eye. -->

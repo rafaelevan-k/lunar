@@ -1,6 +1,7 @@
 <Window x:Class="Lunar.Desktop.Shell.IslandWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Lunar.Desktop.Shell"
         xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
         Title="Lunar"
         Width="160" Height="44"
@@ -9,16 +10,20 @@
         WindowStartupLocation="Manual" UseLayoutRounding="True"
         automation:AutomationProperties.Name="Lunar"
         automation:AutomationProperties.ItemStatus="{Binding StatusText, Mode=OneWay}">
+  <Window.Resources>
+    <local:StadiumRadiusConverter x:Key="StadiumRadius" />
+  </Window.Resources>
   <!-- The pill. Width and Height are the idle size; IslandPositionController sets size limits (FE-03) and position (FE-05). -->
   <Border x:Name="Pill"
           Background="{DynamicResource Lunar.Brush.Background}"
           BorderBrush="{DynamicResource Lunar.Brush.Border}"
           BorderThickness="1"
           SnapsToDevicePixels="True">
-    <!-- Pill radius while idle, panel radius in every expanded layout (PRD §3.5). -->
+    <!-- Idle: a stadium whose ends are exact semicircles (radius = half the height), like the iPhone Dynamic Island.
+         Every expanded layout uses the panel radius (PRD §3.5). -->
     <Border.Style>
       <Style TargetType="Border">
-        <Setter Property="CornerRadius" Value="{DynamicResource Lunar.Radius.Pill}" />
+        <Setter Property="CornerRadius" Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource StadiumRadius}}" />
         <Style.Triggers>
           <DataTrigger Binding="{Binding IsExpandedLayout}" Value="True">
             <Setter Property="CornerRadius" Value="{DynamicResource Lunar.Radius.Panel}" />

@@ -29,6 +29,7 @@ public partial class App : System.Windows.Application
     private IslandWindow? _window;
     private IslandPositionController? _position;
     private TrayController? _tray;
+    private EyeAnimationController? _eyes;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -85,7 +86,16 @@ public partial class App : System.Windows.Application
         var settings = loaded.IsSuccess ? loaded.Value.Settings : LunarSettings.Defaults;
 
         var viewModel = _services.GetRequiredService<IslandViewModel>();
-        _window = new IslandWindow { DataContext = viewModel, ViewContent = new EyesView() };
+        var eyesView = new EyesView();
+        // Reduced motion: either the Lunar setting or Windows "Show animations" turned off. Read once at startup.
+        _eyes = new EyeAnimationController(new DispatcherEyeTimer(), SystemRandomSource.Instance, TimeProvider.System)
+        {
+            ReduceMotion = settings.Appearance.ReduceMotion || !SystemParameters.ClientAreaAnimation
+        };
+        eyesView.Attach(_eyes);
+        if (settings.Appearance.EyeAnimationEnabled)
+            _eyes.Start();
+        _window = new IslandWindow { DataContext = viewModel, ViewContent = eyesView };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
         _position.Start(); // placed before it is shown; a listener failure is logged inside and the window stays placed
@@ -110,6 +120,8 @@ public partial class App : System.Windows.Application
             _instance.ActivationRequested -= OnActivationRequested;
         _tray?.Dispose();
         _tray = null;
+        _eyes?.Dispose();
+        _eyes = null;
         _position?.Dispose();
         _position = null;
         _instance?.Dispose();

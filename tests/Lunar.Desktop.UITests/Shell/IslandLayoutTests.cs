@@ -317,7 +317,9 @@ public sealed class IslandLayoutTests
             try
             {
                 var pill = Assert.IsType<Border>(window.Content);
-                Assert.Equal(new CornerRadius(999), pill.CornerRadius);
+                window.UpdateLayout();
+                Assert.True(pill.ActualHeight > 0);
+                Assert.Equal(new CornerRadius(pill.ActualHeight / 2), pill.CornerRadius); // stadium: semicircular ends
 
                 viewModel.Toggle();
                 Assert.Equal(new CornerRadius(24), pill.CornerRadius);
@@ -325,7 +327,8 @@ public sealed class IslandLayoutTests
                 viewModel.CompleteExpansion();
                 viewModel.Collapse();
                 viewModel.CompleteCollapse();
-                Assert.Equal(new CornerRadius(999), pill.CornerRadius);
+                window.UpdateLayout();
+                Assert.Equal(new CornerRadius(pill.ActualHeight / 2), pill.CornerRadius);
             }
             finally
             {
