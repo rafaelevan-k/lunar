@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using Lunar.Desktop.Behaviors;
+using Lunar.Desktop.Controls;
 using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Navigation;
 
@@ -35,16 +37,29 @@ public sealed class IslandShellView : Grid, IDisposable
         // The eyes strip is exactly the idle pill: its height minus the pill's one-pixel border on each side.
         RowDefinitions.Add(new RowDefinition { Height = new GridLength(IslandLayout.IdleHeight - 2) });
         RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         SetRow(eyes, 0);
         SetRow(swiper, 1);
         Children.Add(eyes);
         Children.Add(swiper);
+
+        // The island's recoverable error, in place under the pages; it takes no room while there is no error.
+        Error = new InlineError();
+        Error.SetBinding(InlineError.MessageProperty, new System.Windows.Data.Binding(nameof(IslandViewModel.ErrorMessage)) { Source = viewModel });
+        Error.SetBinding(InlineError.DismissCommandProperty, new System.Windows.Data.Binding(nameof(IslandViewModel.DismissErrorCommand)) { Source = viewModel });
+        SetRow(Error, 2);
+        Children.Add(Error);
+
+        // Every reusable control below reads reduced motion from here.
+        Motion.SetReduceMotion(this, reduceMotion);
 
         Apply(viewModel.IsExpanded, animate: false);
         viewModel.PropertyChanged += OnViewModelChanged;
     }
 
     public SwiperView Swiper { get; }
+
+    public InlineError Error { get; }
 
     public void Dispose()
     {

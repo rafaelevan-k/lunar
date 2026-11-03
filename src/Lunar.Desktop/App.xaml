@@ -10,6 +10,7 @@
         <ResourceDictionary Source="Themes/Typography.xaml" />
         <ResourceDictionary Source="Themes/Spacing.xaml" />
         <ResourceDictionary Source="Themes/Components.xaml" />
+        <ResourceDictionary Source="Controls/ControlStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>
