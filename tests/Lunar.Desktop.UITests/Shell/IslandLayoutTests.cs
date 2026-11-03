@@ -228,7 +228,10 @@ public sealed class IslandLayoutTests
     [Fact]
     public void ContentIsMeasuredAndTheWindowGrowsToFitIt() => RunOnSta(() =>
     {
-        var (window, viewModel, controller, _) = Start();
+        // A small fake display: Windows caps a real window at the real screen (a hosted CI runner's is small), so the
+        // work area the test asserts against must fit any screen.
+        var dpi = (int)Math.Round(VisualTreeHelper.GetDpi(new IslandWindow()).DpiScaleX * 96);
+        var (window, viewModel, controller, _) = Start([Display(800, 600, dpi)]);
         using (controller)
         {
             window.Show();
