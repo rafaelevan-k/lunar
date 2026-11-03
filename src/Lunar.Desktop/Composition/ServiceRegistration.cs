@@ -37,8 +37,10 @@ public static class ServiceRegistration
             new SingleInstanceCoordinator(InstanceName, sp.GetRequiredService<IDiagnosticLog>()));
 
         // Presentation state is per window, so each window resolves its own state machine and view model.
-        // SystemClock stands in for the Windows clock adapter (BE-14).
-        services.AddSingleton<IClock>(SystemClock.Instance);
+        // One Windows clock serves both ports: plain local time (IClock) and time zone plus regional format (ILocaleClock).
+        services.AddSingleton<WindowsClock>(sp => new WindowsClock(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IClock>(sp => sp.GetRequiredService<WindowsClock>());
+        services.AddSingleton<ILocaleClock>(sp => sp.GetRequiredService<WindowsClock>());
         services.AddTransient<TransitionIsland>(sp => new TransitionIsland(sp.GetRequiredService<IClock>()));
         services.AddTransient<IslandViewModel>(sp => new IslandViewModel(sp.GetRequiredService<TransitionIsland>()));
 

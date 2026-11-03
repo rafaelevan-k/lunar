@@ -48,7 +48,8 @@ public sealed class WindowsSettingsLauncher : ISystemSettingsLauncher
             _start(uri);
             return Task.FromResult(Result.Success());
         }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException or PlatformNotSupportedException)
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException or PlatformNotSupportedException
+            or UnauthorizedAccessException or NotSupportedException or ObjectDisposedException or ArgumentException)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "settings.open.failed", "Settings", "Open",
                 ErrorCode.IoFailure, ExceptionType: ex.GetType()));

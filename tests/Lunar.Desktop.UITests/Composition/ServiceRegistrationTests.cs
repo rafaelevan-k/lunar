@@ -83,6 +83,22 @@ public sealed class ServiceRegistrationTests
     }
 
     [Fact]
+    public void OneWindowsClockServesBothClockPorts()
+    {
+        using var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var clock = provider.GetRequiredService<IClock>();
+        var localeClock = provider.GetRequiredService<ILocaleClock>();
+
+        Assert.Same(clock, localeClock);
+        Assert.Same(clock, provider.GetRequiredService<IClock>());
+        Assert.IsType<WindowsClock>(clock);
+        Assert.NotNull(localeClock.Culture);
+        Assert.NotNull(localeClock.TimeZone);
+    }
+
+    [Fact]
     public void DiagnosticLogIsOneSharedSingletonBackedBySerilog()
     {
         var directory = Path.Combine(Path.GetTempPath(), "Lunar.Tests." + Guid.NewGuid().ToString("N"));

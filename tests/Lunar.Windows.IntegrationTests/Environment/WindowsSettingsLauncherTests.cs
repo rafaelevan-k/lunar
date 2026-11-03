@@ -72,4 +72,55 @@ public sealed class WindowsSettingsLauncherTests
         Assert.Equal(ErrorCode.IoFailure, result.Error!.Code);
         Assert.True(result.Error.Retryable);
     }
+
+    [Theory]
+    [InlineData(typeof(Win32Exception))]
+    [InlineData(typeof(InvalidOperationException))]
+    [InlineData(typeof(IOException))]
+    [InlineData(typeof(PlatformNotSupportedException))]
+    [InlineData(typeof(UnauthorizedAccessException))]
+    [InlineData(typeof(NotSupportedException))]
+    [InlineData(typeof(ObjectDisposedException))]
+    [InlineData(typeof(ArgumentException))]
+    public async Task EveryExpectedLaunchFailureIsAFailedResultNotACrash(Type exceptionType)
+    {
+        var log = new CollectingLog();
+        var launcher = new WindowsSettingsLauncher(_ => throw (Exception)(exceptionType == typeof(ObjectDisposedException)
+            ? new ObjectDisposedException("shell")
+            : Activator.CreateInstance(exceptionType)!), log);
+
+        var result = await launcher.OpenAsync(SettingsPage.Bluetooth, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorCode.IoFailure, result.Error!.Code);
+        Assert.True(result.Error.Retryable);
+        Assert.DoesNotContain("ms-settings", result.Error.SafeMessage); // nothing internal reaches the user
+        var logged = Assert.Single(log.Events);
+        Assert.Equal(exceptionType, logged.ExceptionType);
+    }
+
+    [Fact]
+    public async Task AnUnexpectedProgrammingFaultIsNotHiddenAsAFailedResult()
+    {
+        var launcher = new WindowsSettingsLauncher(_ => throw new DivideByZeroException());
+
+        await Assert.ThrowsAsync<DivideByZeroException>(() => launcher.OpenAsync(SettingsPage.Wifi, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task TheLauncherStaysUsableAfterAFailure()
+    {
+        var calls = 0;
+        var launcher = new WindowsSettingsLauncher(_ => { if (calls++ == 0) throw new Win32Exception(); });
+
+        Assert.True((await launcher.OpenAsync(SettingsPage.Wifi, CancellationToken.None)).IsFailure);
+        Assert.True((await launcher.OpenAsync(SettingsPage.Wifi, CancellationToken.None)).IsSuccess);
+    }
+
+    private sealed class CollectingLog : Lunar.Application.Abstractions.Diagnostics.IDiagnosticLog
+    {
+        public List<Lunar.Application.Abstractions.Diagnostics.DiagnosticEvent> Events { get; } = [];
+
+        public void Write(Lunar.Application.Abstractions.Diagnostics.DiagnosticEvent diagnosticEvent) => Events.Add(diagnosticEvent);
+    }
 }
