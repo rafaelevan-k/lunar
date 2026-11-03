@@ -10,27 +10,25 @@
         WindowStartupLocation="Manual" UseLayoutRounding="True"
         automation:AutomationProperties.Name="Lunar"
         automation:AutomationProperties.ItemStatus="{Binding StatusText, Mode=OneWay}">
+  <Window.InputBindings>
+    <!-- Escape collapses the island whenever the window has keyboard focus (the guards are the state machine's). -->
+    <KeyBinding Key="Escape" Command="{Binding CollapseCommand}" />
+  </Window.InputBindings>
   <Window.Resources>
     <local:StadiumRadiusConverter x:Key="StadiumRadius" />
   </Window.Resources>
-  <!-- The pill. Width and Height are the idle size; IslandPositionController sets size limits (FE-03) and position (FE-05). -->
-  <Border x:Name="Pill"
+  <!-- The pill. At rest it fills the window, whose size IslandPositionController sets (FE-03, FE-05). While the island
+       expands or collapses IslandWindow.AnimatePill gives it an explicit size that glides between idle and expanded (FE-10). -->
+  <Border x:Name="Pill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
           Background="{DynamicResource Lunar.Brush.Background}"
           BorderBrush="{DynamicResource Lunar.Brush.Border}"
           BorderThickness="1"
           SnapsToDevicePixels="True">
-    <!-- Idle: a stadium whose ends are exact semicircles (radius = half the height), like the iPhone Dynamic Island.
-         Every expanded layout uses the panel radius (PRD §3.5). -->
-    <Border.Style>
-      <Style TargetType="Border">
-        <Setter Property="CornerRadius" Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource StadiumRadius}}" />
-        <Style.Triggers>
-          <DataTrigger Binding="{Binding IsExpandedLayout}" Value="True">
-            <Setter Property="CornerRadius" Value="{DynamicResource Lunar.Radius.Panel}" />
-          </DataTrigger>
-        </Style.Triggers>
-      </Style>
-    </Border.Style>
+    <!-- Radius is half the height up to the panel radius: a stadium while idle (like the iPhone Dynamic Island), 24 DIP
+         in every expanded layout (PRD §3.5), and it follows the height smoothly while the pill grows or shrinks. -->
+    <Border.CornerRadius>
+      <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" Converter="{StaticResource StadiumRadius}" />
+    </Border.CornerRadius>
     <!-- Single view host: later features (eyes, pages) are presented here. -->
     <ContentControl x:Name="ViewHost" Focusable="False" IsTabStop="False" />
   </Border>

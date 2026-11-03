@@ -65,15 +65,15 @@ public sealed class IslandViewModelTests
     [InlineData(IslandVisualState.Idle, "Collapse", false, IslandVisualState.Idle)]
     [InlineData(IslandVisualState.Idle, "CompleteExpansion", false, IslandVisualState.Idle)]
     [InlineData(IslandVisualState.Idle, "CompleteCollapse", false, IslandVisualState.Idle)]
-    [InlineData(IslandVisualState.Expanding, "Toggle", false, IslandVisualState.Expanding)]
-    [InlineData(IslandVisualState.Expanding, "Collapse", false, IslandVisualState.Expanding)]
+    [InlineData(IslandVisualState.Expanding, "Toggle", true, IslandVisualState.Collapsing)] // a click reverses a running animation
+    [InlineData(IslandVisualState.Expanding, "Collapse", true, IslandVisualState.Collapsing)]
     [InlineData(IslandVisualState.Expanding, "CompleteExpansion", true, IslandVisualState.Expanded)]
     [InlineData(IslandVisualState.Expanding, "CompleteCollapse", false, IslandVisualState.Expanding)]
     [InlineData(IslandVisualState.Expanded, "Toggle", true, IslandVisualState.Collapsing)]
     [InlineData(IslandVisualState.Expanded, "Collapse", true, IslandVisualState.Collapsing)]
     [InlineData(IslandVisualState.Expanded, "CompleteExpansion", false, IslandVisualState.Expanded)]
     [InlineData(IslandVisualState.Expanded, "CompleteCollapse", false, IslandVisualState.Expanded)]
-    [InlineData(IslandVisualState.Collapsing, "Toggle", false, IslandVisualState.Collapsing)]
+    [InlineData(IslandVisualState.Collapsing, "Toggle", true, IslandVisualState.Expanding)]
     [InlineData(IslandVisualState.Collapsing, "Collapse", false, IslandVisualState.Collapsing)]
     [InlineData(IslandVisualState.Collapsing, "CompleteExpansion", false, IslandVisualState.Collapsing)]
     [InlineData(IslandVisualState.Collapsing, "CompleteCollapse", true, IslandVisualState.Idle)]
@@ -113,7 +113,7 @@ public sealed class IslandViewModelTests
         Assert.Equal(
             [nameof(IslandViewModel.State), nameof(IslandViewModel.IsExpanded), nameof(IslandViewModel.IsExpandedLayout),
                 nameof(IslandViewModel.StatusText),
-                nameof(IslandViewModel.CanToggle), nameof(IslandViewModel.CanCollapse)],
+                nameof(IslandViewModel.CanToggle), nameof(IslandViewModel.CanCollapse), nameof(IslandViewModel.TransitionId)],
             changes);
     }
 
@@ -264,17 +264,89 @@ public sealed class IslandViewModelTests
         Assert.False(vm.CollapseCommand.CanExecute(null));
 
         vm.ToggleCommand.Execute(null); // Idle -> Expanding
-        Assert.False(vm.ToggleCommand.CanExecute(null));
-        vm.ToggleCommand.Execute(null); // ignored while animating
-        Assert.Equal(IslandVisualState.Expanding, vm.State);
+        Assert.True(vm.ToggleCommand.CanExecute(null)); // a click can always act now
+        Assert.True(vm.CollapseCommand.CanExecute(null)); // and Escape can reverse the expansion
+        vm.ToggleCommand.Execute(null); // reverses at once
+        Assert.Equal(IslandVisualState.Collapsing, vm.State);
+        Assert.False(vm.CollapseCommand.CanExecute(null)); // nothing left to collapse
 
+        vm.ToggleCommand.Execute(null); // reverses again
+        Assert.Equal(IslandVisualState.Expanding, vm.State);
         vm.CompleteExpansion();
-        Assert.True(vm.CollapseCommand.CanExecute(null));
         vm.CollapseCommand.Execute(null);
 
         Assert.Equal(IslandVisualState.Collapsing, vm.State);
-        Assert.Equal(3, toggleNotices);
-        Assert.Equal(3, collapseNotices);
+        Assert.Equal(5, toggleNotices); // one per accepted transition
+        Assert.Equal(5, collapseNotices);
+    }
+
+    [Fact]
+    public void EachAnimationHasItsOwnIdAndAStaleCompletionChangesNothing()
+    {
+        var vm = new IslandViewModel();
+        vm.Toggle();
+        var expandId = vm.TransitionId;
+        vm.Toggle(); // interrupts: Collapsing with a new id
+        var collapseId = vm.TransitionId;
+        var changes = Changes(vm);
+
+        Assert.NotEqual(expandId, collapseId);
+        Assert.False(vm.CompleteExpansion(expandId)); // the interrupted animation reports late
+        Assert.Equal(IslandVisualState.Collapsing, vm.State);
+        Assert.Empty(changes);
+
+        Assert.True(vm.CompleteCollapse(collapseId));
+        Assert.Equal(IslandVisualState.Idle, vm.State);
+        Assert.Equal(0, vm.TransitionId);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(9)]
+    [InlineData(500)]
+    public void RapidClicksNeverCorruptTheState(int clicks)
+    {
+        var vm = new IslandViewModel();
+
+        for (var i = 0; i < clicks; i++)
+            Assert.True(vm.Toggle());
+
+        Assert.Equal(clicks % 2 == 1 ? IslandVisualState.Expanding : IslandVisualState.Collapsing, vm.State);
+        Assert.True(vm.IsExpandedLayout);
+        Assert.NotEqual(0, vm.TransitionId);
+
+        if (clicks % 2 == 1)
+            Assert.True(vm.CompleteExpansion());
+        else
+            Assert.True(vm.CompleteCollapse());
+        Assert.Equal(clicks % 2 == 1 ? IslandVisualState.Expanded : IslandVisualState.Idle, vm.State);
+    }
+
+    [Fact]
+    public void ListenersMayCallBackIntoTheViewModelFromANotification()
+    {
+        var vm = new IslandViewModel();
+        var seenStates = new List<IslandVisualState>();
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(IslandViewModel.TransitionId) && vm.State == IslandVisualState.Expanding)
+                vm.CompleteExpansion(vm.TransitionId); // a view that completes at once (reduced motion)
+            if (e.PropertyName == nameof(IslandViewModel.State))
+                seenStates.Add(vm.State);
+        };
+
+        vm.Toggle();
+
+        Assert.Equal(IslandVisualState.Expanded, vm.State);
+        Assert.Contains(IslandVisualState.Expanding, seenStates);
+    }
+
+    [Fact]
+    public void ConstructorRejectsNullAndTheDefaultOneWorks()
+    {
+        Assert.Throws<ArgumentNullException>(() => new IslandViewModel(null!));
+        Assert.Equal(IslandVisualState.Idle, new IslandViewModel().State);
     }
 
     [Fact]
@@ -336,7 +408,9 @@ public sealed class IslandViewModelTests
                 Assert.False(vm.IsBusy);
             if (!accepted)
                 Assert.Equal(before, vm.State);
-            Assert.Equal(vm.State != IslandVisualState.Collapsing && vm.State != IslandVisualState.Expanding, vm.CanToggle);
+            Assert.True(vm.CanToggle);
+            Assert.Equal(vm.State is IslandVisualState.Expanding or IslandVisualState.Expanded or IslandVisualState.Busy, vm.CanCollapse);
+            Assert.Equal(vm.State is IslandVisualState.Expanding or IslandVisualState.Collapsing, vm.TransitionId != 0);
         }
     }
 

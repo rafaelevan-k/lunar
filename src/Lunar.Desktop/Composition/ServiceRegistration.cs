@@ -2,6 +2,7 @@ using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Shell.UseCases;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Settings;
@@ -35,8 +36,11 @@ public static class ServiceRegistration
         services.AddSingleton<IInstanceCoordinator>(sp =>
             new SingleInstanceCoordinator(InstanceName, sp.GetRequiredService<IDiagnosticLog>()));
 
-        // Presentation state is per window, so each window resolves its own view model.
-        services.AddTransient<IslandViewModel>();
+        // Presentation state is per window, so each window resolves its own state machine and view model.
+        // SystemClock stands in for the Windows clock adapter (BE-14).
+        services.AddSingleton<IClock>(SystemClock.Instance);
+        services.AddTransient<TransitionIsland>(sp => new TransitionIsland(sp.GetRequiredService<IClock>()));
+        services.AddTransient<IslandViewModel>(sp => new IslandViewModel(sp.GetRequiredService<TransitionIsland>()));
 
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
 

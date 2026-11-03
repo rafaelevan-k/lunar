@@ -1,25 +1,35 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using Lunar.Application.Shell.Models;
+using Lunar.Application.Shell.UseCases;
+using Lunar.Desktop.Composition;
 using Lunar.Domain.Shared;
 
 namespace Lunar.Desktop.Shell;
 
 /// <summary>
-/// Presentation state of the island (FE-04): the visual state, a background-busy flag and an inline error, with
-/// commands for the view. It makes no OS, file or settings calls and owns no timers: the view reports when an
-/// animation has finished, so every transition is a pure, deterministic function of the current state and the
-/// request. A request that does not apply in the current state is ignored and reported by returning false.
-/// Must be used on the UI thread. Guards (dialog open, drag, focus), debouncing, interruption of a running
-/// animation and time are BE-09; until then a request made while an animation runs is ignored.
+/// Presentation state of the island (FE-04, driven by the BE-09 state machine since FE-10): the visual state, a
+/// background-busy flag and an inline error, with commands for the view. Transitions are validated by
+/// <see cref="TransitionIsland"/>; this class only adapts them for binding. It makes no OS, file or settings calls and
+/// owns no timers: the view reports when an animation has finished, together with the animation's
+/// <see cref="TransitionId"/>, so a completion that belongs to an interrupted animation is ignored. A request that
+/// does not apply in the current state is ignored and reported by returning false. Property change notifications
+/// are raised after the state machine has finished its own notification, so a listener can safely call back into
+/// this view model. Must be used on the UI thread.
 /// </summary>
 public sealed class IslandViewModel : INotifyPropertyChanged
 {
-    private IslandVisualState _state = IslandVisualState.Idle;
-    private bool _isBusy;
+    private readonly TransitionIsland _island;
     private string? _errorMessage;
 
     public IslandViewModel()
+        : this(new TransitionIsland(SystemClock.Instance))
     {
+    }
+
+    public IslandViewModel(TransitionIsland island)
+    {
+        _island = island ?? throw new ArgumentNullException(nameof(island));
         ToggleCommand = new RelayCommand(() => Toggle(), () => CanToggle);
         CollapseCommand = new RelayCommand(() => Collapse(), () => CanCollapse);
         DismissErrorCommand = new RelayCommand(DismissError, () => HasError);
@@ -27,19 +37,29 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public IslandVisualState State => _state;
+    public IslandVisualState State => _island.State switch
+    {
+        IslandState.Expanding => IslandVisualState.Expanding,
+        IslandState.Expanded => IslandVisualState.Expanded,
+        IslandState.Collapsing => IslandVisualState.Collapsing,
+        IslandState.Busy => IslandVisualState.Busy,
+        _ => IslandVisualState.Idle // Idle, and Closing (this view model never starts it)
+    };
+
+    /// <summary>Identifies the running animation (zero when none); the view passes it back when the animation ends.</summary>
+    public long TransitionId => _island.TransitionId;
 
     /// <summary>True while fully expanded (Expanded or Busy); false during both animations.</summary>
-    public bool IsExpanded => _state is IslandVisualState.Expanded or IslandVisualState.Busy;
+    public bool IsExpanded => State is IslandVisualState.Expanded or IslandVisualState.Busy;
 
     /// <summary>
     /// The large layout is needed: true in every state except Idle, including both animations, so the window is
     /// never smaller than the content that is still being shown.
     /// </summary>
-    public bool IsExpandedLayout => _state != IslandVisualState.Idle;
+    public bool IsExpandedLayout => State != IslandVisualState.Idle;
 
     /// <summary>A background job is active. It survives a collapse, so an idle island can still be busy.</summary>
-    public bool IsBusy => _isBusy;
+    public bool IsBusy => _island.IsBusy;
 
     /// <summary>Recoverable failure shown inline; it never changes <see cref="State"/>.</summary>
     public string? ErrorMessage => _errorMessage;
@@ -47,7 +67,7 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     public bool HasError => _errorMessage is not null;
 
     /// <summary>Short plain-text status for assistive technology.</summary>
-    public string StatusText => _state switch
+    public string StatusText => State switch
     {
         IslandVisualState.Idle => "Collapsed",
         IslandVisualState.Expanding => "Expanding",
@@ -56,9 +76,11 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         _ => "Busy"
     };
 
-    public bool CanToggle => _state is IslandVisualState.Idle or IslandVisualState.Expanded or IslandVisualState.Busy;
+    /// <summary>A click can always act: it expands an idle island and reverses a running animation.</summary>
+    public bool CanToggle => _island.State != IslandState.Closing;
 
-    public bool CanCollapse => _state is IslandVisualState.Expanded or IslandVisualState.Busy;
+    /// <summary>Collapse applies while expanding (it reverses the expansion), expanded or busy.</summary>
+    public bool CanCollapse => State is IslandVisualState.Expanding or IslandVisualState.Expanded or IslandVisualState.Busy;
 
     public ICommand ToggleCommand { get; }
 
@@ -66,23 +88,26 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 
     public ICommand DismissErrorCommand { get; }
 
-    /// <summary>Idle starts expanding; expanded or busy starts collapsing; during an animation nothing happens.</summary>
-    public bool Toggle() => _state switch
-    {
-        IslandVisualState.Idle => Move(IslandVisualState.Expanding),
-        IslandVisualState.Expanded or IslandVisualState.Busy => Move(IslandVisualState.Collapsing),
-        _ => false
-    };
+    /// <summary>
+    /// Idle starts expanding; expanded or busy starts collapsing; during an animation the direction is reversed at
+    /// once, so rapid clicks cannot get stuck.
+    /// </summary>
+    public bool Toggle() => Apply(_island.Toggle());
 
-    /// <summary>Starts collapsing from expanded or busy (Escape, outside click); otherwise nothing happens.</summary>
-    public bool Collapse() => CanCollapse && Move(IslandVisualState.Collapsing);
+    /// <summary>Starts collapsing from expanded or busy (Escape), or reverses a running expansion.</summary>
+    public bool Collapse() => Apply(_island.Collapse());
 
-    /// <summary>The view reports that the expansion animation finished.</summary>
-    public bool CompleteExpansion() =>
-        _state == IslandVisualState.Expanding && Move(_isBusy ? IslandVisualState.Busy : IslandVisualState.Expanded);
+    /// <summary>The view reports that the current expansion animation finished.</summary>
+    public bool CompleteExpansion() => CompleteExpansion(_island.TransitionId);
 
-    /// <summary>The view reports that the collapse animation finished.</summary>
-    public bool CompleteCollapse() => _state == IslandVisualState.Collapsing && Move(IslandVisualState.Idle);
+    /// <summary>The view reports that expansion animation <paramref name="transitionId"/> finished.</summary>
+    public bool CompleteExpansion(long transitionId) => Apply(_island.CompleteExpansion(transitionId));
+
+    /// <summary>The view reports that the current collapse animation finished.</summary>
+    public bool CompleteCollapse() => CompleteCollapse(_island.TransitionId);
+
+    /// <summary>The view reports that collapse animation <paramref name="transitionId"/> finished.</summary>
+    public bool CompleteCollapse(long transitionId) => Apply(_island.CompleteCollapse(transitionId));
 
     /// <summary>
     /// Sets whether a background job is active. While expanded this switches between Expanded and Busy; in every
@@ -90,15 +115,13 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     /// </summary>
     public bool SetBusy(bool busy)
     {
-        if (_isBusy == busy)
+        var result = _island.SetBusy(busy);
+        if (!result.Accepted)
             return false;
 
-        _isBusy = busy;
         Raise(nameof(IsBusy));
-        if (_state == IslandVisualState.Expanded && busy)
-            Move(IslandVisualState.Busy);
-        else if (_state == IslandVisualState.Busy && !busy)
-            Move(IslandVisualState.Expanded);
+        if (result.Transition is not null)
+            RaiseStateChanged();
         return true;
     }
 
@@ -122,12 +145,19 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         ((RelayCommand)DismissErrorCommand).NotifyCanExecuteChanged();
     }
 
-    private bool Move(IslandVisualState next)
+    private bool Apply(IslandRequestResult result)
     {
-        if (_state == next)
+        if (result.Transition is null)
             return false;
 
-        _state = next;
+        RaiseStateChanged();
+        return true;
+    }
+
+    // TransitionId goes last on purpose: the view starts an animation when it changes, by which time the window
+    // has already been resized for the new layout (IsExpandedLayout comes before it).
+    private void RaiseStateChanged()
+    {
         Raise(nameof(State));
         Raise(nameof(IsExpanded));
         Raise(nameof(IsExpandedLayout));
@@ -136,7 +166,7 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         Raise(nameof(CanCollapse));
         ((RelayCommand)ToggleCommand).NotifyCanExecuteChanged();
         ((RelayCommand)CollapseCommand).NotifyCanExecuteChanged();
-        return true;
+        Raise(nameof(TransitionId));
     }
 
     private void Raise(string name) =>

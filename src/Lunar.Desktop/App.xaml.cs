@@ -30,6 +30,7 @@ public partial class App : System.Windows.Application
     private IslandPositionController? _position;
     private TrayController? _tray;
     private EyeAnimationController? _eyes;
+    private IslandTransitionController? _transition;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -89,33 +90,25 @@ public partial class App : System.Windows.Application
         var eyesView = new EyesView();
         // Motion is off when the Lunar setting says so, when idle eye animation is disabled, or when Windows has
         // "Show animations" turned off. Read once at startup.
+        var motionOff = settings.Appearance.ReduceMotion || !settings.Appearance.EyeAnimationEnabled || !SystemParameters.ClientAreaAnimation;
         _eyes = new EyeAnimationController(new DispatcherEyeTimer(), SystemRandomSource.Instance, TimeProvider.System)
         {
-            ReduceMotion = settings.Appearance.ReduceMotion || !settings.Appearance.EyeAnimationEnabled || !SystemParameters.ClientAreaAnimation
+            ReduceMotion = motionOff
         };
         eyesView.Attach(_eyes);
         _eyes.Start();
-        // Click opens or closes the island. FE-10 will animate the transition; until then it completes at once.
-        eyesView.ClickCommand = new RelayCommand(() => ToggleIsland(viewModel));
+        // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
+        eyesView.ClickCommand = viewModel.ToggleCommand;
         _window = new IslandWindow { DataContext = viewModel, ViewContent = eyesView };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
+        _transition = new IslandTransitionController(_window, viewModel, motionOff);
         _position.Start(); // placed before it is shown; a listener failure is logged inside and the window stays placed
         _window.Show();
 
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
-    }
-
-    private static void ToggleIsland(IslandViewModel viewModel)
-    {
-        if (!viewModel.Toggle())
-            return;
-        if (viewModel.State == IslandVisualState.Expanding)
-            viewModel.CompleteExpansion();
-        else if (viewModel.State == IslandVisualState.Collapsing)
-            viewModel.CompleteCollapse();
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
@@ -132,6 +125,8 @@ public partial class App : System.Windows.Application
             _instance.ActivationRequested -= OnActivationRequested;
         _tray?.Dispose();
         _tray = null;
+        _transition?.Dispose();
+        _transition = null;
         _eyes?.Dispose();
         _eyes = null;
         _position?.Dispose();
