@@ -6,6 +6,7 @@ using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Eyes;
+using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public partial class App : System.Windows.Application
     private TrayController? _tray;
     private EyeAnimationController? _eyes;
     private IslandTransitionController? _transition;
+    private IslandShellView? _shell;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -99,7 +101,11 @@ public partial class App : System.Windows.Application
         _eyes.Start();
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
-        _window = new IslandWindow { DataContext = viewModel, ViewContent = eyesView };
+        var navigation = new PageNavigationViewModel(["System", "Media", "File converter"]);
+        var swiper = new SwiperView();
+        swiper.Initialize(navigation, IslandShellView.CreatePlaceholderPages(navigation.Titles), motionOff);
+        _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
+        _window = new IslandWindow { DataContext = viewModel, ViewContent = _shell };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
         _transition = new IslandTransitionController(_window, viewModel, motionOff);
@@ -127,6 +133,8 @@ public partial class App : System.Windows.Application
         _tray = null;
         _transition?.Dispose();
         _transition = null;
+        _shell?.Dispose();
+        _shell = null;
         _eyes?.Dispose();
         _eyes = null;
         _position?.Dispose();
