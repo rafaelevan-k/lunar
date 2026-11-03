@@ -1,6 +1,0 @@
-{"Timestamp":"2026-10-26T19:56:32.4760491+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"CreateWordInstance"}
-{"Timestamp":"2026-10-26T19:56:34.0227565+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"CheckIsolation"}
-{"Timestamp":"2026-10-26T19:56:35.0662839+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"ConfigureOwnedInstance"}
-{"Timestamp":"2026-10-26T19:56:35.0747766+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"OpenSyntheticFixture"}
-{"Timestamp":"2026-10-26T19:56:35.8267324+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"ComputePageCount"}
-{"Timestamp":"2026-10-26T19:56:36.1203256+00:00","Experiment":"DOCX-WordReferencePhase","Phase":"ExportSyntheticPdf"}

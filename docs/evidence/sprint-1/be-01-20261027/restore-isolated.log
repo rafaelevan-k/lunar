@@ -1,6 +1,0 @@
-  Determining projects to restore...
-  Restored <repo>\src\Lunar.Windows\Lunar.Windows.csproj (in 145 ms).
-  Restored <repo>\src\Lunar.Desktop\Lunar.Desktop.csproj (in 102 ms).
-  Restored <repo>\tests\Lunar.Windows.IntegrationTests\Lunar.Windows.IntegrationTests.csproj (in 241 ms).
-  Restored <repo>\tests\Lunar.Desktop.UITests\Lunar.Desktop.UITests.csproj (in 198 ms).
-  8 of 12 projects are up-to-date for restore.

@@ -11,3 +11,15 @@ artifacts/
 local-inputs/
 local-output/
 *.private.log
+
+# Internal planning, status and evidence documents are kept locally, not in the repository
+/AGENTS.md
+/PRD.md
+/ARCHITECTURE.md
+/FE_TASK.md
+/BE_TASK.md
+/CHANGELOG.md
+/docs/*
+!/docs/CI.md
+!/docs/PRIVACY.md
+!/docs/SECURITY.md

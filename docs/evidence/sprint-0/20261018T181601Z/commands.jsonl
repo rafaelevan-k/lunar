@@ -1,2 +1,0 @@
-﻿{"Timestamp":"2026-10-18T18:16:02.5597336+00:00","Command":"dotnet --info","ExitCode":0,"Artifact":"sdk-info.log"}
-{"Timestamp":"2026-10-18T18:16:03.4944898+00:00","Command":"dotnet restore src/Lunar.Windows/Lunar.Windows.Spike.csproj","ExitCode":1,"Artifact":"restore-Windows.log"}

@@ -1,6 +1,0 @@
-﻿{"Timestamp":"2026-10-26T19:56:09.1034551+00:00","Command":"dotnet --info","ExitCode":0,"Artifact":"sdk-info.log"}
-{"Timestamp":"2026-10-26T19:56:10.8577818+00:00","Command":"dotnet restore src/Lunar.Conversion/Spike/Lunar.Conversion.Spike.csproj --locked-mode","ExitCode":0,"Artifact":"restore-locked.log"}
-{"Timestamp":"2026-10-26T19:56:25.1881790+00:00","Command":"dotnet build src/Lunar.Conversion/Spike/Lunar.Conversion.Spike.csproj -c Release --no-restore","ExitCode":0,"Artifact":"build.log"}
-{"Timestamp":"2026-10-26T19:56:31.3984178+00:00","Command":"dotnet \u003cconverter-spike.dll\u003e generate \u003cnew-synthetic-workspace\u003e","ExitCode":0,"Artifact":"generate.jsonl"}
-{"Timestamp":"2026-10-26T19:57:31.7844982+00:00","Command":"powershell -File scripts/Export-WordDiscoveryReference.ps1 -Workspace \u003cnew-synthetic-workspace\u003e (60-second owned-process guard)","ExitCode":"TIMEOUT","Artifact":"word-reference.jsonl"}
-{"Timestamp":"2026-10-26T20:06:01.8630050+00:00","Command":"powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Sprint0Evidence.ps1","ExitCode":0,"Artifact":"verification-handoff.log"}

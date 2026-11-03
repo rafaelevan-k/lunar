@@ -1,3 +1,0 @@
-﻿{"Timestamp":"2026-10-26T20:14:40.8417444+00:00","Command":"powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Sprint0Evidence.ps1","Status":"STARTED"}
-{"Timestamp":"2026-10-26T20:14:41.9282850+00:00","Command":"powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Sprint0Evidence.ps1","ExitCode":1,"Artifact":"verification.log"}
-{"Timestamp":"2026-10-26T20:15:28.9120038+00:00","Command":"powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Test-Sprint0Evidence.ps1","ExitCode":0,"Artifact":"verification-final.log"}

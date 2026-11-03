@@ -1,9 +1,0 @@
-﻿PASS: four ADRs Accepted, approver User, date 2026-10-27
-PASS: AGENTS and both backlogs unchanged
-PASS: all 21 source/project/package-lock/runner files unchanged
-PASS: all 56 indexed FE/BE tasks remain TODO, including BE-01
-PASS: Sprint 0 gate remains BLOCKED; no progression approval recorded
-PASS: all 141 relative Markdown links resolve
-NOT_RUN: build/restore/unit/native/converter/manual Windows tests; documentation-only approval action
-Inspection: git branch/status unavailable (not a Git repository); SDK --version exit 0, 10.0.402
-Initial snapshot command: PowerShell parse error, exit 1; corrected capture exit 0 before edits

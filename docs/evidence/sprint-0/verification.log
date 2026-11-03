@@ -1,7 +1,0 @@
-﻿PASS: discovery runner PowerShell AST parses without errors
-PASS: project/manifest XML parses; no prototype project references
-PASS: five actual component results recorded Available on observed host
-PASS: window instrumentation reports expected initial properties, exit 0 and tray disposal
-PASS: SDK plus both restore/build commands have exit 0
-NOT_RUN: unit tests, native writes, manual UI and full target OS matrix
-PASS: all 13 recorded source/project/runner files match SHA-256 manifest
