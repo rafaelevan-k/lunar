@@ -83,6 +83,20 @@ public sealed class ServiceRegistrationTests
     }
 
     [Fact]
+    public async Task VolumeServiceIsOneSingletonAndTheContainerCanDisposeIt()
+    {
+        var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var volume = provider.GetRequiredService<IVolumeService>();
+
+        Assert.Same(volume, provider.GetRequiredService<IVolumeService>());
+        Assert.IsType<Lunar.Windows.Audio.CoreAudioVolumeService>(volume);
+        provider.Dispose(); // synchronous disposal at shutdown must not throw for a service that is also IAsyncDisposable
+        Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await volume.GetAsync(CancellationToken.None)).Error?.Code);
+    }
+
+    [Fact]
     public void OneWindowsClockServesBothClockPorts()
     {
         using var provider = ServiceRegistration.BuildServiceProvider(
@@ -183,7 +197,12 @@ public sealed class ServiceRegistrationTests
     public void MissingRegistrationFailsAtBuildNotAtFirstUse()
     {
         Assert.ThrowsAny<Exception>(() => ServiceRegistration.BuildServiceProvider(
-            services => services.AddSingleton<VolumeConsumer>()));
+            services => services.AddSingleton<WifiConsumer>())); // no Wi-Fi adapter is registered until BE-12
+    }
+
+    private sealed class WifiConsumer(IWifiService wifi)
+    {
+        public IWifiService Wifi { get; } = wifi;
     }
 
     private sealed class VolumeConsumer(IVolumeService volume)
