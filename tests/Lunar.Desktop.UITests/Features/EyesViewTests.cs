@@ -238,4 +238,165 @@ public sealed class EyesViewTests
         Assert.True(bitmap.PixelWidth - 1 - right >= 40 * scale, "The eyes keep clear of the rounded ends.");
         Assert.True((bottom - top + 1) <= 22 * scale, "The eyes are at most about 20 DIP high.");
     });
+
+    private sealed class CountingCommand(bool canExecute = true) : System.Windows.Input.ICommand
+    {
+        public int Runs { get; private set; }
+
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+
+        public bool CanExecute(object? parameter) => canExecute;
+
+        public void Execute(object? parameter) => Runs++;
+    }
+
+    private static EyesView Laid(string colors = "Colors.Dark.xaml")
+    {
+        var view = Create(colors);
+        view.Measure(new Size(158, 42));
+        view.Arrange(new Rect(0, 0, 158, 42));
+        view.UpdateLayout();
+        return view;
+    }
+
+    private static (double X, double Y) Pupil(EyesView view, string name) =>
+        (((TranslateTransform)view.FindName(name)).X, ((TranslateTransform)view.FindName(name)).Y);
+
+    private static double Feedback(EyesView view) => ((ScaleTransform)view.FindName("FeedbackScale")).ScaleX;
+
+    [Fact]
+    public void PupilsFollowThePointerWithinTheCapAndReturnToNeutralOnLeave() => RunOnSta(() =>
+    {
+        var view = Laid();
+
+        view.PointerEntered(new Point(150, 21)); // far to the right of both eyes
+        foreach (var name in new[] { "LeftPupilOffset", "RightPupilOffset" })
+        {
+            var (x, y) = Pupil(view, name);
+            Assert.True(x > 1, "The pupil looks toward the pointer.");
+            Assert.True(Math.Sqrt((x * x) + (y * y)) <= EyeGaze.MaxOffset + 1e-9);
+        }
+
+        view.PointerMoved(new Point(2, 21)); // far to the left
+        Assert.True(Pupil(view, "LeftPupilOffset").X < -1);
+
+        view.PointerLeft();
+        Assert.Equal((0d, 0d), Pupil(view, "LeftPupilOffset"));
+        Assert.Equal((0d, 0d), Pupil(view, "RightPupilOffset"));
+        Assert.Equal(1.0, Feedback(view));
+    });
+
+    [Fact]
+    public void ThePointerAtAnEyeCentreLeavesThatPupilNeutral() => RunOnSta(() =>
+    {
+        var view = Laid();
+        var left = (FrameworkElement)view.FindName("LeftEye");
+        var center = left.TranslatePoint(new Point(left.ActualWidth / 2, left.ActualHeight / 2), view);
+
+        view.PointerMoved(center);
+
+        var (x, y) = Pupil(view, "LeftPupilOffset");
+        Assert.True(Math.Abs(x) < 1e-6 && Math.Abs(y) < 1e-6);
+    });
+
+    [Fact]
+    public void HoverGrowsAndPressShrinksTheEyes() => RunOnSta(() =>
+    {
+        var view = Laid();
+
+        view.PointerEntered(new Point(79, 21));
+        Assert.Equal(EyesView.HoverScale, Feedback(view));
+
+        view.PointerPressed();
+        Assert.Equal(EyesView.PressScale, Feedback(view));
+
+        view.PointerReleased(new Point(79, 21));
+        Assert.Equal(EyesView.HoverScale, Feedback(view));
+
+        view.PointerLeft();
+        Assert.Equal(1.0, Feedback(view));
+    });
+
+    [Fact]
+    public void PressAndReleaseOverTheEyesIsAClickAndReleaseOutsideIsNot() => RunOnSta(() =>
+    {
+        var view = Laid();
+        var command = new CountingCommand();
+        view.ClickCommand = command;
+
+        view.PointerPressed();
+        view.PointerReleased(new Point(79, 21));
+        Assert.Equal(1, command.Runs);
+
+        view.PointerPressed();
+        view.PointerReleased(new Point(500, 21)); // slid off before releasing
+        Assert.Equal(1, command.Runs);
+        Assert.Equal(1.0, Feedback(view)); // and the feedback is reset
+    });
+
+    [Fact]
+    public void ACommandThatCannotRunIsNotRunAndNoCommandIsHarmless() => RunOnSta(() =>
+    {
+        var view = Laid();
+        var blocked = new CountingCommand(canExecute: false);
+        view.ClickCommand = blocked;
+        view.PointerPressed();
+        view.PointerReleased(new Point(79, 21));
+        Assert.Equal(0, blocked.Runs);
+
+        view.ClickCommand = null;
+        view.PointerPressed();
+        view.PointerReleased(new Point(79, 21)); // must not throw
+    });
+
+    [Fact]
+    public void ReducedMotionKeepsThePupilsNeutralButClicksStillWork() => RunOnSta(() =>
+    {
+        var controller = new EyeAnimationController(new EyeAnimationControllerTests.FakeTimer(), new EyeAnimationControllerTests.ScriptedRandom(), new EyeAnimationControllerTests.FakeTime()) { ReduceMotion = true };
+        var view = Laid();
+        view.Attach(controller);
+        var command = new CountingCommand();
+        view.ClickCommand = command;
+
+        view.PointerEntered(new Point(150, 21));
+        view.PointerMoved(new Point(140, 5));
+        Assert.Equal((0d, 0d), Pupil(view, "LeftPupilOffset"));
+        Assert.False(((ScaleTransform)view.FindName("FeedbackScale")).HasAnimatedProperties); // instant, not animated
+
+        view.PointerPressed();
+        view.PointerReleased(new Point(79, 21));
+        Assert.Equal(1, command.Runs);
+        view.Detach();
+    });
+
+    [Fact]
+    public void InteractionWakesSleepingEyes() => RunOnSta(() =>
+    {
+        var timer = new EyeAnimationControllerTests.FakeTimer();
+        var time = new EyeAnimationControllerTests.FakeTime();
+        var controller = new EyeAnimationController(timer, new EyeAnimationControllerTests.ScriptedRandom(0.0), time);
+        var view = Laid();
+        view.Attach(controller);
+        controller.IsHidden = false;
+        controller.Start();
+        time.Advance(TimeSpan.FromMinutes(6));
+        timer.Fire();
+        Assert.Equal(EyePhase.Asleep, controller.State.Phase);
+
+        view.PointerMoved(new Point(79, 21));
+
+        Assert.Equal(EyePhase.Open, controller.State.Phase);
+        Assert.Equal(0.0, LidScale(view, "LeftEyelid").ScaleY);
+        view.Detach();
+    });
+
+    [Fact]
+    public void ViewFillsItsHostSoTheWholePillReceivesThePointer() => RunOnSta(() =>
+    {
+        var view = Laid();
+        Assert.Equal(158, view.ActualWidth, 3);
+        Assert.Equal(42, view.ActualHeight, 3);
+        Assert.NotNull(view.Background); // transparent but hit-testable
+    });
 }
+

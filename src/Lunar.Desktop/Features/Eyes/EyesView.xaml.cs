@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
@@ -7,23 +8,53 @@ using System.Windows.Shapes;
 namespace Lunar.Desktop.Features.Eyes;
 
 /// <summary>
-/// The two eyes (FE-07 artwork). With an <see cref="EyeAnimationController"/> attached (FE-08) it animates the
-/// eyelids from the controller's state using WPF animations, which run on the render thread, so there is no per-frame
-/// code here. Gaze and hover (FE-09) will drive the pupil transforms.
+/// The two eyes (FE-07 artwork). With an <see cref="EyeAnimationController"/> attached (FE-08) the lids blink; the view
+/// also follows the pointer with the pupils, shows hover and press feedback, and raises <see cref="ClickCommand"/> on a
+/// click (FE-09). All motion is WPF animation on the render thread: there is no per-frame code and no timer here.
+/// The pointer is only tracked while it is over this view (the island window), never elsewhere on the screen, and the
+/// pupils return to neutral when it leaves. With reduced motion there is no gaze and the feedback is instant.
 /// </summary>
 public partial class EyesView : UserControl
 {
     /// <summary>How far the lids close while asleep: 0 is open, 1 is fully closed.</summary>
     internal const double AsleepClosure = 0.55;
 
+    internal const double HoverScale = 1.08;
+    internal const double PressScale = 0.92;
+
+    private static readonly TimeSpan GazeFollow = TimeSpan.FromMilliseconds(90);
+    private static readonly TimeSpan GazeReturn = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan FeedbackTime = TimeSpan.FromMilliseconds(110);
+    private static readonly IEasingFunction EaseOut = CreateEase();
+
     private EyeAnimationController? _controller;
+    private bool _pressed;
+
+    // Frozen, so the shared instance is not tied to the thread that happened to create it first.
+    private static CubicEase CreateEase()
+    {
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        ease.Freeze();
+        return ease;
+    }
 
     public EyesView()
     {
         InitializeComponent();
         Unloaded += OnUnloaded;
         IsVisibleChanged += OnIsVisibleChanged;
+        MouseEnter += OnMouseEnter;
+        MouseMove += OnMouseMove;
+        MouseLeave += OnMouseLeave;
+        MouseLeftButtonDown += OnMouseLeftButtonDown;
+        MouseLeftButtonUp += OnMouseLeftButtonUp;
+        LostMouseCapture += OnLostMouseCapture;
     }
+
+    /// <summary>Run when the user clicks the eyes (press and release over them). The owner decides what it does.</summary>
+    public ICommand? ClickCommand { get; set; }
+
+    private bool MotionAllowed => _controller is null || !_controller.ReduceMotion;
 
     /// <summary>Starts following <paramref name="controller"/>. The view does not own it and never disposes it.</summary>
     public void Attach(EyeAnimationController controller)
@@ -55,7 +86,138 @@ public partial class EyesView : UserControl
             _controller.IsHidden = !IsVisible;
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e) => Detach();
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        ResetPointerState();
+        Detach();
+    }
+
+    private void OnMouseEnter(object sender, MouseEventArgs e) => PointerEntered(e.GetPosition(this));
+
+    private void OnMouseMove(object sender, MouseEventArgs e) => PointerMoved(e.GetPosition(this));
+
+    private void OnMouseLeave(object sender, MouseEventArgs e) => PointerLeft();
+
+    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        PointerPressed();
+        e.Handled = true;
+    }
+
+    private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_pressed)
+            return;
+        PointerReleased(e.GetPosition(this));
+        e.Handled = true;
+    }
+
+    private void OnLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        if (!_pressed)
+            return;
+        _pressed = false;
+        ResetPointerState(); // capture was taken away (for example the window deactivated): no click
+    }
+
+    // The pointer rules, with the position passed in so tests can drive them without a real mouse.
+    internal void PointerEntered(Point position)
+    {
+        _controller?.NotifyInteraction();
+        MoveFeedback(_pressed ? PressScale : HoverScale);
+        Follow(position);
+    }
+
+    internal void PointerMoved(Point position)
+    {
+        _controller?.NotifyInteraction();
+        Follow(position);
+    }
+
+    internal void PointerLeft()
+    {
+        if (!_pressed) // while pressed the pointer is captured; the release decides
+            ResetPointerState();
+    }
+
+    internal void PointerPressed()
+    {
+        _controller?.NotifyInteraction();
+        _pressed = true;
+        CaptureMouse(); // so the release is seen even if the pointer slid off, and a release outside is not a click
+        MoveFeedback(PressScale);
+    }
+
+    internal void PointerReleased(Point position)
+    {
+        var inside = IsPointerInside(position);
+        _pressed = false;
+        ReleaseMouseCapture();
+
+        if (!inside)
+        {
+            ResetPointerState();
+            return;
+        }
+
+        MoveFeedback(HoverScale);
+        var command = ClickCommand;
+        if (command?.CanExecute(null) == true)
+            command.Execute(null);
+    }
+
+    private bool IsPointerInside(Point position) =>
+        position.X >= 0 && position.Y >= 0 && position.X <= ActualWidth && position.Y <= ActualHeight;
+
+    // Neutral gaze and normal size.
+    private void ResetPointerState()
+    {
+        MoveGaze(LeftPupilOffset, 0, 0, GazeReturn);
+        MoveGaze(RightPupilOffset, 0, 0, GazeReturn);
+        MoveFeedback(1);
+    }
+
+    private void Follow(Point pointer)
+    {
+        if (!MotionAllowed)
+            return;
+        FollowEye(LeftEye, LeftPupilOffset, pointer);
+        FollowEye(RightEye, RightPupilOffset, pointer);
+    }
+
+    private void FollowEye(FrameworkElement eye, TranslateTransform pupil, Point pointer)
+    {
+        if (eye.ActualWidth <= 0 || eye.ActualHeight <= 0)
+            return;
+        var center = eye.TranslatePoint(new Point(eye.ActualWidth / 2, eye.ActualHeight / 2), this);
+        var (x, y) = EyeGaze.Offset(pointer.X - center.X, pointer.Y - center.Y);
+        MoveGaze(pupil, x, y, GazeFollow);
+    }
+
+    private void MoveGaze(TranslateTransform pupil, double x, double y, TimeSpan duration)
+    {
+        Glide(pupil, TranslateTransform.XProperty, x, duration);
+        Glide(pupil, TranslateTransform.YProperty, y, duration);
+    }
+
+    private void MoveFeedback(double scale)
+    {
+        Glide(FeedbackScale, ScaleTransform.ScaleXProperty, scale, FeedbackTime);
+        Glide(FeedbackScale, ScaleTransform.ScaleYProperty, scale, FeedbackTime);
+    }
+
+    // Moves a property to its target. The resting value is set first so the end state is exact; the animation only
+    // supplies the in-between frames and is dropped when finished (FillBehavior.Stop), so nothing keeps running.
+    private void Glide(Animatable target, DependencyProperty property, double to, TimeSpan duration)
+    {
+        var from = (double)target.GetValue(property); // the live, possibly mid-animation value
+        ((IAnimatable)target).BeginAnimation(property, null);
+        target.SetValue(property, to);
+        if (!MotionAllowed || duration <= TimeSpan.Zero || Math.Abs(from - to) < 1e-3)
+            return;
+        ((IAnimatable)target).BeginAnimation(property,
+            new DoubleAnimation(from, to, duration) { EasingFunction = EaseOut, FillBehavior = FillBehavior.Stop });
+    }
 
     private void Apply(EyeAnimationState state)
     {

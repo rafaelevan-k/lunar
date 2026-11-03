@@ -2,25 +2,29 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
-             Focusable="False" IsTabStop="False"
+             Focusable="False" IsTabStop="False" Background="Transparent" Cursor="Hand"
              SnapsToDevicePixels="False" UseLayoutRounding="False"
              automation:AutomationProperties.Name="Lunar eyes">
   <!--
     FE-07: the paired eyes as pure vector geometry (no bitmap, no GIF), so edges stay crisp at any DPI.
     The artwork is drawn on a fixed 62x26 logical grid inside a Viewbox, 20 DIP high, so the eyes stay well inside the 44 DIP pill (about 12 DIP of margin above and below) and scale crisply with DPI. Colors come only
     from the theme brushes (high contrast follows the palette swap).
-    Animation hooks for FE-08 / FE-09 (this task adds no motion): each eye has a Pupil translate (gaze) and an
-    Eyelid scale (blink; 0 = open, 1 = closed). Names are LeftEyelid / RightEyelid, LeftPupilOffset / RightPupilOffset.
+    Motion hooks: each eye has a pupil translate (gaze, FE-09) and an eyelid scale (blink, FE-08; 0 = open, 1 = closed):
+    LeftEyelid / RightEyelid, LeftPupilOffset / RightPupilOffset. FeedbackScale is the hover and press feedback (FE-09).
+    The transparent view background makes the whole pill area receive the pointer, not only the shapes.
   -->
   <Viewbox Stretch="Uniform" StretchDirection="Both" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-    <Grid Width="62" Height="26" Background="Transparent">
+    <Grid Width="62" Height="26" Background="Transparent" RenderTransformOrigin="0.5,0.5">
+      <Grid.RenderTransform>
+        <ScaleTransform x:Name="FeedbackScale" />
+      </Grid.RenderTransform>
       <Grid.Resources>
         <!-- One eye outline, reused as the clip for the pupil and the eyelid so neither can draw outside the eye. -->
         <EllipseGeometry x:Key="EyeOutline" Center="12,13" RadiusX="12" RadiusY="13" />
       </Grid.Resources>
 
       <!-- Left eye -->
-      <Grid Width="24" Height="26" HorizontalAlignment="Left">
+      <Grid x:Name="LeftEye" Width="24" Height="26" HorizontalAlignment="Left">
         <Ellipse Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
         <Grid Clip="{StaticResource EyeOutline}">
           <Grid Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
@@ -42,7 +46,7 @@
       </Grid>
 
       <!-- Right eye -->
-      <Grid Width="24" Height="26" HorizontalAlignment="Right">
+      <Grid x:Name="RightEye" Width="24" Height="26" HorizontalAlignment="Right">
         <Ellipse Fill="{DynamicResource Lunar.Brush.TextPrimary}" />
         <Grid Clip="{StaticResource EyeOutline}">
           <Grid Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">

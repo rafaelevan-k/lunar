@@ -87,14 +87,16 @@ public partial class App : System.Windows.Application
 
         var viewModel = _services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
-        // Reduced motion: either the Lunar setting or Windows "Show animations" turned off. Read once at startup.
+        // Motion is off when the Lunar setting says so, when idle eye animation is disabled, or when Windows has
+        // "Show animations" turned off. Read once at startup.
         _eyes = new EyeAnimationController(new DispatcherEyeTimer(), SystemRandomSource.Instance, TimeProvider.System)
         {
-            ReduceMotion = settings.Appearance.ReduceMotion || !SystemParameters.ClientAreaAnimation
+            ReduceMotion = settings.Appearance.ReduceMotion || !settings.Appearance.EyeAnimationEnabled || !SystemParameters.ClientAreaAnimation
         };
         eyesView.Attach(_eyes);
-        if (settings.Appearance.EyeAnimationEnabled)
-            _eyes.Start();
+        _eyes.Start();
+        // Click opens or closes the island. FE-10 will animate the transition; until then it completes at once.
+        eyesView.ClickCommand = new RelayCommand(() => ToggleIsland(viewModel));
         _window = new IslandWindow { DataContext = viewModel, ViewContent = eyesView };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
@@ -104,6 +106,16 @@ public partial class App : System.Windows.Application
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
+    }
+
+    private static void ToggleIsland(IslandViewModel viewModel)
+    {
+        if (!viewModel.Toggle())
+            return;
+        if (viewModel.State == IslandVisualState.Expanding)
+            viewModel.CompleteExpansion();
+        else if (viewModel.State == IslandVisualState.Collapsing)
+            viewModel.CompleteCollapse();
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
