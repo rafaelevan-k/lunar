@@ -27,6 +27,10 @@ public sealed class EyesViewTests
             {
                 failure = ex;
             }
+            finally
+            {
+                StaDispatcher.ShutDownCurrent();
+            }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();

@@ -31,6 +31,10 @@ public sealed class IslandWindowTests
             {
                 failure = ex;
             }
+            finally
+            {
+                StaDispatcher.ShutDownCurrent();
+            }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();

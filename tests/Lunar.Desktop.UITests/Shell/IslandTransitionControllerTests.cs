@@ -67,6 +67,10 @@ public sealed class IslandTransitionControllerTests
             {
                 failure = ex;
             }
+            finally
+            {
+                StaDispatcher.ShutDownCurrent();
+            }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
