@@ -33,7 +33,7 @@ public sealed class WindowsBluetoothService : IBluetoothService, IDisposable
     private readonly IBluetoothBackend _backend;
     private readonly IDiagnosticLog? _log;
     private readonly RadioConfirmOptions _options;
-    private readonly RadioServiceCore<BluetoothState> _core;
+    private readonly ServiceCore<BluetoothState> _core;
 
     private bool _toggleDenied;
 
@@ -50,7 +50,7 @@ public sealed class WindowsBluetoothService : IBluetoothService, IDisposable
         if (_options.ConfirmAttempts < 1)
             throw new ArgumentOutOfRangeException(nameof(options), "At least one confirmation read is required.");
 
-        _core = new RadioServiceCore<BluetoothState>(
+        _core = new ServiceCore<BluetoothState>(
             refresh: async () => _ = await ReadStateAsync(CancellationToken.None).ConfigureAwait(false),
             detach: () => _backend.Changed -= OnBackendChanged,
             release: _backend.Dispose);
@@ -239,7 +239,7 @@ public sealed class WindowsBluetoothService : IBluetoothService, IDisposable
     private Task<Result> ConfirmAsync(bool enabled, CancellationToken ct)
     {
         var wanted = enabled ? RadioState.Enabled : RadioState.Disabled;
-        return RadioServiceCore<BluetoothState>.ConfirmAsync(
+        return ServiceCore<BluetoothState>.ConfirmAsync(
             async () =>
             {
                 var read = await ReadStateAsync(ct).ConfigureAwait(false);

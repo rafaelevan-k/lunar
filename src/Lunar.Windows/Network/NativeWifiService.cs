@@ -35,7 +35,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
     private readonly IWlanBackend _backend;
     private readonly IDiagnosticLog? _log;
     private readonly RadioConfirmOptions _options;
-    private readonly RadioServiceCore<WifiState> _core;
+    private readonly ServiceCore<WifiState> _core;
 
     private bool _toggleDenied;
 
@@ -52,7 +52,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
         if (_options.ConfirmAttempts < 1)
             throw new ArgumentOutOfRangeException(nameof(options), "At least one confirmation read is required.");
 
-        _core = new RadioServiceCore<WifiState>(
+        _core = new ServiceCore<WifiState>(
             refresh: () =>
             {
                 _ = ReadState();
@@ -222,7 +222,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
     private Task<Result> ConfirmAsync(bool enabled, CancellationToken ct)
     {
         var wanted = enabled ? RadioState.Enabled : RadioState.Disabled;
-        return RadioServiceCore<WifiState>.ConfirmAsync(
+        return ServiceCore<WifiState>.ConfirmAsync(
             async () =>
             {
                 var read = await Task.Run(ReadState, CancellationToken.None).ConfigureAwait(false);

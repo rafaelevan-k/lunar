@@ -4,13 +4,13 @@ using Lunar.Domain.Shared;
 namespace Lunar.Windows.Shared;
 
 /// <summary>
-/// What every radio-state service of the Windows layer (Wi-Fi, Bluetooth) needs and must get the same way (ADR-0006):
+/// What every state-publishing service of the Windows layer (Wi-Fi, Bluetooth, media) needs and must get the same way (ADR-0006):
 /// one operation at a time behind a gate that honours cancellation, states published to observers without repeats,
 /// bursts of OS notifications coalesced into one refresh, and a disposal that waits for a call already talking to
 /// Windows, completes the observers and is idempotent. The services own the Windows calls and the mapping to a state;
 /// this class owns none of that.
 /// </summary>
-internal sealed class RadioServiceCore<TState>
+internal sealed class ServiceCore<TState>
     where TState : class
 {
     private readonly Func<Task> _refresh;
@@ -29,7 +29,7 @@ internal sealed class RadioServiceCore<TState>
     /// <param name="refresh">Reads the state and publishes it. Called holding the gate.</param>
     /// <param name="detach">Stops receiving notifications from Windows. Called first on disposal, without the gate.</param>
     /// <param name="release">Closes the Windows handles. Called holding the gate, once.</param>
-    public RadioServiceCore(Func<Task> refresh, Action detach, Action release)
+    public ServiceCore(Func<Task> refresh, Action detach, Action release)
     {
         _refresh = refresh;
         _detach = detach;
