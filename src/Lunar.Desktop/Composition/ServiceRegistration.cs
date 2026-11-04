@@ -34,6 +34,13 @@ public static class ServiceRegistration
     /// <summary>Fixed identifier of the production single-instance scope (ADR-0008).</summary>
     internal const string InstanceName = "Lunar.Desktop.v1";
 
+    /// <summary>
+    /// The hold of ADR-0005: Word documents are converted with the user's own LibreOffice, but Lunar does not promise those routes until their fidelity
+    /// has been checked on a real LibreOffice. While this is false the planner refuses every Word route, whether or not LibreOffice is installed.
+    /// Switching it on is this one value, after that check and with the user's approval.
+    /// </summary>
+    internal const bool DocxRoutesEnabled = false;
+
     /// <summary>Where conversions make their private working folders: under the user's own profile, whose permissions keep them private.</summary>
     internal static string DefaultConversionWorkRoot { get; } = System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunar", "Temp");
@@ -76,8 +83,9 @@ public static class ServiceRegistration
         // PDF pages to pictures (BE-24): the operating system's renderer behind the Application port; the conversion layer never sees it.
         services.AddSingleton<IPdfPageRasterizer>(sp => new WindowsPdfPageRasterizer(sp.GetRequiredService<IDiagnosticLog>()));
         // Conversion (BE-27): the planner, the providers, the output step and the orchestrator that joins them, behind the queue and the use
-        // case the screens call. No document layout engine is wired yet (BE-25), so Word routes are refused with "needs LibreOffice".
-        services.AddSingleton<IRendererAvailability, RendererNotInstalled>();
+        // case the screens call. Word routes need the user's own LibreOffice and are held off by DocxRoutesEnabled (ADR-0005).
+        services.AddSingleton<ILibreOfficeLocator, LibreOfficeLocator>();
+        services.AddSingleton<IRendererAvailability>(sp => new LibreOfficeAvailability(sp.GetRequiredService<ILibreOfficeLocator>(), DocxRoutesEnabled));
         services.AddSingleton<IConversionPlanner>(sp => new ConversionPlanner(sp.GetRequiredService<IRendererAvailability>()));
         services.AddSingleton<ConversionOrchestrator>(sp => new ConversionOrchestrator(
             DefaultConversionWorkRoot,
@@ -85,6 +93,7 @@ public static class ServiceRegistration
             new PdfCreationProvider(sp.GetRequiredService<IDiagnosticLog>()),
             new DocxEmbeddingProvider(sp.GetRequiredService<IDiagnosticLog>()),
             new PdfRasterizationProvider(sp.GetRequiredService<IPdfPageRasterizer>(), sp.GetRequiredService<IDiagnosticLog>()),
+            new LibreOfficeRendererProvider(sp.GetRequiredService<ILibreOfficeLocator>(), log: sp.GetRequiredService<IDiagnosticLog>()),
             new OutputCommitter(sp.GetRequiredService<IDiagnosticLog>()),
             sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IConversionQueue>(sp => new ConversionJobQueue(sp.GetRequiredService<ConversionOrchestrator>()));

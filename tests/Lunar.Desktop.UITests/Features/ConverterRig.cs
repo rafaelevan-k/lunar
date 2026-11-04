@@ -16,6 +16,12 @@ internal sealed class StubRenderer(bool available, bool throws = false) : IRende
     public Task<bool> IsAvailableAsync(CancellationToken ct) => throws ? throw new InvalidOperationException("boom") : Task.FromResult(available);
 }
 
+/// <summary>No LibreOffice on this PC (whatever the real PC has), so tests never depend on it.</summary>
+internal sealed class NoLibreOffice : ILibreOfficeLocator
+{
+    public LibreOfficeInfo? Locate() => null;
+}
+
 /// <summary>A file manager that only records what it was asked to show.</summary>
 internal sealed class RecordingRevealer : IOutputRevealer
 {
@@ -79,6 +85,7 @@ internal sealed class ConverterRig : IDisposable
                 new PdfCreationProvider(),
                 new DocxEmbeddingProvider(),
                 new PdfRasterizationProvider(sp.GetRequiredService<IPdfPageRasterizer>()),
+                new LibreOfficeRendererProvider(new NoLibreOffice()),
                 new OutputCommitter()));
         });
         var toUi = post ?? (a => a());

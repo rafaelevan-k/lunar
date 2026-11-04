@@ -44,6 +44,7 @@ public sealed class ConversionOrchestratorTests : IAsyncDisposable
         new PdfCreationProvider(),
         new DocxEmbeddingProvider(),
         new PdfRasterizationProvider(_pdf),
+        new LibreOfficeRendererProvider(new NoLibreOffice()),
         fileSystem is null ? new OutputCommitter() : new OutputCommitter(fileSystem, null));
 
     private (StartConversion Start, ConversionJobQueue Queue, ConversionOrchestrator Orchestrator) Build(

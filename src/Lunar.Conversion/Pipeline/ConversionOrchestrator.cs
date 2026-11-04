@@ -32,6 +32,7 @@ public sealed class ConversionOrchestrator : IConversionJobExecutor
     private readonly PdfCreationProvider _pdfs;
     private readonly DocxEmbeddingProvider _docx;
     private readonly PdfRasterizationProvider _rasterizer;
+    private readonly LibreOfficeRendererProvider _office;
     private readonly OutputCommitter _committer;
     private readonly IDiagnosticLog? _log;
     private readonly Lazy<Task<int>> _recovery;
@@ -43,9 +44,12 @@ public sealed class ConversionOrchestrator : IConversionJobExecutor
         PdfCreationProvider pdfs,
         DocxEmbeddingProvider docx,
         PdfRasterizationProvider rasterizer,
+        LibreOfficeRendererProvider office,
         OutputCommitter committer,
         IDiagnosticLog? log = null)
     {
+        ArgumentNullException.ThrowIfNull(office);
+        _office = office;
         ArgumentException.ThrowIfNullOrWhiteSpace(workRoot);
         ArgumentNullException.ThrowIfNull(images);
         ArgumentNullException.ThrowIfNull(pdfs);
@@ -156,8 +160,21 @@ public sealed class ConversionOrchestrator : IConversionJobExecutor
                 }
 
             case ConversionMode.ExternalRenderer:
-                return Fail(ErrorCode.DependencyMissing,
-                    "Converting Word documents needs LibreOffice, and Lunar can't use it yet in this version. Your original file is untouched.");
+                {
+                    // Word to PDF with the user's LibreOffice; Word to pictures is that PDF drawn page by page like any PDF.
+                    var pdf = workspace.NewFilePath(".pdf");
+                    var laidOut = await _office.ConvertToPdfAsync(job.SourcePath, pdf, workspace, limits, ct).ConfigureAwait(false);
+                    if (laidOut.IsFailure)
+                        return Carry(laidOut);
+                    if (route.Target == FileFormat.Pdf)
+                        return await _committer.CommitAsync(job, workspace, [pdf], limits, ct).ConfigureAwait(false);
+
+                    var pages = await _rasterizer.RasterizeAsync(
+                        pdf, password: null, route.Target, choices.Pdf, choices.Image, workspace, limits, progress, ct).ConfigureAwait(false);
+                    return pages.IsSuccess
+                        ? await _committer.CommitAsync(job, workspace, pages.Value.StagedFiles, pages.Value.Numbering, limits, ct).ConfigureAwait(false)
+                        : Carry(pages);
+                }
 
             default:
                 return Fail(ErrorCode.Unsupported, "Converting this kind of file to the chosen format isn't available in this version.");

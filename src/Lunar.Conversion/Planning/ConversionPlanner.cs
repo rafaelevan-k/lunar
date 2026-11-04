@@ -161,7 +161,7 @@ public sealed class ConversionPlanner : IConversionPlanner
         return available.Value
             ? null
             : new ValidationFailure(RejectionReason.RendererMissing, ErrorCode.DependencyMissing,
-                "Converting Word documents needs LibreOffice, which isn't installed. Install it yourself and try again; Lunar never installs or downloads it.");
+                "Converting Word documents isn't available right now. It needs LibreOffice, which you have to install yourself (Lunar never installs or downloads it), and this version doesn't switch it on yet.");
     }
 
     // ---- output folder -----------------------------------------------------------------------------------------------

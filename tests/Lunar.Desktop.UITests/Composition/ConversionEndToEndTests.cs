@@ -6,6 +6,7 @@ using Lunar.Conversion.Output;
 using Lunar.Conversion.Pipeline;
 using Lunar.Conversion.Providers;
 using Lunar.Desktop.Composition;
+using Lunar.Desktop.UITests.Features;
 using Lunar.Domain.Conversion;
 using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
@@ -42,6 +43,7 @@ public sealed class ConversionEndToEndTests : IDisposable
                 new PdfCreationProvider(),
                 new DocxEmbeddingProvider(),
                 new PdfRasterizationProvider(sp.GetRequiredService<IPdfPageRasterizer>()),
+                new LibreOfficeRendererProvider(new NoLibreOffice()),
                 new OutputCommitter()));
         });
     }
@@ -104,6 +106,16 @@ public sealed class ConversionEndToEndTests : IDisposable
         Assert.Same(services.GetRequiredService<IConversionQueue>(), services.GetRequiredService<IConversionQueue>());
         Assert.Same(services.GetRequiredService<ConversionOrchestrator>(), services.GetRequiredService<ConversionOrchestrator>());
         // Disposing here, with the queue resolved, is the app's exit: it must not throw.
+    }
+
+    [Fact]
+    public async Task TheDefaultRegistrationKeepsWordRoutesOffEvenIfLibreOfficeWereInstalled()
+    {
+        using var services = ServiceRegistration.BuildServiceProvider(s => s.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        Assert.IsAssignableFrom<ILibreOfficeLocator>(services.GetRequiredService<ILibreOfficeLocator>());
+        Assert.False(ServiceRegistration.DocxRoutesEnabled); // the hold of ADR-0005
+        Assert.False(await services.GetRequiredService<IRendererAvailability>().IsAvailableAsync(Ct));
     }
 
     [Fact]

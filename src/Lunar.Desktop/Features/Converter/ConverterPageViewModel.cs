@@ -674,7 +674,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             }
             else if (routes.Any(r => r.RequiresExternalRenderer) && !rendererAvailable)
             {
-                offered.Add(new Offered(target, false, "Needs LibreOffice, which isn't installed. Lunar never installs it for you.", false));
+                offered.Add(new Offered(target, false, "Not available yet: it needs LibreOffice, which you install yourself (Lunar never installs it for you).", false));
             }
             else
             {
