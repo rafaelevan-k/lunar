@@ -811,6 +811,17 @@ public sealed class SystemPageTests
         encoder.Save(stream);
     });
 
+    [Fact]
+    public void TheClockIsOneAccessibleItemAndTheZoneIsItsTooltip() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var clock = Named<StackPanel>(rig, "Clock");
+
+        Assert.Equal("2:05 PM, Wednesday, November 4, 2026", AutomationProperties.GetName(clock));
+        Assert.Equal(TimeZoneInfo.Utc.StandardName, AutomationProperties.GetHelpText(clock));
+        Assert.Equal(TimeZoneInfo.Utc.StandardName, clock.ToolTip);
+    });
+
     // ---- boundaries --------------------------------------------------------------------------------------------------
 
     [Fact]

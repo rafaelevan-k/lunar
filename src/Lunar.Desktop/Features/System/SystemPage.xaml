@@ -77,7 +77,10 @@
     </Grid.RowDefinitions>
 
     <!-- Date and time. -->
-    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,6" automation:AutomationProperties.Name="Date and time">
+    <StackPanel x:Name="Clock" Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,6" Background="Transparent"
+                ToolTip="{Binding TimeZoneText}"
+                automation:AutomationProperties.Name="{Binding ClockLabel}"
+                automation:AutomationProperties.HelpText="{Binding TimeZoneText}">
       <TextBlock x:Name="Time" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Title}" />
       <TextBlock x:Name="Date" Text="{Binding DateText}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Bottom" Margin="10,0,0,3" />
     </StackPanel>

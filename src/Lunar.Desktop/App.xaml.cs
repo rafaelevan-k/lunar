@@ -36,7 +36,7 @@ public partial class App : System.Windows.Application
     private IslandTransitionController? _transition;
     private IslandShellView? _shell;
     private SystemPageViewModel? _system;
-    private IslandViewModel? _island;
+    private ClockLifetime? _clockLifetime;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -97,7 +97,7 @@ public partial class App : System.Windows.Application
         // Motion is off when the Lunar setting says so, when idle eye animation is disabled, or when Windows has
         // "Show animations" turned off. Read once at startup.
         var motionOff = settings.Appearance.ReduceMotion || !settings.Appearance.EyeAnimationEnabled || !SystemParameters.ClientAreaAnimation;
-        _eyes = new EyeAnimationController(new DispatcherEyeTimer(), SystemRandomSource.Instance, TimeProvider.System)
+        _eyes = new EyeAnimationController(new DispatcherOneShotTimer(), SystemRandomSource.Instance, TimeProvider.System)
         {
             ReduceMotion = motionOff
         };
@@ -127,21 +127,14 @@ public partial class App : System.Windows.Application
         _position.Start(); // placed before it is shown; a listener failure is logged inside and the window stays placed
         _window.Show();
 
-        // A fresh time every time the island opens; FE-16 adds the per-minute refresh while it stays open.
-        _island = viewModel;
-        viewModel.PropertyChanged += OnIslandChanged;
+        // The clock starts and stops with the island.
+        _clockLifetime = new ClockLifetime(viewModel, _system);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
         // The window is already on screen; the cards fill in as each reading arrives.
         await _system.InitializeAsync(_lifetime.Token);
-    }
-
-    private void OnIslandChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(IslandViewModel.IsExpanded) && sender is IslandViewModel { IsExpanded: true })
-            _system?.RefreshClock();
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
@@ -160,9 +153,8 @@ public partial class App : System.Windows.Application
         _tray = null;
         _transition?.Dispose();
         _transition = null;
-        if (_island is not null)
-            _island.PropertyChanged -= OnIslandChanged;
-        _island = null;
+        _clockLifetime?.Dispose();
+        _clockLifetime = null;
         _system?.Dispose();
         _system = null;
         _shell?.Dispose();

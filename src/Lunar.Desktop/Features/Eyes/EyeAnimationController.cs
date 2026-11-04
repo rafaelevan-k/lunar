@@ -1,3 +1,4 @@
+using Lunar.Desktop.Shell;
 namespace Lunar.Desktop.Features.Eyes;
 
 /// <summary>
@@ -17,7 +18,7 @@ public sealed class EyeAnimationController : IDisposable
     private const double CloseShare = 0.4;
     private const double HoldShare = 0.1;
 
-    private readonly IEyeTimer _timer;
+    private readonly IOneShotTimer _timer;
     private readonly IRandomSource _random;
     private readonly TimeProvider _time;
     private readonly EyeAnimationOptions _options;
@@ -33,7 +34,7 @@ public sealed class EyeAnimationController : IDisposable
     private long _lastInteraction;
     private TimeSpan _blinkDuration;
 
-    internal EyeAnimationController(IEyeTimer timer, IRandomSource random, TimeProvider time, EyeAnimationOptions? options = null)
+    internal EyeAnimationController(IOneShotTimer timer, IRandomSource random, TimeProvider time, EyeAnimationOptions? options = null)
     {
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _random = random ?? throw new ArgumentNullException(nameof(random));

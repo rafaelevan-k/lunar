@@ -42,6 +42,8 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     private readonly ILocaleClock _clock;
     private readonly Action<Action> _post;
     private readonly IDiagnosticLog? _log;
+    private IOneShotTimer? _clockTimer;
+    private bool _clockRunning;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly List<IDisposable> _subscriptions = [];
 
@@ -59,6 +61,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     private string? _volumeError;
     private string _timeText = string.Empty;
     private string _dateText = string.Empty;
+    private string _timeZoneText = string.Empty;
 
     public SystemPageViewModel(
         IVolumeService volume,
@@ -68,6 +71,19 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         ISystemSettingsLauncher settings,
         Action<Action> post,
         IDiagnosticLog? log = null)
+        : this(volume, wifi, bluetooth, clock, settings, post, log, clockTimer: null)
+    {
+    }
+
+    internal SystemPageViewModel(
+        IVolumeService volume,
+        IWifiService wifi,
+        IBluetoothService bluetooth,
+        ILocaleClock clock,
+        ISystemSettingsLauncher settings,
+        Action<Action> post,
+        IDiagnosticLog? log,
+        IOneShotTimer? clockTimer)
     {
         ArgumentNullException.ThrowIfNull(volume);
         ArgumentNullException.ThrowIfNull(wifi);
@@ -81,6 +97,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         _clock = clock;
         _post = post;
         _log = log;
+        _clockTimer = clockTimer;
 
         var lifetime = _lifetime.Token;
         ToggleMuteCommand = new AsyncRelayCommand(ToggleMuteAsync, () => IsVolumeAvailable, OnFault, lifetime);
@@ -239,13 +256,72 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         private set => Set(ref _dateText, value);
     }
 
-    /// <summary>Re-reads the clock and the regional format. Call when the page is shown.</summary>
+    /// <summary>The time and date as one sentence for assistive technology, for example "2:05 PM, Wednesday, November 4, 2026".</summary>
+    public string ClockLabel => $"{_timeText}, {_dateText}";
+
+    /// <summary>The time zone the clock is showing ("Pacific Daylight Time"), for the tooltip and the accessible description.</summary>
+    public string TimeZoneText
+    {
+        get => _timeZoneText;
+        private set => Set(ref _timeZoneText, value);
+    }
+
+    /// <summary>
+    /// Re-reads the clock, the time zone and the regional format (12 or 24 hour, date order) and shows them. Cheap; safe to
+    /// call at any time on the UI thread.
+    /// </summary>
     public void RefreshClock()
     {
         _clock.Refresh();
         var now = _clock.LocalNow;
         TimeText = ClockFormat.FormatTime(now, _clock.Culture);
         DateText = ClockFormat.FormatDate(now, _clock.Culture);
+        OnChanged(nameof(ClockLabel));
+        var zone = _clock.TimeZone;
+        TimeZoneText = zone.IsDaylightSavingTime(now) ? zone.DaylightName : zone.StandardName;
+    }
+
+    /// <summary>
+    /// Shows the current time and keeps it right while the island is open: refreshes at once, then at the start of every
+    /// minute, so the date rolls over at midnight and a changed time zone or 12/24 hour setting shows within a minute.
+    /// Each tick re-reads the real time and schedules the next minute from it, so an early or late tick corrects itself.
+    /// Call <see cref="StopClock"/> when the island closes: nothing runs while it is hidden. Idempotent.
+    /// </summary>
+    public void StartClock()
+    {
+        if (_disposed || _clockRunning)
+            return;
+
+        _clockRunning = true;
+        RefreshClock();
+        ScheduleNextMinute();
+    }
+
+    /// <summary>Stops the per-minute refresh. The shown time stays as it was; <see cref="StartClock"/> refreshes it again.</summary>
+    public void StopClock()
+    {
+        _clockRunning = false;
+        _clockTimer?.Cancel();
+    }
+
+    private void ScheduleNextMinute()
+    {
+        if (!_clockRunning || _disposed)
+            return;
+
+        // The timer is created on first use, on the UI thread that owns the page.
+        _clockTimer ??= new DispatcherOneShotTimer();
+        // Ten milliseconds past the boundary, so a timer that fires a hair early still lands in the new minute.
+        _clockTimer.Schedule(ClockFormat.UntilNextMinute(_clock.LocalNow) + TimeSpan.FromMilliseconds(10), OnClockTick);
+    }
+
+    private void OnClockTick()
+    {
+        if (!_clockRunning || _disposed)
+            return;
+
+        RefreshClock();
+        ScheduleNextMinute();
     }
 
     // ---- lifetime ---------------------------------------------------------------------------------------------------
@@ -278,6 +354,9 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         if (_disposed)
             return;
         _disposed = true;
+        _clockRunning = false;
+        _clockTimer?.Dispose();
+        _clockTimer = null;
         _lifetime.Cancel();
         foreach (var subscription in _subscriptions)
             subscription.Dispose();

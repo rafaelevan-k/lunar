@@ -1,4 +1,5 @@
 using Lunar.Desktop.Features.Eyes;
+using Lunar.Desktop.Shell;
 using Xunit;
 
 namespace Lunar.Desktop.UITests.Features;
@@ -6,7 +7,7 @@ namespace Lunar.Desktop.UITests.Features;
 // Pure state-machine tests: a hand-driven timer, scripted random numbers and a hand-driven clock. No WPF is touched.
 public sealed class EyeAnimationControllerTests
 {
-    internal sealed class FakeTimer : IEyeTimer
+    internal sealed class FakeTimer : IOneShotTimer
     {
         private Action? _callback;
 
