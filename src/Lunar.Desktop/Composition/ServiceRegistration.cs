@@ -11,6 +11,7 @@ using Lunar.Conversion.Output;
 using Lunar.Conversion.Pipeline;
 using Lunar.Conversion.Planning;
 using Lunar.Conversion.Providers;
+using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Settings;
@@ -88,6 +89,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IConversionQueue>(sp => new ConversionJobQueue(sp.GetRequiredService<ConversionOrchestrator>()));
         services.AddTransient<StartConversion>(sp => new StartConversion(sp.GetRequiredService<IConversionPlanner>(), sp.GetRequiredService<IConversionQueue>()));
+        services.AddSingleton<IFilePicker, WindowsFilePicker>();
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 

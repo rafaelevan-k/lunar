@@ -125,6 +125,12 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         return true;
     }
 
+    /// <summary>
+    /// Says which things must keep the island open (a dialog, a drag, focus inside, a confirmation). They are read when a collapse is
+    /// requested or becomes due; the visual state does not change by setting them.
+    /// </summary>
+    public void SetGuards(IslandGuards guards) => _island.SetGuards(guards);
+
     /// <summary>Shows a recoverable failure inline using its user-safe message; a newer error replaces the old one.</summary>
     public void ReportError(OperationError error)
     {

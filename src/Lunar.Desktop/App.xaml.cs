@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
@@ -7,6 +8,7 @@ using Lunar.Application.Abstractions.System;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Composition;
+using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Features.MediaControls;
 using Lunar.Desktop.Features.SystemControls;
@@ -41,6 +43,8 @@ public partial class App : System.Windows.Application
     private ClockLifetime? _clockLifetime;
     private MediaPageViewModel? _media;
     private MediaLifetime? _mediaLifetime;
+    private ConverterPageViewModel? _converter;
+    private ConverterGuardLink? _converterGuards;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -110,7 +114,7 @@ public partial class App : System.Windows.Application
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
         var navigation = new PageNavigationViewModel(["System", "Media", "File converter"]);
-        // The System and Media pages are real; the Converter page is still a stand-in.
+        // All three pages are real now (the Converter page so far chooses files and a format).
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -125,9 +129,16 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<SeekMedia>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
+        _converter = new ConverterPageViewModel(
+            _services.GetRequiredService<IConversionPlanner>(),
+            _services.GetRequiredService<IRendererAvailability>(),
+            _services.GetRequiredService<IFilePicker>(),
+            work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
+            _log);
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
         pages[0] = new SystemPage { DataContext = _system };
         pages[1] = new MediaPage { DataContext = _media };
+        pages[2] = new ConverterPage { DataContext = _converter };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
@@ -141,6 +152,7 @@ public partial class App : System.Windows.Application
         // The clock starts and stops with the island.
         _clockLifetime = new ClockLifetime(viewModel, _system);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
+        _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
@@ -171,6 +183,10 @@ public partial class App : System.Windows.Application
         _mediaLifetime = null;
         _media?.Dispose();
         _media = null;
+        _converterGuards?.Dispose();
+        _converterGuards = null;
+        _converter?.Dispose();
+        _converter = null;
         _system?.Dispose();
         _system = null;
         _shell?.Dispose();
