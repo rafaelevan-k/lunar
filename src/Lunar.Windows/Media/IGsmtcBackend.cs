@@ -79,7 +79,10 @@ internal enum GsmtcAction
     Pause,
     Toggle,
     Next,
-    Previous
+    Previous,
+
+    /// <summary>Move to a position on the timeline of the player (its start plus the position).</summary>
+    Seek
 }
 
 /// <summary>How a command ended at the player.</summary>
@@ -107,9 +110,10 @@ internal interface IGsmtcBackend : IDisposable
 
     /// <summary>
     /// Sends one transport command to the session with this id (as listed by the last read) and reports how it ended.
+    /// <paramref name="target"/> is the timeline position of a <see cref="GsmtcAction.Seek"/> and ignored otherwise.
     /// Throws <see cref="MediaException"/> on failure.
     /// </summary>
-    Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct);
+    Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, TimeSpan target, CancellationToken ct);
 
     /// <summary>
     /// Raised on an arbitrary thread when the session list, the current session, or anything about a session (its media,

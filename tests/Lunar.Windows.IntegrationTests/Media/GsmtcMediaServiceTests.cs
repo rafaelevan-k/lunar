@@ -23,6 +23,8 @@ public sealed class GsmtcMediaServiceTests
 
         public List<(string Id, GsmtcAction Action)> Sent { get; } = [];
 
+        public List<TimeSpan> SeekTargets { get; } = [];
+
         public GsmtcCommandResult SendResult { get; set; } = GsmtcCommandResult.Accepted;
 
         public MediaException? SendError { get; set; }
@@ -52,7 +54,7 @@ public sealed class GsmtcMediaServiceTests
                 return [.. Readings];
         }
 
-        public async Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+        public async Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, TimeSpan target, CancellationToken ct)
         {
             var running = Interlocked.Increment(ref _sending);
             try
@@ -61,6 +63,8 @@ public sealed class GsmtcMediaServiceTests
                 {
                     MaxConcurrentSends = Math.Max(MaxConcurrentSends, running);
                     Sent.Add((sessionId, action));
+                    if (action == GsmtcAction.Seek)
+                        SeekTargets.Add(target);
                 }
 
                 if (SendDelay > TimeSpan.Zero)
@@ -700,16 +704,184 @@ public sealed class GsmtcMediaServiceTests
         }
     }
 
+    // ---- seeking (BE-17) ---------------------------------------------------------------------------------------------
+
     [Fact]
-    public async Task SeekingIsStillNotAvailableUntilItsOwnTask()
+    public async Task ASeekIsSentToTheNamedSessionAtTheRequestedPosition()
     {
-        var backend = new FakeBackend { Readings = [Reading()] };
+        var backend = new FakeBackend { Readings = [Reading("a.exe"), Reading("b.exe")] };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("b.exe", TimeSpan.FromSeconds(90), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([("b.exe", GsmtcAction.Seek)], backend.Sent);
+        Assert.Equal([TimeSpan.FromSeconds(90)], backend.SeekTargets);
+    }
+
+    [Fact]
+    public async Task TheTargetIsConvertedToTheTimelineOfThePlayer()
+    {
+        // The player counts from 1 minute; position 10 s into the media is 1:10 on its timeline.
+        var reading = Reading() with { Start = TimeSpan.FromSeconds(60), End = TimeSpan.FromSeconds(260), Position = TimeSpan.FromSeconds(90) };
+        var backend = new FakeBackend { Readings = [reading] };
+        await using var service = Create(backend);
+
+        _ = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(10), Ct);
+
+        Assert.Equal([TimeSpan.FromSeconds(70)], backend.SeekTargets);
+    }
+
+    [Theory]
+    [InlineData(-5, 0)]
+    [InlineData(0, 0)]
+    [InlineData(200, 200)]
+    [InlineData(500, 200)]
+    public async Task TheTargetIsKeptInsideTheMedia(int requested, int expected)
+    {
+        var backend = new FakeBackend { Readings = [Reading(durationSeconds: 200)] };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(requested), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([TimeSpan.FromSeconds(expected)], backend.SeekTargets);
+    }
+
+    [Fact]
+    public async Task APausedSessionIsSeekedLikeAnyOther()
+    {
+        var backend = new FakeBackend { Readings = [Reading(status: GsmtcStatus.Paused)] };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(40), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(backend.SeekTargets);
+    }
+
+    [Fact]
+    public async Task ASessionWithoutAFiniteTimelineIsUnsupportedAndNothingIsSent()
+    {
+        // Zero duration (end at start), an end before the start, and an unbounded sentinel are all "no timeline".
+        foreach (var reading in new[]
+                 {
+                     Reading(durationSeconds: 0),
+                     Reading() with { End = TimeSpan.FromSeconds(-5) },
+                     Reading() with { End = TimeSpan.FromDays(400) }
+                 })
+        {
+            var backend = new FakeBackend { Readings = [reading] };
+            await using var service = Create(backend);
+
+            var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+
+            Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
+            Assert.Empty(backend.Sent);
+        }
+    }
+
+    [Fact]
+    public async Task ASessionThatDoesNotAdvertiseSeekingIsUnsupportedAndNothingIsSent()
+    {
+        var backend = new FakeBackend { Readings = [Reading() with { CanSeek = false }] };
         await using var service = Create(backend);
 
         var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
 
         Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
         Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task SeekingIsCheckedAgainstWhatThePlayerAdvertisesNowNotWhatTheUiSaw()
+    {
+        var backend = new FakeBackend { Readings = [Reading()] };
+        await using var service = Create(backend);
+        Assert.True((await service.GetSessionsAsync(Ct)).Value[0].CanSeek);
+        backend.Readings = [Reading() with { CanSeek = false }];
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+
+        Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Theory]
+    [InlineData("no-such-session")]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task SeekingAnUnknownOrBlankSessionIsInvalidInputAndNothingIsSent(string id)
+    {
+        var backend = new FakeBackend { Readings = [Reading()] };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync(id, TimeSpan.FromSeconds(5), Ct);
+
+        Assert.Equal(ErrorCode.InvalidInput, result.Error!.Code);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task ASessionThatClosesUnderTheSeekIsInvalidInput()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendResult = GsmtcCommandResult.SessionGone };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+
+        Assert.Equal(ErrorCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task APlayerThatRefusesTheSeekIsARetryableFailure()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendResult = GsmtcCommandResult.Refused };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+
+        Assert.Equal(ErrorCode.Unexpected, result.Error!.Code);
+        Assert.True(result.Error.Retryable);
+    }
+
+    [Fact]
+    public async Task ASeekThatTheWindowsApiFailsOrDoesNotAnswerIsTyped()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendError = new MediaException(MediaFailure.AccessDenied, 5, "Secret title") };
+        await using var service = Create(backend);
+        Assert.Equal(ErrorCode.AccessDenied, (await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct)).Error!.Code);
+
+        backend.SendError = null;
+        backend.SendDelay = TimeSpan.FromSeconds(30);
+        var slow = await Create(backend, timeout: TimeSpan.FromMilliseconds(30)).SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+        Assert.Equal(ErrorCode.Timeout, slow.Error!.Code);
+    }
+
+    [Fact]
+    public async Task SeekingHonoursCancellationAndDisposal()
+    {
+        var service = Create(new FakeBackend { Readings = [Reading()] });
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+        Assert.True((await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), cts.Token)).IsCancelled);
+
+        await service.DisposeAsync();
+
+        Assert.Equal(ErrorCode.DeviceUnavailable, (await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct)).Error!.Code);
+    }
+
+    [Fact]
+    public async Task SeeksAndCommandsGoOneAtATime()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendDelay = TimeSpan.FromMilliseconds(5) };
+        await using var service = Create(backend);
+
+        await Task.WhenAll(Enumerable.Range(0, 40).Select(i => Task.Run(
+            () => i % 2 == 0 ? service.SeekAsync("player.exe", TimeSpan.FromSeconds(i), Ct) : service.NextAsync("player.exe", Ct), Ct)));
+
+        Assert.Equal(40, backend.Sent.Count);
+        Assert.Equal(1, backend.MaxConcurrentSends);
     }
 
     [Fact]

@@ -32,9 +32,8 @@ namespace Lunar.Windows.Media;
 /// never sent; a command the player does not accept is <see cref="ErrorCode.Unexpected"/> (retryable); success means the
 /// player accepted it, and the new state arrives through <see cref="Changes"/>. Commands go one at a time with the reads.
 ///
-/// What it does not do yet: <see cref="SeekAsync"/> belongs to BE-17 and fails with <see cref="ErrorCode.Unsupported"/> until
-/// then. The service is not registered in the composition root until the port is complete, so a half-finished port is not
-/// handed to the UI.
+/// Seeking (BE-17): <see cref="SeekAsync"/> follows the same path (fresh read, check against what the session advertises now,
+/// then ask the player), keeps the target inside the media and converts it to the timeline of the player.
 /// Thread-safe.
 /// </summary>
 public sealed class GsmtcMediaService : IMediaService, IDisposable
@@ -106,15 +105,22 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
 
     public Task<Result> PreviousAsync(string sessionId, CancellationToken ct) => CommandAsync(sessionId, MediaCommand.Previous, ct);
 
-    // Seeking is BE-17. Until then it says so, instead of pretending.
-    public Task<Result> SeekAsync(string sessionId, TimeSpan position, CancellationToken ct)
-    {
-        if (ct.IsCancellationRequested)
-            return Task.FromResult(Result.Cancelled());
-        if (_core.IsDisposed)
-            return Task.FromResult(Result.Failure(Closed));
-        return Task.FromResult(Result.Failure(new OperationError(ErrorCode.Unsupported, "Seeking is not available yet.")));
-    }
+    /// <summary>
+    /// Moves the session to <paramref name="position"/>, counted from the start of its media (the same scale as the snapshot
+    /// position). The session is looked up in a fresh read; a session without a finite timeline or without seek support is
+    /// <see cref="ErrorCode.Unsupported"/> and nothing is sent. The target is kept inside the media (not before its start, not
+    /// past its end) and converted to the timeline the player reports (its start plus the position). Success means the player
+    /// accepted it; the new position arrives through <see cref="Changes"/>.
+    /// </summary>
+    public Task<Result> SeekAsync(string sessionId, TimeSpan position, CancellationToken ct) =>
+        WithSessionAsync(sessionId, ct, async reading =>
+        {
+            if (!reading.CanSeek || MediaSnapshotMapper.DurationOf(reading) is not { } duration)
+                return Result.Failure(new OperationError(ErrorCode.Unsupported, "This player cannot be seeked right now."));
+
+            var inside = position < TimeSpan.Zero ? TimeSpan.Zero : position > duration ? duration : position;
+            return await SendAsync(sessionId, GsmtcAction.Seek, reading.Start + inside, ct).ConfigureAwait(false);
+        });
 
     public ValueTask DisposeAsync() => _core.DisposeAsync();
 
@@ -123,9 +129,15 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
 
     private static OperationError Closed => new(ErrorCode.DeviceUnavailable, "The media service is closed.");
 
-    // One transport command: the session is looked up in a fresh read, the command is checked against what that session advertises
-    // right now, and only then is it sent. A command succeeds only when the player accepted it.
-    private async Task<Result> CommandAsync(string sessionId, MediaCommand command, CancellationToken ct)
+    private Task<Result> CommandAsync(string sessionId, MediaCommand command, CancellationToken ct) =>
+        WithSessionAsync(sessionId, ct, reading =>
+            MediaCommandPlanner.Plan(reading, command) is { } action
+                ? SendAsync(sessionId, action, TimeSpan.Zero, ct)
+                : Task.FromResult(Result.Failure(new OperationError(ErrorCode.Unsupported, "This player does not offer that command right now."))));
+
+    // One command to one session: the session is looked up in a fresh read, the command is checked against what that session
+    // advertises right now by the callback, and only then is it sent. A command succeeds only when the player accepted it.
+    private async Task<Result> WithSessionAsync(string sessionId, CancellationToken ct, Func<MediaSessionReading, Task<Result>> act)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
             return Result.Failure(new OperationError(ErrorCode.InvalidInput, "A media session id is required."));
@@ -152,10 +164,7 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
             if (reading is null)
                 return Result.Failure(new OperationError(ErrorCode.InvalidInput, "That media session is not open any more."));
 
-            if (MediaCommandPlanner.Plan(reading, command) is not { } action)
-                return Result.Failure(new OperationError(ErrorCode.Unsupported, "This player does not offer that command right now."));
-
-            return await SendAsync(sessionId, action, ct).ConfigureAwait(false);
+            return await act(reading).ConfigureAwait(false);
         }
         finally
         {
@@ -163,13 +172,13 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
         }
     }
 
-    private async Task<Result> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+    private async Task<Result> SendAsync(string sessionId, GsmtcAction action, TimeSpan target, CancellationToken ct)
     {
         try
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
             linked.CancelAfter(_readTimeout);
-            var outcome = await _backend.SendAsync(sessionId, action, linked.Token).ConfigureAwait(false);
+            var outcome = await _backend.SendAsync(sessionId, action, target, linked.Token).ConfigureAwait(false);
             return outcome switch
             {
                 GsmtcCommandResult.Accepted => Result.Success(),

@@ -55,8 +55,8 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
 
     public Task<IReadOnlyList<MediaSessionReading>> ReadAsync(CancellationToken ct) => _worker.RunAsync(() => ReadCoreAsync(ct));
 
-    public Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct) =>
-        _worker.RunAsync(() => SendCoreAsync(sessionId, action, ct));
+    public Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, TimeSpan target, CancellationToken ct) =>
+        _worker.RunAsync(() => SendCoreAsync(sessionId, action, target, ct));
 
     private async Task<IReadOnlyList<MediaSessionReading>> ReadCoreAsync(CancellationToken ct)
     {
@@ -86,7 +86,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         }
     }
 
-    private async Task<GsmtcCommandResult> SendCoreAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+    private async Task<GsmtcCommandResult> SendCoreAsync(string sessionId, GsmtcAction action, TimeSpan target, CancellationToken ct)
     {
         GlobalSystemMediaTransportControlsSession? session;
         lock (_gate)
@@ -108,6 +108,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
                 GsmtcAction.Pause => session.TryPauseAsync(),
                 GsmtcAction.Toggle => session.TryTogglePlayPauseAsync(),
                 GsmtcAction.Next => session.TrySkipNextAsync(),
+                GsmtcAction.Seek => session.TryChangePlaybackPositionAsync(target.Ticks),
                 _ => session.TrySkipPreviousAsync()
             };
             var accepted = await operation.AsTask(ct);

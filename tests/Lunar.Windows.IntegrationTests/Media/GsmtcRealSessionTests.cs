@@ -132,6 +132,44 @@ public sealed class GsmtcRealSessionTests
         }
     }
 
+    // Sends one real seek, to a seekable current session, and puts the position back. Skipped unless LUNAR_REAL_MEDIA_SEEK=1.
+    // It moves the playback position of the current player by a few seconds and back; it sends nothing else and never prints or
+    // asserts anything about the media itself.
+    [Fact]
+    public async Task RealSmokeSeekTheCurrentPlayerAndPutItBack()
+    {
+        if (System.Environment.GetEnvironmentVariable("LUNAR_REAL_MEDIA_SEEK") != "1")
+        {
+            Assert.Skip("Set LUNAR_REAL_MEDIA_SEEK=1 to seek the current player once and put it back.");
+            return;
+        }
+
+        await using var service = new GsmtcMediaService();
+        var sessions = (await service.GetSessionsAsync(Ct)).Value;
+        var current = sessions.FirstOrDefault(s => s.IsCurrent && s.CanSeek && s.Position is { } p && s.Duration is { } d && d - p > TimeSpan.FromSeconds(30));
+        if (current is null)
+        {
+            Assert.Skip("No current session is seekable with at least 30 seconds left.");
+            return;
+        }
+
+        var original = current.Position!.Value;
+        var seek = new Lunar.Application.Media.UseCases.SeekMedia(service);
+        try
+        {
+            var outcome = await seek.ExecuteAsync(current, original + TimeSpan.FromSeconds(10), Ct);
+            Assert.True(outcome.IsSuccess, $"Seek failed: {outcome.Error?.Code} {outcome.Error?.SafeMessage}");
+            TestContext.Current.SendDiagnosticMessage($"Real seek: settled {outcome.Value.Settled}, moved {(outcome.Value.Position - original)?.TotalSeconds:F1} s");
+            Assert.NotNull(outcome.Value.Position);
+        }
+        finally
+        {
+            var fresh = (await service.GetSessionsAsync(CancellationToken.None)).Value.FirstOrDefault(s => s.Id == current.Id);
+            if (fresh is not null)
+                _ = await new Lunar.Application.Media.UseCases.SeekMedia(service).ExecuteAsync(fresh, original, CancellationToken.None);
+        }
+    }
+
     // Reads until the session shows the wanted state (the player needs a moment) or two seconds pass, and returns what it saw last.
     private static async Task<MediaPlaybackStatus> StatusOf(GsmtcMediaService service, string id, MediaPlaybackStatus wanted)
     {
