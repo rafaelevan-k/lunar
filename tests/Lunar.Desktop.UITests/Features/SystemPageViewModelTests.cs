@@ -499,6 +499,231 @@ public sealed class SystemPageViewModelTests
         Assert.Contains(nameof(SystemPageViewModel.ErrorMessage), changes);
     }
 
+    // ---- adjusting (FE-14) -------------------------------------------------------------------------------------------
+
+    private static VolumeState Level(float scalar, bool muted = false) => new(scalar, muted, CapabilityStatus.Supported);
+
+    [Fact]
+    public async Task AnOutsideLevelWaitsWhileTheHandIsOnTheSliderAndAppliesWhenItLetsGo()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+
+        rig.Volume.Raise(Level(0.9f));
+        rig.Flush();
+
+        Assert.Equal(50, rig.Model.VolumePercent); // not moved under the thumb
+        rig.Model.IsAdjusting = false;
+        Assert.Equal(90, rig.Model.VolumePercent); // the user did not move it, so the outside level wins now
+    }
+
+    [Fact]
+    public async Task IfTheUserMovedTheSliderTheirLevelWinsAndTheOutsideOneIsDropped()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+        rig.Model.VolumePercent = 20;
+        rig.Volume.Raise(Level(0.9f)); // an outside change during the drag
+        rig.Flush();
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        rig.Model.IsAdjusting = false;
+
+        Assert.Equal(20, rig.Model.VolumePercent);
+    }
+
+    [Fact]
+    public async Task OnlyTheLatestHeldBackLevelIsApplied()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+
+        rig.Volume.Raise(Level(0.7f));
+        rig.Volume.Raise(Level(0.3f));
+        rig.Flush();
+        rig.Model.IsAdjusting = false;
+
+        Assert.Equal(30, rig.Model.VolumePercent);
+    }
+
+    [Fact]
+    public async Task AnOutsideMuteShowsAtOnceEvenDuringADrag()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+
+        rig.Volume.Raise(Level(0.9f, muted: true));
+        rig.Flush();
+
+        Assert.True(rig.Model.IsMuted);
+        Assert.Equal(50, rig.Model.VolumePercent);
+    }
+
+    [Fact]
+    public async Task ARefusedWriteSnapsBackEvenDuringADrag()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Volume.WriteFailure = new OperationError(ErrorCode.DeviceUnavailable, "gone");
+        rig.Model.IsAdjusting = true;
+
+        rig.Model.VolumePercent = 90;
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        Assert.Equal(50, rig.Model.VolumePercent);
+        Assert.NotNull(rig.Model.VolumeError);
+    }
+
+    [Fact]
+    public async Task LosingTheDeviceMidDragAppliesAtOnce()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+
+        rig.Volume.Raise(VolumeState.Unavailable);
+        rig.Flush();
+
+        Assert.False(rig.Model.IsVolumeAvailable);
+        Assert.Equal("No audio output device", rig.Model.VolumeNote);
+    }
+
+    [Fact]
+    public async Task AHeldBackLevelIsForgottenOnceTheUserHasMoved()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+        rig.Volume.Raise(Level(0.9f));
+        rig.Flush();
+        rig.Model.VolumePercent = 40; // moved, so on release the held level is dropped
+        await rig.Model.PendingWrite;
+        rig.Flush();
+        rig.Model.IsAdjusting = false;
+
+        rig.Model.IsAdjusting = true;
+        rig.Model.IsAdjusting = false; // a touch without a move must not bring the old outside level back
+
+        Assert.Equal(40, rig.Model.VolumePercent);
+    }
+
+    [Fact]
+    public async Task AStormOfOutsideChangesNeverMovesTheSliderUnderTheHand()
+    {
+        using var rig = await new Rig().StartAsync();
+        var seen = new List<double>();
+        rig.Model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SystemPageViewModel.VolumePercent))
+                seen.Add(rig.Model.VolumePercent);
+        };
+        rig.Model.IsAdjusting = true;
+
+        for (var i = 1; i <= 60; i++)
+        {
+            rig.Model.VolumePercent = i;
+            rig.Volume.Raise(Level(((i * 7) % 100) / 100f)); // someone else keeps changing it
+            rig.Flush();
+        }
+
+        await rig.Model.PendingWrite;
+        rig.Flush();
+        rig.Model.IsAdjusting = false;
+
+        Assert.Equal(Enumerable.Range(1, 60).Select(i => (double)i), seen); // only the hand moved it, in order
+        Assert.Equal(60, rig.Model.VolumePercent);
+    }
+
+    [Fact]
+    public async Task MovingTheSliderWhileMutedUnmutes()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Volume.Raise(Level(0.5f, muted: true));
+        rig.Flush();
+        Assert.True(rig.Model.IsMuted);
+
+        rig.Model.VolumePercent = 35;
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        Assert.False(rig.Model.IsMuted);
+        Assert.False(rig.Volume.State.IsMuted);
+        Assert.Equal(0.35f, rig.Volume.State.Scalar, precision: 3);
+    }
+
+    [Fact]
+    public async Task MovingToZeroWhileMutedStaysMuted()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Volume.Raise(Level(0.5f, muted: true));
+        rig.Flush();
+
+        rig.Model.VolumePercent = 0;
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        Assert.True(rig.Model.IsMuted);
+        Assert.True(rig.Volume.State.IsMuted);
+    }
+
+    [Fact]
+    public async Task MovingTheSliderWhileNotMutedNeverTouchesMute()
+    {
+        using var rig = await new Rig().StartAsync();
+
+        rig.Model.VolumePercent = 80;
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        Assert.False(rig.Model.IsMuted);
+        Assert.False(rig.Volume.State.IsMuted);
+    }
+
+    [Fact]
+    public async Task ARefusedUnmuteSnapsBackAndSaysSo()
+    {
+        using var rig = await new Rig().StartAsync();
+        rig.Volume.Raise(Level(0.5f, muted: true));
+        rig.Flush();
+        rig.Volume.WriteFailure = new OperationError(ErrorCode.AccessDenied, "no");
+
+        rig.Model.VolumePercent = 70;
+        await rig.Model.PendingWrite;
+        rig.Flush();
+
+        Assert.True(rig.Model.IsMuted);
+        Assert.Equal(50, rig.Model.VolumePercent);
+        Assert.NotNull(rig.Model.VolumeError);
+    }
+
+    [Fact]
+    public async Task AdjustingRaisesItsChangeOncePerChange()
+    {
+        using var rig = await new Rig().StartAsync();
+        var changes = 0;
+        rig.Model.PropertyChanged += (_, e) => changes += e.PropertyName == nameof(SystemPageViewModel.IsAdjusting) ? 1 : 0;
+
+        rig.Model.IsAdjusting = true;
+        rig.Model.IsAdjusting = true;
+        rig.Model.IsAdjusting = false;
+        rig.Model.IsAdjusting = false;
+
+        Assert.Equal(2, changes);
+    }
+
+    [Fact]
+    public async Task ReleasingAfterDisposeDoesNothing()
+    {
+        var rig = await new Rig().StartAsync();
+        rig.Model.IsAdjusting = true;
+        rig.Volume.Raise(Level(0.9f));
+        rig.Flush();
+
+        rig.Dispose();
+        rig.Model.IsAdjusting = false;
+
+        Assert.Equal(50, rig.Model.VolumePercent);
+    }
+
     // ---- clock -------------------------------------------------------------------------------------------------------
 
     [Fact]

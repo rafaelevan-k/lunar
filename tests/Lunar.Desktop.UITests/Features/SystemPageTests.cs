@@ -3,6 +3,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -399,6 +401,213 @@ public sealed class SystemPageTests
             using var stream = File.Create(System.IO.Path.Combine(shots, "system-page.png"));
             encoder.Save(stream);
         }
+    });
+
+    // ---- the slider while the hand is on it (FE-14) ------------------------------------------------------------------
+
+    private static void StartDrag(Slider slider) =>
+        slider.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent, Source = slider });
+
+    private static void EndDrag(Slider slider) =>
+        slider.RaiseEvent(new DragCompletedEventArgs(0, 0, canceled: false) { RoutedEvent = Thumb.DragCompletedEvent, Source = slider });
+
+    private static void PressKey(Rig rig, Slider slider, Key key, bool down)
+    {
+        var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(rig.Window)!, 0, key)
+        {
+            RoutedEvent = down ? Keyboard.PreviewKeyDownEvent : Keyboard.KeyUpEvent,
+            Source = slider
+        };
+        slider.RaiseEvent(args);
+    }
+
+    private static MouseWheelEventArgs Wheel(Slider slider, int delta)
+    {
+        var args = new MouseWheelEventArgs(Mouse.PrimaryDevice, 0, delta) { RoutedEvent = Mouse.PreviewMouseWheelEvent, Source = slider };
+        slider.RaiseEvent(args);
+        return args;
+    }
+
+    [Fact]
+    public void ADragOfTheThumbMarksTheViewModelAsAdjustingUntilItCompletes() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        StartDrag(slider);
+        Assert.True(rig.Model.IsAdjusting);
+        EndDrag(slider);
+
+        Assert.False(rig.Model.IsAdjusting);
+    });
+
+    [Fact]
+    public void AnOutsideChangeDuringADragDoesNotMoveTheThumbAndAppliesOnRelease() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        StartDrag(slider);
+        rig.Volume.RaiseExternalChange(new VolumeState(0.9f, false, CapabilityStatus.Supported));
+        Settle(rig.Window);
+        Assert.Equal(50, slider.Value);
+
+        EndDrag(slider);
+        Settle(rig.Window);
+        Assert.Equal(90, slider.Value);
+    });
+
+    [Fact]
+    public void ADragThatMovedTheThumbKeepsTheUsersLevelWhateverElseHappened() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        StartDrag(slider);
+        slider.Value = 25;
+        rig.Volume.RaiseExternalChange(new VolumeState(0.9f, false, CapabilityStatus.Supported));
+        Settle(rig.Window);
+        Pump(rig.Model.PendingWrite);
+        EndDrag(slider);
+        Settle(rig.Window);
+
+        Assert.Equal(25, slider.Value);
+        Assert.Equal(25, rig.Model.VolumePercent);
+    });
+
+    [Fact]
+    public void NavigationKeysCountAsAdjustingOtherKeysDoNot() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        PressKey(rig, slider, Key.A, down: true);
+        Assert.False(rig.Model.IsAdjusting);
+
+        PressKey(rig, slider, Key.Right, down: true);
+        Assert.True(rig.Model.IsAdjusting);
+        PressKey(rig, slider, Key.Right, down: false);
+
+        Assert.False(rig.Model.IsAdjusting);
+    });
+
+    [Fact]
+    public void AdjustingNeverStaysOnWhateverEndsTheInteraction() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        StartDrag(slider);
+        slider.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, slider, Named<IconButton>(rig, "MuteButton"))
+        {
+            RoutedEvent = Keyboard.LostKeyboardFocusEvent
+        });
+        Assert.False(rig.Model.IsAdjusting); // focus moved away
+
+        StartDrag(slider);
+        slider.IsEnabled = false;
+        Assert.False(rig.Model.IsAdjusting); // disabled (the device went away)
+        slider.IsEnabled = true;
+
+        StartDrag(slider);
+        rig.Window.Content = null;
+        Settle(rig.Window);
+        Assert.False(rig.Model.IsAdjusting); // unloaded
+    });
+
+    [Fact]
+    public void TheWheelOverTheSliderChangesItByTwoPerNotchAndIsHandled() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        var up = Wheel(slider, 120);
+        var down = Wheel(slider, -240);
+
+        Assert.True(up.Handled);
+        Assert.True(down.Handled);
+        Assert.Equal(48, slider.Value); // 50 + 2 - 4
+    });
+
+    [Fact]
+    public void TheWheelStopsAtTheEnds() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        Wheel(slider, 12000);
+        Assert.Equal(100, slider.Value);
+
+        Wheel(slider, -24000);
+        Assert.Equal(0, slider.Value);
+    });
+
+    [Fact]
+    public void ASmallPrecisionTouchpadDeltaMovesProportionally() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+
+        Wheel(slider, 60);
+
+        Assert.Equal(51, slider.Value);
+    });
+
+    [Fact]
+    public void WithoutAWheelStepTheWheelIsLeftAlone() => RunOnSta(() =>
+    {
+        var slider = new Slider { Minimum = 0, Maximum = 100, Value = 50 };
+        Lunar.Desktop.Behaviors.SliderInteraction.SetIsTracking(slider, true);
+
+        var args = Wheel(slider, 120);
+
+        Assert.False(args.Handled);
+        Assert.Equal(50, slider.Value);
+    });
+
+    [Fact]
+    public void TurningTrackingOffRemovesTheBehaviorAndResetsAdjusting() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "VolumeSlider");
+        StartDrag(slider);
+
+        Lunar.Desktop.Behaviors.SliderInteraction.SetIsTracking(slider, false);
+        Assert.False(rig.Model.IsAdjusting);
+        StartDrag(slider);
+
+        Assert.False(rig.Model.IsAdjusting);
+    });
+
+    [Fact]
+    public void TheSliderDimsWhileMutedAndNotOtherwise() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var host = Named<Grid>(rig, "SliderHost");
+        Assert.Equal(1.0, host.Opacity);
+
+        rig.Volume.RaiseExternalChange(new VolumeState(0.5f, true, CapabilityStatus.Supported));
+        Settle(rig.Window);
+        Assert.Equal(0.5, host.Opacity);
+
+        rig.Volume.RaiseExternalChange(new VolumeState(0.5f, false, CapabilityStatus.Supported));
+        Settle(rig.Window);
+        Assert.Equal(1.0, host.Opacity);
+    });
+
+    [Fact]
+    public void MovingTheThumbWhileMutedUnmutesOnScreen() => RunOnSta(() =>
+    {
+        using var rig = Create(arrange: (volume, _, _) => volume.RaiseExternalChange(new VolumeState(0.5f, true, CapabilityStatus.Supported)));
+        var slider = Named<Slider>(rig, "VolumeSlider");
+        Assert.Equal("Unmute", AutomationProperties.GetName(Named<IconButton>(rig, "MuteButton")));
+
+        slider.Value = 60;
+        Pump(rig.Model.PendingWrite);
+        Settle(rig.Window);
+
+        Assert.Equal("Mute", AutomationProperties.GetName(Named<IconButton>(rig, "MuteButton")));
+        Assert.Equal("60%", Named<TextBlock>(rig, "VolumeValue").Text);
     });
 
     // ---- boundaries --------------------------------------------------------------------------------------------------

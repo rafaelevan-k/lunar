@@ -25,6 +25,11 @@ namespace Lunar.Desktop.Features.SystemControls;
 /// write comes back as a corrected snapshot that snaps the slider back. The echo of the page's own write is not applied to
 /// the slider, so it cannot fight the user's hand.
 ///
+/// While the hand is on the slider (<see cref="IsAdjusting"/>) an outside change of the level is held back, never applied
+/// under the thumb: when the hand lets go it is applied if the user did not move the slider meanwhile, and dropped if they
+/// did (their level is the newer request and has been written). Moving the slider while muted unmutes, as Windows' own
+/// volume control does; moving it to zero does not mute. A refused write is authoritative and applies at once.
+///
 /// Owns the volume controller; does not own the other services (the container does). Use on the UI thread.
 /// </summary>
 public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
@@ -44,6 +49,9 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     private bool _started;
     private bool _disposed;
     private bool _applying;
+    private bool _isAdjusting;
+    private bool _movedDuringAdjust;
+    private VolumeSnapshot? _deferred;
     private bool _isVolumeLoaded;
     private string? _volumeNote;
     private double _volumePercent;
@@ -138,12 +146,38 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             _volumePercent = clamped;
             OnChanged(nameof(VolumePercent));
             OnChanged(nameof(VolumeText));
-            if (!_applying)
-                _lastWrite = WriteVolumeAsync((float)(clamped / 100d));
+            if (_applying)
+                return;
+
+            _movedDuringAdjust = true;
+            var unmute = _isMuted && clamped > 0;
+            if (unmute)
+                IsMuted = false; // optimistic; a refused change comes back as a corrected snapshot
+            _lastWrite = WriteVolumeAsync((float)(clamped / 100d), unmute);
         }
     }
 
     public string VolumeText => SystemPageText.VolumeText(_volumePercent, _isMuted);
+
+    /// <summary>
+    /// True while the user holds the slider (mouse, touch, keyboard). Bound by the page; outside changes of the level wait
+    /// for it to become false.
+    /// </summary>
+    public bool IsAdjusting
+    {
+        get => _isAdjusting;
+        set
+        {
+            if (_isAdjusting == value)
+                return;
+            _isAdjusting = value;
+            OnChanged(nameof(IsAdjusting));
+            if (value)
+                _movedDuringAdjust = false;
+            else
+                EndAdjusting();
+        }
+    }
 
     public bool IsMuted
     {
@@ -284,6 +318,29 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             return;
 
         var state = snapshot.State;
+
+        // The hand is on the slider: an outside level waits (mute shows at once). Anything that changes what the slider can
+        // do at all, and a refused write, still apply immediately.
+        if (_isAdjusting && _volumeNote is null && state.Capability == CapabilityStatus.Supported
+            && snapshot.Source is VolumeChangeSource.External or VolumeChangeSource.Initial)
+        {
+            _deferred = snapshot;
+            _applying = true;
+            try
+            {
+                IsMuted = state.IsMuted;
+            }
+            finally
+            {
+                _applying = false;
+            }
+
+            return;
+        }
+
+        if (snapshot.Source == VolumeChangeSource.Corrected)
+            _deferred = null;
+
         _applying = true;
         try
         {
@@ -302,6 +359,15 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         }
 
         ((AsyncRelayCommand)ToggleMuteCommand).NotifyCanExecuteChanged();
+    }
+
+    // The hand let go: apply what was held back, unless the user moved the slider meanwhile (their level is newer).
+    private void EndAdjusting()
+    {
+        var deferred = _deferred;
+        _deferred = null;
+        if (deferred is not null && !_movedDuringAdjust && !_disposed)
+            ApplyVolume(deferred);
     }
 
     private void ShowVolumeUnknown()
@@ -344,13 +410,15 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     }
 
     // Never throws: every outcome ends in state or a log entry, so the task kept in _lastWrite cannot fault.
-    private async Task WriteVolumeAsync(float scalar)
+    private async Task WriteVolumeAsync(float scalar, bool unmute)
     {
         try
         {
             VolumeError = null;
-            var result = await _volume.SetVolumeAsync(scalar, _lifetime.Token);
-            if (result.IsFailure && !result.IsCancelled)
+            var level = _volume.SetVolumeAsync(scalar, _lifetime.Token);
+            var mute = unmute ? _volume.SetMuteAsync(false, _lifetime.Token) : Task.FromResult(Result.Success());
+            var results = await Task.WhenAll(level, mute);
+            if (results.Any(r => r.IsFailure && !r.IsCancelled))
                 _post(() => VolumeError = "Couldn't change the volume.");
         }
         catch (OperationCanceledException)

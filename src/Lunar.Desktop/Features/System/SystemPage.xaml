@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:behaviors="clr-namespace:Lunar.Desktop.Behaviors"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              xmlns:local="clr-namespace:Lunar.Desktop.Features.SystemControls"
              Focusable="False" IsTabStop="False" Background="Transparent"
@@ -98,11 +99,26 @@
             <c:SkeletonBlock Height="16" />
           </Grid>
 
-          <Slider x:Name="VolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"
-                  Margin="8,0" VerticalAlignment="Center" Style="{DynamicResource Lunar.Style.Slider}"
-                  Value="{Binding VolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                  Visibility="{Binding IsVolumeAvailable, Converter={StaticResource BoolToVisible}}"
-                  automation:AutomationProperties.Name="Volume" />
+          <!-- The slider dims while muted (the mute button and the "Muted" text say so too, so this is never the only signal). -->
+          <Grid x:Name="SliderHost" Grid.Column="1" Margin="8,0" VerticalAlignment="Center">
+            <Grid.Style>
+              <Style TargetType="Grid">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                    <Setter Property="Opacity" Value="0.5" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Grid.Style>
+            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"
+                    Style="{DynamicResource Lunar.Style.Slider}"
+                    behaviors:SliderInteraction.IsTracking="True"
+                    behaviors:SliderInteraction.WheelStep="2"
+                    behaviors:SliderInteraction.IsAdjusting="{Binding IsAdjusting, Mode=OneWayToSource}"
+                    Value="{Binding VolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding IsVolumeAvailable, Converter={StaticResource BoolToVisible}}"
+                    automation:AutomationProperties.Name="Volume" />
+          </Grid>
 
           <TextBlock x:Name="VolumeNoteText" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding VolumeNote}" Margin="8,0,0,0"
                      VerticalAlignment="Center" TextWrapping="Wrap" Style="{DynamicResource Lunar.Text.Secondary}"
