@@ -118,7 +118,7 @@ public sealed class ImageConversionProvider
 
             var rotate = origin != SKEncodedOrigin.TopLeft;
             var flatten = toJpeg && hasAlpha;
-            using var rendered = rotate || flatten ? Render(decoded, origin, flatten ? options.Background : null) : null;
+            using var rendered = rotate || flatten ? PictureRendering.Render(decoded, origin, flatten ? options.Background : null) : null;
             var final = rendered ?? decoded;
             ct.ThrowIfCancellationRequested();
 
@@ -175,42 +175,6 @@ public sealed class ImageConversionProvider
             return Fail(ErrorCode.Unexpected, "The picture could not be converted.");
         }
     }
-
-    // Turns the pixels by the EXIF orientation and, for a JPEG target, paints them over the background colour: one pass, one extra bitmap.
-    private static SKBitmap Render(SKBitmap source, SKEncodedOrigin origin, RgbColor? background)
-    {
-        var swap = origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
-        var width = swap ? source.Height : source.Width;
-        var height = swap ? source.Width : source.Height;
-        var alpha = background is null ? source.AlphaType : SKAlphaType.Opaque;
-        var target = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, alpha, source.ColorSpace));
-        try
-        {
-            using var canvas = new SKCanvas(target);
-            canvas.Clear(background is { } color ? new SKColor(color.R, color.G, color.B) : SKColors.Transparent);
-            canvas.SetMatrix(MatrixFor(origin, source.Width, source.Height));
-            canvas.DrawBitmap(source, 0, 0, SKSamplingOptions.Default);
-            return target;
-        }
-        catch
-        {
-            target.Dispose();
-            throw;
-        }
-    }
-
-    // Maps a source point (x, y) to where it lands once the picture is shown the right way up (EXIF orientation values 1 to 8).
-    private static SKMatrix MatrixFor(SKEncodedOrigin origin, int w, int h) => origin switch
-    {
-        SKEncodedOrigin.TopRight => new SKMatrix(-1, 0, w, 0, 1, 0, 0, 0, 1),
-        SKEncodedOrigin.BottomRight => new SKMatrix(-1, 0, w, 0, -1, h, 0, 0, 1),
-        SKEncodedOrigin.BottomLeft => new SKMatrix(1, 0, 0, 0, -1, h, 0, 0, 1),
-        SKEncodedOrigin.LeftTop => new SKMatrix(0, 1, 0, 1, 0, 0, 0, 0, 1),
-        SKEncodedOrigin.RightTop => new SKMatrix(0, -1, h, 1, 0, 0, 0, 0, 1),
-        SKEncodedOrigin.RightBottom => new SKMatrix(0, -1, h, -1, 0, w, 0, 0, 1),
-        SKEncodedOrigin.LeftBottom => new SKMatrix(0, 1, 0, -1, 0, w, 0, 0, 1),
-        _ => SKMatrix.Identity
-    };
 
     private void DeletePartial(string outputPath, bool created)
     {

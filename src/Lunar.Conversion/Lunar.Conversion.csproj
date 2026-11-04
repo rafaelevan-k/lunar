@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Remove="Spike\**\*.cs" />
     <InternalsVisibleTo Include="Lunar.Conversion.Tests" />
+    <PackageReference Include="DocumentFormat.OpenXml" />
     <PackageReference Include="SkiaSharp" />
     <ProjectReference Include="..\Lunar.Application\Lunar.Application.csproj" />
     <ProjectReference Include="..\Lunar.Domain\Lunar.Domain.csproj" />

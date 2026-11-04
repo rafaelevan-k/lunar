@@ -11,6 +11,11 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.13"
         }
       },
+      "DocumentFormat.OpenXml.Framework": {
+        "type": "Transitive",
+        "resolved": "3.5.1",
+        "contentHash": "U5txtc3ORno73xQx9Lf2gWzfaSZnZwKHfLkTAslhlew9lxe5XbUiCt0dY1fHeAf8yRqszUAe5i/+xLC9R/Xfsw=="
+      },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.13",
@@ -30,6 +35,7 @@
       "lunar.conversion": {
         "type": "Project",
         "dependencies": {
+          "DocumentFormat.OpenXml": "[3.5.1, )",
           "Lunar.Application": "[1.0.0, )",
           "Lunar.Domain": "[1.0.0, )",
           "SkiaSharp": "[4.153.1, )"
@@ -52,6 +58,15 @@
         "dependencies": {
           "Lunar.Application": "[1.0.0, )",
           "Lunar.Domain": "[1.0.0, )"
+        }
+      },
+      "DocumentFormat.OpenXml": {
+        "type": "CentralTransitive",
+        "requested": "[3.5.1, )",
+        "resolved": "3.5.1",
+        "contentHash": "zxdOf5VVCe/uNklbRhj8dVBzQGj3DoqkUuqOp9cAZVuN8mNYDjof1lvSQA2OQNr8Ptc9d7pbA7Azq/ReaI3FpA==",
+        "dependencies": {
+          "DocumentFormat.OpenXml.Framework": "3.5.1"
         }
       },
       "Serilog": {

@@ -14,5 +14,7 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <!-- Product package for picture conversion (Lunar.Conversion only), MIT (managed and native nuspec); version approved in ADR-0003, checked in BE-22 evidence. Shipping the native payload stays on hold (ADR-0003). -->
     <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <!-- Product package for Word documents (Lunar.Conversion only), MIT; version approved in ADR-0003, checked in BE-23 evidence. -->
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
   </ItemGroup>
 </Project>
