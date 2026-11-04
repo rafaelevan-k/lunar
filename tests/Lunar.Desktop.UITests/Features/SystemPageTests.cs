@@ -201,7 +201,7 @@ public sealed class SystemPageTests
         Assert.DoesNotContain(Descendants<SkeletonBlock>(rig.Page), b => b.IsVisible);
         var chips = Descendants<StatusChip>(rig.Page).ToList();
         Assert.Equal(["On, not connected", "On"], chips.Select(c => c.Text));
-        Assert.Equal(2, Descendants<Button>(rig.Page).Count(b => b is not IconButton && b.Content is "Turn off"));
+        Assert.Equal(["Turn off Wi-Fi", "Turn off Bluetooth"], Descendants<Button>(rig.Page).Where(b => b.IsVisible).Select(AutomationProperties.GetName).Where(n => n.StartsWith("Turn", StringComparison.Ordinal)));
     });
 
     [Fact]
@@ -227,7 +227,7 @@ public sealed class SystemPageTests
 
         Assert.Equal(["Not supported", "Access denied"], Descendants<StatusChip>(rig.Page).Select(c => c.Text));
         var buttons = Descendants<Button>(rig.Page).Where(b => b is not IconButton && b.IsVisible).Select(b => b.Content).ToList();
-        Assert.Equal(["Open Settings", "Open Settings"], buttons);
+        Assert.Equal(["Settings", "Settings"], buttons);
     });
 
     [Fact]
@@ -290,7 +290,7 @@ public sealed class SystemPageTests
     public void ARadioSwitchPressedOnTheCardChangesTheRadio() => RunOnSta(() =>
     {
         using var rig = Create();
-        var toggle = Descendants<Button>(Named<ContentControl>(rig, "BluetoothCard")).First(b => b.Content is "Turn off");
+        var toggle = Descendants<Button>(Named<ContentControl>(rig, "BluetoothCard")).First(b => AutomationProperties.GetName(b) == "Turn off Bluetooth");
 
         Press(rig, toggle);
         var end = DateTime.UtcNow.AddSeconds(3);
@@ -608,6 +608,207 @@ public sealed class SystemPageTests
 
         Assert.Equal("Mute", AutomationProperties.GetName(Named<IconButton>(rig, "MuteButton")));
         Assert.Equal("60%", Named<TextBlock>(rig, "VolumeValue").Text);
+    });
+
+    // ---- the switch (FE-15) ------------------------------------------------------------------------------------------
+
+    /// <summary>A Wi-Fi service that answers a switch request only when told to.</summary>
+    private sealed class HoldingWifi : IWifiService
+    {
+        private readonly Lunar.Application.Tests.Fakes.TestObservable<WifiState> _changes = new();
+        private TaskCompletionSource<Result>? _gate;
+
+        public WifiState State { get; set; } = new(CapabilityStatus.Supported, RadioState.Enabled, WifiConnectivity.Connected, true);
+
+        public IObservable<WifiState> Changes => _changes;
+
+        public Task<Result<WifiState>> GetAsync(CancellationToken ct) => Task.FromResult(Result.Success(State));
+
+        public Task<Result> SetEnabledAsync(bool enabled, CancellationToken ct)
+        {
+            _gate = new TaskCompletionSource<Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _gate.Task;
+        }
+
+        public void Answer(Result result, RadioState radio)
+        {
+            State = State with { Radio = radio };
+            _changes.Publish(State);
+            _gate!.SetResult(result);
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private static Rig CreateHolding(HoldingWifi wifi)
+    {
+        var volume = new FakeVolumeService();
+        var bluetooth = new FakeBluetoothService();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+        var model = new SystemPageViewModel(volume, wifi, bluetooth, new Clock(), new Launcher(),
+            work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
+        var page = new SystemPage { DataContext = model };
+        var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
+        window.Resources.MergedDictionaries.Add(Load("Themes", "Colors.Dark.xaml"));
+        window.Resources.MergedDictionaries.Add(Load("Themes", "Typography.xaml"));
+        window.Resources.MergedDictionaries.Add(Load("Themes", "Spacing.xaml"));
+        window.Resources.MergedDictionaries.Add(Load("Themes", "Components.xaml"));
+        window.Resources.MergedDictionaries.Add(Load("Controls", "ControlStyles.xaml"));
+        window.Show();
+        window.UpdateLayout();
+        var rig = new Rig(window, page, model, volume, new FakeWifiService(), bluetooth);
+        Pump(model.InitializeAsync());
+        Settle(window);
+        return rig;
+    }
+
+    private static Button WifiSwitch(Rig rig) =>
+        Descendants<Button>(Named<ContentControl>(rig, "WifiCard")).First(b => AutomationProperties.GetName(b).StartsWith("Turn", StringComparison.Ordinal));
+
+    [Fact]
+    public void TheSwitchDrawsTheStateWindowsReportedAndNothingElse() => RunOnSta(() =>
+    {
+        using var rig = Create();
+
+        Assert.True(Lunar.Desktop.Controls.SwitchState.GetIsOn(WifiSwitch(rig)));
+        Assert.Equal("Turn off Wi-Fi", AutomationProperties.GetName(WifiSwitch(rig)));
+    });
+
+    [Fact]
+    public void PressingTheSwitchDoesNotMoveItUntilWindowsConfirms() => RunOnSta(() =>
+    {
+        var wifi = new HoldingWifi();
+        using var rig = CreateHolding(wifi);
+        var toggle = WifiSwitch(rig);
+
+        Press(rig, toggle);
+        Settle(rig.Window);
+
+        Assert.True(Lunar.Desktop.Controls.SwitchState.GetIsOn(toggle)); // still the real state
+        Assert.False(toggle.IsEnabled); // one request at a time
+        var chip = Descendants<StatusChip>(Named<ContentControl>(rig, "WifiCard")).First();
+        Assert.Equal("Turning off…", chip.Text);
+        Assert.Equal(StatusKind.Info, chip.Kind);
+
+        wifi.Answer(Result.Success(), RadioState.Disabled);
+        var end = DateTime.UtcNow.AddSeconds(3);
+        while (rig.Model.Wifi.IsSwitching && DateTime.UtcNow < end)
+            Settle(rig.Window);
+        Settle(rig.Window);
+
+        Assert.False(Lunar.Desktop.Controls.SwitchState.GetIsOn(WifiSwitch(rig)));
+        Assert.Equal("Off", Descendants<StatusChip>(Named<ContentControl>(rig, "WifiCard")).First().Text);
+        Assert.True(WifiSwitch(rig).IsEnabled);
+    });
+
+    [Fact]
+    public void ARefusedRequestLeavesTheSwitchOnAndTheErrorOnThePage() => RunOnSta(() =>
+    {
+        var wifi = new HoldingWifi();
+        using var rig = CreateHolding(wifi);
+        Press(rig, WifiSwitch(rig));
+
+        wifi.Answer(Result.Failure(new OperationError(ErrorCode.Timeout, "slow", retryable: true)), RadioState.Enabled);
+        var end = DateTime.UtcNow.AddSeconds(3);
+        while (rig.Model.Wifi.IsSwitching && DateTime.UtcNow < end)
+            Settle(rig.Window);
+        Settle(rig.Window);
+
+        Assert.True(Lunar.Desktop.Controls.SwitchState.GetIsOn(WifiSwitch(rig)));
+        Assert.Equal("Windows didn't confirm the change. Try again.", Named<InlineError>(rig, "PageError").Message);
+    });
+
+    [Fact]
+    public void TheSwitchCanBePressedByAssistiveTechnology() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var toggle = WifiSwitch(rig);
+
+        var peer = System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(toggle);
+
+        Assert.NotNull(peer.GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke));
+        Assert.Equal("Turn off Wi-Fi", peer.GetName());
+        Assert.True(toggle.Focusable && toggle.IsTabStop);
+    });
+
+    [Fact]
+    public void WithoutASwitchTheCardGivesAReasonAndTheSettingsPage() => RunOnSta(() =>
+    {
+        using var rig = Create(arrange: (_, wifi, bluetooth) =>
+        {
+            wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
+            bluetooth.State = new BluetoothState(CapabilityStatus.Supported, RadioState.Disabled, CanToggle: false);
+        });
+
+        var cards = new[] { Named<ContentControl>(rig, "WifiCard"), Named<ContentControl>(rig, "BluetoothCard") };
+        var hints = cards.Select(card => Descendants<TextBlock>(card).First(t => t.Name == "HintText")).ToList();
+        Assert.Equal(["This PC doesn't allow controlling it.", "Can't be switched from here."], hints.Select(h => h.Text));
+        Assert.All(hints, h => Assert.True(h.IsVisible));
+        Assert.All(cards, card => Assert.DoesNotContain(Descendants<Button>(card), b => b.IsVisible && AutomationProperties.GetName(b).StartsWith("Turn", StringComparison.Ordinal)));
+        Assert.All(cards, card => Assert.Single(Descendants<Button>(card), b => b.IsVisible && AutomationProperties.GetName(b) == "Open Settings"));
+    });
+
+    [Fact]
+    public void ACardWithASwitchShowsNoReasonText() => RunOnSta(() =>
+    {
+        using var rig = Create();
+
+        var hints = Descendants<TextBlock>(rig.Page).Where(t => t.Name == "HintText");
+        Assert.All(hints, h => Assert.False(h.IsVisible));
+    });
+
+    [Fact]
+    public void TheWorstCaseCardsStillFitTheExpandedIsland() => RunOnSta(() =>
+    {
+        using var rig = Create(arrange: (_, wifi, bluetooth) =>
+        {
+            wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
+            bluetooth.State = new BluetoothState(CapabilityStatus.PermissionDenied, RadioState.Unknown, false);
+        });
+
+        rig.Page.Measure(new Size(PageWidth, double.PositiveInfinity));
+
+        Assert.True(rig.Page.DesiredSize.Height <= PageHeight, $"Page wants {rig.Page.DesiredSize.Height} high, {PageHeight} available.");
+    });
+
+    [Fact]
+    public void TheWorstCaseCardsWithAnErrorStillFit() => RunOnSta(() =>
+    {
+        using var rig = Create(arrange: (_, wifi, bluetooth) =>
+        {
+            wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
+            bluetooth.State = new BluetoothState(CapabilityStatus.PermissionDenied, RadioState.Unknown, false);
+        });
+        rig.Model.Wifi.ShowFault("Windows didn't allow this change. Use Settings to switch Bluetooth.");
+        Settle(rig.Window);
+
+        rig.Page.Measure(new Size(PageWidth, double.PositiveInfinity));
+
+        Assert.True(rig.Page.DesiredSize.Height <= PageHeight, $"Page wants {rig.Page.DesiredSize.Height} high, {PageHeight} available.");
+    });
+
+    [Fact]
+    public void TheWorstCasePageRendersWhenAskedTo() => RunOnSta(() =>
+    {
+        var shots = Environment.GetEnvironmentVariable("LUNAR_SHOT_DIR");
+        if (string.IsNullOrEmpty(shots) || !Directory.Exists(shots))
+            return; // only to look at the page by eye; nothing to assert otherwise
+
+        using var rig = Create(arrange: (_, wifi, bluetooth) =>
+        {
+            wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
+            bluetooth.State = new BluetoothState(CapabilityStatus.Supported, RadioState.Disabled, CanToggle: false);
+        });
+        rig.Model.Wifi.ShowFault("Windows didn't allow this change. Use Settings to switch Bluetooth.");
+        Settle(rig.Window);
+        rig.Page.Measure(new Size(PageWidth, PageHeight));
+        rig.Page.Arrange(new Rect(0, 0, PageWidth, PageHeight));
+        var bitmap = new RenderTargetBitmap((int)PageWidth, (int)PageHeight, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(rig.Page);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(System.IO.Path.Combine(shots, "system-page-worst.png"));
+        encoder.Save(stream);
     });
 
     // ---- boundaries --------------------------------------------------------------------------------------------------

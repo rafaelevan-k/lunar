@@ -7,7 +7,7 @@
     Spacing, Components), so the controls follow the dark, light and high-contrast palettes. Load after Components.xaml.
     Every interactive control is a tab stop with the shared focus ring (Lunar.Style.FocusVisual) and a disabled look
     that is not colour alone (reduced opacity plus the disabled text colour).
-    Keys: Lunar.Style.Slider, Lunar.Style.Toggle, Lunar.Style.ActionButton, and implicit styles for IconButton,
+    Keys: Lunar.Style.Slider, Lunar.Style.Toggle, Lunar.Style.SwitchButton, Lunar.Style.ActionButton, and implicit styles for IconButton,
     StatusChip, InlineError, SkeletonBlock and ToolTip.
   -->
   <shell:StadiumRadiusConverter x:Key="Lunar.Converter.Stadium" />
@@ -137,6 +137,52 @@
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="Root" Property="Opacity" Value="0.4" />
               <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextDisabled}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!--
+    ===== Switch button (FE-15) =====
+    A switch that is a plain Button, so pressing it only asks (it never flips itself): it draws the on or off state of the
+    attached c:SwitchState.IsOn (bind it to the confirmed state) and changes only when that state changes. Because it is a Button it
+    supports the Invoke pattern, so assistive technology can press it; give it an accessible name that says the action.
+  -->
+  <Style x:Key="Lunar.Style.SwitchButton" TargetType="Button">
+    <Setter Property="Focusable" Value="True" />
+    <Setter Property="IsTabStop" Value="True" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Grid Background="Transparent">
+            <Rectangle x:Name="FocusRing" Margin="-3" RadiusX="14" RadiusY="14" StrokeThickness="2"
+                       Stroke="{DynamicResource Lunar.Brush.Focus}" Visibility="Collapsed" />
+            <Border x:Name="Track" CornerRadius="11" Background="{DynamicResource Lunar.Brush.Surface}"
+                    BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}" BorderThickness="1" />
+            <Ellipse x:Name="Knob" Width="14" Height="14" Margin="4,0" HorizontalAlignment="Left"
+                     Fill="{DynamicResource Lunar.Brush.TextSecondary}" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="c:SwitchState.IsOn" Value="True">
+              <Setter TargetName="Track" Property="Background" Value="{DynamicResource Lunar.Brush.Accent}" />
+              <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+              <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource Lunar.Brush.OnAccent}" />
+              <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="FocusRing" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.4" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

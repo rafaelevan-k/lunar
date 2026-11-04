@@ -24,11 +24,26 @@
       <Setter Property="Padding" Value="10,8" />
     </Style>
 
-    <!-- A Wi-Fi or Bluetooth card. -->
+    <!-- A Wi-Fi or Bluetooth card: title and switch on one row, the confirmed status under it, a one-line reason when there
+         is no switch, and the Settings page as the fallback. Nothing here scans or lists networks. -->
     <DataTemplate DataType="{x:Type local:RadioCardViewModel}">
       <Border Style="{StaticResource Card}" automation:AutomationProperties.Name="{Binding Title}">
         <StackPanel>
-          <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Caption}" />
+          <Grid MinHeight="22">
+            <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" />
+            <Button x:Name="Switch" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Style="{DynamicResource Lunar.Style.SwitchButton}"
+                    c:SwitchState.IsOn="{Binding IsOn}" Command="{Binding ToggleCommand}"
+                    IsEnabled="{Binding IsSwitchEnabled}"
+                    Visibility="{Binding CanToggle, Converter={StaticResource BoolToVisible}}"
+                    automation:AutomationProperties.Name="{Binding SwitchLabel}" />
+            <!-- The Settings page takes the switch's place when there is no switch: same row, so no extra height. -->
+            <Button x:Name="SettingsLink" Content="Settings" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Command="{Binding OpenSettingsCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                    MinHeight="22" Padding="8,1"
+                    Visibility="{Binding ShowSettingsLink, Converter={StaticResource BoolToVisible}}"
+                    automation:AutomationProperties.Name="Open Settings" />
+          </Grid>
           <Grid Margin="0,6,0,0" x:Name="Placeholder">
             <Grid.Style>
               <Style TargetType="Grid">
@@ -43,15 +58,10 @@
             <c:SkeletonBlock Height="18" />
           </Grid>
           <StackPanel Visibility="{Binding IsLoaded, Converter={StaticResource BoolToVisible}}">
-            <c:StatusChip Text="{Binding StatusText}" Kind="{Binding StatusKind}" HorizontalAlignment="Left" Margin="0,4,0,0" />
-            <Button Content="{Binding ActionText}" Command="{Binding ToggleCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                    HorizontalAlignment="Left" Margin="0,6,0,0"
-                    Visibility="{Binding CanToggle, Converter={StaticResource BoolToVisible}}"
-                    automation:AutomationProperties.Name="{Binding ActionText}" />
-            <Button Content="Open Settings" Command="{Binding OpenSettingsCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                    HorizontalAlignment="Left" Margin="0,6,0,0"
-                    Visibility="{Binding ShowSettingsLink, Converter={StaticResource BoolToVisible}}"
-                    automation:AutomationProperties.Name="Open Settings" />
+            <c:StatusChip Text="{Binding ShownStatusText}" Kind="{Binding ShownStatusKind}" HorizontalAlignment="Left" Margin="0,4,0,0" />
+            <TextBlock x:Name="HintText" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0"
+                       Style="{DynamicResource Lunar.Text.Caption}"
+                       Visibility="{Binding Hint, Converter={x:Static c:NullToVisibilityConverter.Instance}}" />
           </StackPanel>
         </StackPanel>
       </Border>

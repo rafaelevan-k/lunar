@@ -170,6 +170,63 @@ public sealed class ControlsTests
         window.Close();
     });
 
+    // ---- switch button (FE-15) -------------------------------------------------------------------------------------
+
+    [Fact]
+    public void SwitchButtonDrawsItsStateAndNeverChangesItselfWhenPressed() => RunOnSta(() =>
+    {
+        var button = new Button();
+        var window = Show(new StackPanel());
+        button.Style = (Style)window.FindResource("Lunar.Style.SwitchButton");
+        window.Content = button;
+        window.UpdateLayout();
+        button.ApplyTemplate();
+        var track = (Border)button.Template.FindName("Track", button);
+        var knob = (System.Windows.Shapes.Ellipse)button.Template.FindName("Knob", button);
+        var offTrack = ((SolidColorBrush)track.Background).Color;
+        Assert.Equal(HorizontalAlignment.Left, knob.HorizontalAlignment);
+
+        SwitchState.SetIsOn(button, true);
+        window.UpdateLayout();
+        Assert.Equal(HorizontalAlignment.Right, knob.HorizontalAlignment);
+        Assert.NotEqual(offTrack, ((SolidColorBrush)track.Background).Color);
+
+        // Pressing only raises Click; the drawn state is whatever was bound.
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.UpdateLayout();
+        Assert.True(SwitchState.GetIsOn(button));
+
+        SwitchState.SetIsOn(button, false);
+        window.UpdateLayout();
+        Assert.Equal(HorizontalAlignment.Left, knob.HorizontalAlignment);
+
+        window.Close();
+    });
+
+    [Fact]
+    public void SwitchButtonIsFocusableDimsWhenDisabledAndAcceptsInvoke() => RunOnSta(() =>
+    {
+        var button = new Button();
+        var window = Show(new StackPanel());
+        button.Style = (Style)window.FindResource("Lunar.Style.SwitchButton");
+        window.Content = button;
+        window.UpdateLayout();
+
+        Assert.True(button.Focusable && button.IsTabStop);
+        var invoked = 0;
+        button.Click += (_, _) => invoked++;
+        var peer = UIElementAutomationPeer.CreatePeerForElement(button);
+        ((IInvokeProvider)peer.GetPattern(PatternInterface.Invoke)).Invoke();
+        window.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background, () => { });
+        Assert.Equal(1, invoked);
+
+        button.IsEnabled = false;
+        window.UpdateLayout();
+        Assert.True(button.Opacity < 1);
+
+        window.Close();
+    });
+
     // ---- toggle ----------------------------------------------------------------------------------------------------
 
     [Fact]

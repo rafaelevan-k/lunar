@@ -95,11 +95,13 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             "Wi-Fi", "Wi-Fi",
             (enabled, ct) => wifi.SetEnabledAsync(enabled, ct),
             ct => settings.OpenAsync(SettingsPage.Wifi, ct),
+            ct => RefreshWifiAsync(ct),
             OnFault, lifetime);
         Bluetooth = new RadioCardViewModel(
             "Bluetooth", "Bluetooth",
             (enabled, ct) => bluetooth.SetEnabledAsync(enabled, ct),
             ct => settings.OpenAsync(SettingsPage.Bluetooth, ct),
+            ct => RefreshBluetoothAsync(ct),
             OnFault, lifetime);
         Wifi.PropertyChanged += OnCardChanged;
         Bluetooth.PropertyChanged += OnCardChanged;
@@ -310,6 +312,54 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             _post(() => Bluetooth.ShowFault("Couldn't read the Bluetooth state."));
     }
 
+    // After a switch request: read the real state again and apply it before returning, so the card ends the request showing
+    // what Windows has, never what was asked for.
+    private async Task RefreshWifiAsync(CancellationToken ct)
+    {
+        var result = await _wifi.GetAsync(ct).ConfigureAwait(false);
+        if (result.IsCancelled)
+            return;
+        await PostAsync(() =>
+        {
+            if (result.IsSuccess)
+                ApplyWifi(result.Value);
+            else
+                Wifi.ShowFault("Couldn't read the Wi-Fi state.");
+        }, ct).ConfigureAwait(false);
+    }
+
+    private async Task RefreshBluetoothAsync(CancellationToken ct)
+    {
+        var result = await _bluetooth.GetAsync(ct).ConfigureAwait(false);
+        if (result.IsCancelled)
+            return;
+        await PostAsync(() =>
+        {
+            if (result.IsSuccess)
+                ApplyBluetooth(result.Value);
+            else
+                Bluetooth.ShowFault("Couldn't read the Bluetooth state.");
+        }, ct).ConfigureAwait(false);
+    }
+
+    // Runs work on the UI thread and completes once it has run (or the page is closing).
+    private Task PostAsync(Action work, CancellationToken ct)
+    {
+        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _post(() =>
+        {
+            try
+            {
+                work();
+            }
+            finally
+            {
+                done.TrySetResult();
+            }
+        });
+        return done.Task.WaitAsync(ct);
+    }
+
     // ---- applying port state ----------------------------------------------------------------------------------------
 
     private void ApplyVolume(VolumeSnapshot snapshot)
@@ -386,7 +436,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             return;
         var (text, kind) = SystemPageText.Wifi(state);
         Wifi.Show(text, kind, state.Radio == RadioState.Enabled, state.CanToggle,
-            SystemPageText.OffersSettings(state.Capability, state.Radio, state.CanToggle));
+            SystemPageText.OffersSettings(state.Capability, state.Radio, state.CanToggle), SystemPageText.WifiHint(state));
     }
 
     private void ApplyBluetooth(BluetoothState state)
@@ -395,7 +445,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             return;
         var (text, kind) = SystemPageText.Bluetooth(state);
         Bluetooth.Show(text, kind, state.Radio == RadioState.Enabled, state.CanToggle,
-            SystemPageText.OffersSettings(state.Capability, state.Radio, state.CanToggle));
+            SystemPageText.OffersSettings(state.Capability, state.Radio, state.CanToggle), SystemPageText.BluetoothHint(state));
     }
 
     // ---- actions ----------------------------------------------------------------------------------------------------

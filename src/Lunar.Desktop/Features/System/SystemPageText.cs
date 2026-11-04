@@ -44,6 +44,34 @@ internal static class SystemPageText
         };
     }
 
+    public const string UnknownHint = "The state couldn't be determined.";
+
+    /// <summary>What the chip says while a switch request is out. An in-progress status, never a result.</summary>
+    public static string Switching(bool enabling) => enabling ? "Turning on…" : "Turning off…";
+
+    public static string? WifiHint(WifiState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return Hint(state.Capability, state.Radio, state.CanToggle);
+    }
+
+    public static string? BluetoothHint(BluetoothState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return Hint(state.Capability, state.Radio, state.CanToggle);
+    }
+
+    // One short sentence about why there is no switch. A machine with no adapter needs none: the chip says it.
+    private static string? Hint(CapabilityStatus capability, RadioState radio, bool canToggle) => capability switch
+    {
+        CapabilityStatus.Unsupported => "This PC doesn't allow controlling it.",
+        CapabilityStatus.PermissionDenied => "Windows didn't allow access.",
+        CapabilityStatus.Unknown => UnknownHint,
+        CapabilityStatus.Supported when !canToggle && radio is RadioState.Enabled or RadioState.Disabled => "Can't be switched from here.",
+        CapabilityStatus.Supported when radio == RadioState.Unknown => UnknownHint,
+        _ => null
+    };
+
     /// <summary>Whether a Settings link helps: it does for everything except a machine that simply has no adapter or radio.</summary>
     public static bool OffersSettings(CapabilityStatus capability, RadioState radio, bool canToggle) =>
         !canToggle && capability != CapabilityStatus.Unavailable && !(capability == CapabilityStatus.Supported && radio == RadioState.Unavailable);
