@@ -1,12 +1,12 @@
-namespace Lunar.Windows.Reactive;
+namespace Lunar.Application.Reactive;
 
 /// <summary>
-/// The observable half of every state port in this layer (ADR-0006 semantics): no replay, delivery serialized under
+/// The observable half of every state port and state-owning use case (ADR-0006 semantics): no replay, delivery serialized under
 /// one lock so observers never see two calls at once or out of order, idempotent and thread-safe unsubscribe, and
 /// <c>OnCompleted</c> when the owner closes it. <c>OnError</c> is never called. A throwing observer is dropped from that
 /// notification only: it neither stops the others nor reaches the caller. Safe to publish from any thread.
 /// </summary>
-internal sealed class StateBroadcaster<T> : IObservable<T>
+public sealed class StateBroadcaster<T> : IObservable<T>
 {
     private readonly object _gate = new();
     private readonly List<IObserver<T>> _observers = [];

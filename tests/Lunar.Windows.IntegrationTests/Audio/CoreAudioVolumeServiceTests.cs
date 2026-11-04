@@ -1,8 +1,8 @@
 using Lunar.Application.Abstractions.Diagnostics;
+using Lunar.Application.Reactive;
 using Lunar.Application.System.Models;
 using Lunar.Domain.Shared;
 using Lunar.Windows.Audio;
-using Lunar.Windows.Reactive;
 using Xunit;
 
 namespace Lunar.Windows.IntegrationTests.Audio;

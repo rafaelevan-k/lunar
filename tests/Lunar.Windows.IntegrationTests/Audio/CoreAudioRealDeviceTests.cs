@@ -109,6 +109,41 @@ public sealed class CoreAudioRealDeviceTests
     }
 
     [Fact]
+    public async Task TheVolumeControllerWorksOverTheRealService()
+    {
+        var (service, state) = await OpenOrSkip();
+        await using (service)
+        {
+            var controller = new Lunar.Application.System.UseCases.VolumeController(service, new Lunar.Windows.Environment.WindowsClock());
+            var snapshots = new List<Lunar.Application.System.Models.VolumeSnapshot>();
+            controller.Snapshots.Subscribe(new SnapshotObserver(snapshots));
+
+            var initial = await controller.InitializeAsync(CancellationToken.None);
+            var same = await controller.SetVolumeAsync(state.Scalar, CancellationToken.None); // only the value it already has is ever written: nothing audible
+            var again = await controller.SetVolumeAsync(state.Scalar, CancellationToken.None);
+            await Task.Delay(300, CancellationToken.None);
+            await controller.DisposeAsync();
+
+            Assert.True(initial.IsSuccess);
+            Assert.True(same.IsSuccess);
+            Assert.True(again.IsSuccess);
+            Assert.Equal(Lunar.Application.System.Models.VolumeChangeSource.Initial, snapshots[0].Source);
+            Assert.True((await service.GetAsync(CancellationToken.None)).Value.Scalar is var end && Math.Abs(end - state.Scalar) <= 0.011f); // back where it started
+        }
+    }
+
+    private sealed class SnapshotObserver(List<Lunar.Application.System.Models.VolumeSnapshot> into) : IObserver<Lunar.Application.System.Models.VolumeSnapshot>
+    {
+        public void OnNext(Lunar.Application.System.Models.VolumeSnapshot value) => into.Add(value);
+
+        public void OnError(Exception error) => throw new InvalidOperationException("OnError must never be called.");
+
+        public void OnCompleted()
+        {
+        }
+    }
+
+    [Fact]
     public async Task SeveralServicesCanReadTheSameDeviceAtOnce()
     {
         var (probe, _) = await OpenOrSkip();
