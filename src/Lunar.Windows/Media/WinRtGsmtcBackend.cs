@@ -8,8 +8,8 @@ namespace Lunar.Windows.Media;
 
 /// <summary>
 /// The real Global System Media Transport Controls implementation of <see cref="IGsmtcBackend"/> (ADR-0002, ADR-0013). It
-/// only reads: session list, current session, media properties, playback info, timeline and thumbnail. It never sends a
-/// command, never synthesizes a key press and never writes anything.
+/// reads the session list, current session, media properties, playback info, timeline and thumbnail, and (BE-16) sends the
+/// player a play, pause, toggle, next or previous request when asked. It never synthesizes a key press.
 ///
 /// Ids: a session is identified by its app's user-model id; when several sessions share one (two windows of one browser) the
 /// later ones get "#2", "#3" in the order Windows lists them. An id therefore stays the same while the session lives and
@@ -20,7 +20,8 @@ namespace Lunar.Windows.Media;
 /// raise <see cref="Changed"/>; nothing calls back into Windows from them. A session that closes under a read is left out
 /// of that read. Artwork is read once per track (cached by title, artist and album) and only when it is at most
 /// <see cref="Lunar.Application.Media.Models.MediaSessionSnapshot.MaxArtworkBytes"/>.
-/// Calls are serialized by the owning service.
+/// Every call into Windows runs on one dedicated thread (<see cref="GsmtcWorker"/>), because the session objects are bound to
+/// the thread that first used them. Calls are serialized by the owning service.
 /// </summary>
 internal sealed class WinRtGsmtcBackend : IGsmtcBackend
 {
@@ -28,6 +29,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
     private const int AccessDeniedHResult = unchecked((int)0x80070005);
 
     private readonly object _gate = new();
+    private readonly GsmtcWorker _worker = new();
     private readonly Dictionary<string, string?> _appNames = [];
     private readonly Dictionary<string, (string Key, byte[] Bytes)> _artwork = [];
     private readonly TypedEventHandler<GlobalSystemMediaTransportControlsSessionManager, SessionsChangedEventArgs> _sessionsChanged;
@@ -37,6 +39,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
     private readonly TypedEventHandler<GlobalSystemMediaTransportControlsSession, TimelinePropertiesChangedEventArgs> _timelineChanged;
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
     private List<GlobalSystemMediaTransportControlsSession> _tracked = [];
+    private List<string> _ids = [];
     private bool _disposed;
 
     public WinRtGsmtcBackend()
@@ -50,21 +53,26 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
 
     public event Action? Changed;
 
-    public async Task<IReadOnlyList<MediaSessionReading>> ReadAsync(CancellationToken ct)
+    public Task<IReadOnlyList<MediaSessionReading>> ReadAsync(CancellationToken ct) => _worker.RunAsync(() => ReadCoreAsync(ct));
+
+    public Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct) =>
+        _worker.RunAsync(() => SendCoreAsync(sessionId, action, ct));
+
+    private async Task<IReadOnlyList<MediaSessionReading>> ReadCoreAsync(CancellationToken ct)
     {
         try
         {
-            var manager = await ManagerAsync(ct).ConfigureAwait(false);
+            var manager = await ManagerAsync(ct);
             var sessions = manager.GetSessions().ToList();
             var current = manager.GetCurrentSession();
             var ids = AssignIds(sessions);
-            Track(sessions);
+            Track(sessions, ids);
 
             var currentIndex = IndexOfCurrent(sessions, current);
             var readings = new List<MediaSessionReading>(sessions.Count);
             for (var i = 0; i < sessions.Count; i++)
             {
-                var reading = await ReadOneAsync(sessions[i], ids[i], i == currentIndex, ct).ConfigureAwait(false);
+                var reading = await ReadOneAsync(sessions[i], ids[i], i == currentIndex, ct);
                 if (reading is not null)
                     readings.Add(reading);
             }
@@ -78,19 +86,63 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         }
     }
 
+    private async Task<GsmtcCommandResult> SendCoreAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+    {
+        GlobalSystemMediaTransportControlsSession? session;
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var index = _ids.IndexOf(sessionId);
+            session = index >= 0 && index < _tracked.Count ? _tracked[index] : null;
+        }
+
+        if (session is null)
+            return GsmtcCommandResult.SessionGone;
+
+        try
+        {
+            // Each of these is a request to the player; true means the player accepted it. Nothing here synthesizes a key press.
+            var operation = action switch
+            {
+                GsmtcAction.Play => session.TryPlayAsync(),
+                GsmtcAction.Pause => session.TryPauseAsync(),
+                GsmtcAction.Toggle => session.TryTogglePlayPauseAsync(),
+                GsmtcAction.Next => session.TrySkipNextAsync(),
+                _ => session.TrySkipPreviousAsync()
+            };
+            var accepted = await operation.AsTask(ct);
+            return accepted ? GsmtcCommandResult.Accepted : GsmtcCommandResult.Refused;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
+        {
+            throw Translate(ex);
+        }
+    }
+
     public void Dispose()
     {
-        GlobalSystemMediaTransportControlsSessionManager? manager;
-        List<GlobalSystemMediaTransportControlsSession> tracked;
         lock (_gate)
         {
             if (_disposed)
                 return;
             _disposed = true;
+        }
+
+        // The Windows objects are released on the thread that owns them, after anything already queued; this does not wait.
+        _worker.Complete(ReleaseWindowsObjects);
+    }
+
+    private void ReleaseWindowsObjects()
+    {
+        GlobalSystemMediaTransportControlsSessionManager? manager;
+        List<GlobalSystemMediaTransportControlsSession> tracked;
+        lock (_gate)
+        {
             manager = _manager;
             _manager = null;
             tracked = _tracked;
             _tracked = [];
+            _ids = [];
         }
 
         if (manager is not null)
@@ -112,7 +164,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
                 return _manager;
         }
 
-        var manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync().AsTask(ct).ConfigureAwait(false);
+        var manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync().AsTask(ct);
         lock (_gate)
         {
             if (_disposed)
@@ -150,7 +202,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
     }
 
     // Keeps our event subscriptions on exactly the sessions that are in the list.
-    private void Track(List<GlobalSystemMediaTransportControlsSession> sessions)
+    private void Track(List<GlobalSystemMediaTransportControlsSession> sessions, List<string> ids)
     {
         List<GlobalSystemMediaTransportControlsSession> previous;
         lock (_gate)
@@ -158,6 +210,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
             ObjectDisposedException.ThrowIf(_disposed, this);
             previous = _tracked;
             _tracked = sessions;
+            _ids = ids;
         }
 
         foreach (var session in previous.Where(p => !sessions.Any(s => ReferenceEquals(s, p))))
@@ -200,10 +253,10 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         {
             var playback = session.GetPlaybackInfo();
             var timeline = session.GetTimelineProperties();
-            var properties = await session.TryGetMediaPropertiesAsync().AsTask(ct).ConfigureAwait(false);
+            var properties = await session.TryGetMediaPropertiesAsync().AsTask(ct);
             var controls = playback.Controls;
             var artwork = properties?.Thumbnail is { } thumbnail
-                ? await ArtworkAsync(id, $"{properties.Title}|{properties.Artist}|{properties.AlbumTitle}", thumbnail, ct).ConfigureAwait(false)
+                ? await ArtworkAsync(id, $"{properties.Title}|{properties.Artist}|{properties.AlbumTitle}", thumbnail, ct)
                 : [];
 
             var stamp = timeline.LastUpdatedTime;
@@ -224,7 +277,8 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
                 controls.IsPreviousEnabled,
                 controls.IsPlaybackPositionEnabled,
                 isCurrent,
-                artwork);
+                artwork,
+                controls.IsPlayPauseToggleEnabled);
         }
         catch (Exception ex) when (ex is COMException or InvalidOperationException or ArgumentException)
         {
@@ -240,12 +294,12 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         var bytes = Array.Empty<byte>();
         try
         {
-            using var stream = await thumbnail.OpenReadAsync().AsTask(ct).ConfigureAwait(false);
+            using var stream = await thumbnail.OpenReadAsync().AsTask(ct);
             var size = stream.Size;
             if (size is > 0 and <= Lunar.Application.Media.Models.MediaSessionSnapshot.MaxArtworkBytes)
             {
                 using var reader = new DataReader(stream);
-                await reader.LoadAsync((uint)size).AsTask(ct).ConfigureAwait(false);
+                await reader.LoadAsync((uint)size).AsTask(ct);
                 bytes = new byte[size];
                 reader.ReadBytes(bytes);
             }

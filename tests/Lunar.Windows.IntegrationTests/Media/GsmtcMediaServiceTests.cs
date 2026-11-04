@@ -21,6 +21,18 @@ public sealed class GsmtcMediaServiceTests
 
         public int Reads { get; private set; }
 
+        public List<(string Id, GsmtcAction Action)> Sent { get; } = [];
+
+        public GsmtcCommandResult SendResult { get; set; } = GsmtcCommandResult.Accepted;
+
+        public MediaException? SendError { get; set; }
+
+        public TimeSpan SendDelay { get; set; }
+
+        public int MaxConcurrentSends { get; private set; }
+
+        private int _sending;
+
         public bool Disposed { get; private set; }
 
         public bool HasSubscribers => Changed is not null;
@@ -38,6 +50,30 @@ public sealed class GsmtcMediaServiceTests
                 throw ReadError;
             lock (_gate)
                 return [.. Readings];
+        }
+
+        public async Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+        {
+            var running = Interlocked.Increment(ref _sending);
+            try
+            {
+                lock (_gate)
+                {
+                    MaxConcurrentSends = Math.Max(MaxConcurrentSends, running);
+                    Sent.Add((sessionId, action));
+                }
+
+                if (SendDelay > TimeSpan.Zero)
+                    await Task.Delay(SendDelay, ct);
+                ct.ThrowIfCancellationRequested();
+                if (SendError is not null)
+                    throw SendError;
+                return SendResult;
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _sending);
+            }
         }
 
         public void Raise() => Changed?.Invoke();
@@ -428,37 +464,265 @@ public sealed class GsmtcMediaServiceTests
         Assert.Empty(late.Snapshot()); // no replay (ADR-0006)
     }
 
-    // ---- commands are not here yet -----------------------------------------------------------------------------------
+    // ---- transport commands (BE-16) ---------------------------------------------------------------------------------
 
     [Fact]
-    public async Task CommandsSayTheyAreNotAvailableYetInsteadOfPretending()
+    public async Task PlayPauseOnAPlayingSessionPausesIt()
+    {
+        var backend = new FakeBackend { Readings = [Reading(status: GsmtcStatus.Playing)] };
+        await using var service = Create(backend);
+
+        var result = await service.PlayPauseAsync("player.exe", Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([("player.exe", GsmtcAction.Pause)], backend.Sent);
+    }
+
+    [Theory]
+    [InlineData("Paused")]
+    [InlineData("Stopped")]
+    public async Task PlayPauseOnAPausedOrStoppedSessionPlaysIt(string status)
+    {
+        var backend = new FakeBackend { Readings = [Reading(status: Enum.Parse<GsmtcStatus>(status))] };
+        await using var service = Create(backend);
+
+        Assert.True((await service.PlayPauseAsync("player.exe", Ct)).IsSuccess);
+
+        Assert.Equal([("player.exe", GsmtcAction.Play)], backend.Sent);
+    }
+
+    [Fact]
+    public async Task AToggleOnlyPlayerIsToggled()
+    {
+        var backend = new FakeBackend { Readings = [Reading() with { CanPlay = false, CanPause = false, CanToggle = true }] };
+        await using var service = Create(backend);
+
+        Assert.True((await service.PlayPauseAsync("player.exe", Ct)).IsSuccess);
+
+        Assert.Equal([("player.exe", GsmtcAction.Toggle)], backend.Sent);
+    }
+
+    [Fact]
+    public async Task NextAndPreviousAreSentToTheNamedSession()
+    {
+        var backend = new FakeBackend { Readings = [Reading(id: "a.exe"), Reading(id: "b.exe", current: false)] };
+        await using var service = Create(backend);
+
+        Assert.True((await service.NextAsync("b.exe", Ct)).IsSuccess);
+        Assert.True((await service.PreviousAsync("a.exe", Ct)).IsSuccess);
+
+        Assert.Equal([("b.exe", GsmtcAction.Next), ("a.exe", GsmtcAction.Previous)], backend.Sent);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("no-such-session")]
+    public async Task AnUnknownOrBlankSessionIsInvalidInputAndNothingIsSent(string id)
     {
         var backend = new FakeBackend { Readings = [Reading()] };
+        await using var service = Create(backend);
+
+        var result = await service.NextAsync(id, Ct);
+
+        Assert.Equal(ErrorCode.InvalidInput, result.Error!.Code);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task ACommandTheSessionDoesNotAdvertiseIsUnsupportedAndNeverSent()
+    {
+        var backend = new FakeBackend { Readings = [Reading() with { CanNext = false, CanPrevious = false, CanPlay = false, CanPause = false }] };
         await using var service = Create(backend);
 
         var results = new[]
         {
             await service.PlayPauseAsync("player.exe", Ct),
             await service.NextAsync("player.exe", Ct),
-            await service.PreviousAsync("player.exe", Ct),
-            await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct)
+            await service.PreviousAsync("player.exe", Ct)
         };
 
         Assert.All(results, r => Assert.Equal(ErrorCode.Unsupported, r.Error!.Code));
-        Assert.Equal(0, backend.Reads); // and they did not touch Windows
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task APlayerChangingTrackIsNotAskedToPlayOrPause()
+    {
+        var backend = new FakeBackend { Readings = [Reading(status: GsmtcStatus.Changing)] };
+        await using var service = Create(backend);
+
+        var result = await service.PlayPauseAsync("player.exe", Ct);
+
+        Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task TheCommandIsCheckedAgainstWhatTheSessionAdvertisesNowNotWhenItWasLastRead()
+    {
+        var backend = new FakeBackend { Readings = [Reading()] };
+        await using var service = Create(backend);
+        _ = await service.GetSessionsAsync(Ct); // the UI saw "next is available"
+
+        backend.Readings = [Reading() with { CanNext = false }]; // and then the player stopped offering it
+
+        var result = await service.NextAsync("player.exe", Ct);
+
+        Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task ASessionThatClosedBetweenTheReadAndTheSendIsInvalidInput()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendResult = GsmtcCommandResult.SessionGone };
+        await using var service = Create(backend);
+
+        var result = await service.NextAsync("player.exe", Ct);
+
+        Assert.Equal(ErrorCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task APlayerThatDoesNotAcceptTheCommandIsNotReportedAsSuccess()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendResult = GsmtcCommandResult.Refused };
+        await using var service = Create(backend);
+
+        var result = await service.NextAsync("player.exe", Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorCode.Unexpected, result.Error!.Code);
+        Assert.True(result.Error.Retryable);
+    }
+
+    [Theory]
+    [InlineData("NotSupported", ErrorCode.Unsupported, false)]
+    [InlineData("AccessDenied", ErrorCode.AccessDenied, false)]
+    [InlineData("Other", ErrorCode.Unexpected, true)]
+    public async Task EveryCommandFailureIsTyped(string failure, ErrorCode code, bool retryable)
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendError = new MediaException(Enum.Parse<MediaFailure>(failure), 5, "x") };
+        await using var service = Create(backend);
+
+        var result = await service.PlayPauseAsync("player.exe", Ct);
+
+        Assert.Equal(code, result.Error!.Code);
+        Assert.Equal(retryable, result.Error.Retryable);
+    }
+
+    [Fact]
+    public async Task APlayerThatNeverAnswersTimesOut()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendDelay = TimeSpan.FromSeconds(30) };
+        await using var service = Create(backend, timeout: TimeSpan.FromMilliseconds(80));
+
+        var result = await service.NextAsync("player.exe", Ct);
+
+        Assert.Equal(ErrorCode.Timeout, result.Error!.Code);
+        Assert.True(result.Error.Retryable);
+    }
+
+    [Fact]
+    public async Task ACallerWhoCancelsWhileTheCommandIsOutGetsCancelled()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendDelay = TimeSpan.FromSeconds(30) };
+        await using var service = Create(backend);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(80));
+
+        var result = await service.NextAsync("player.exe", cts.Token);
+
+        Assert.True(result.IsCancelled);
+    }
+
+    [Fact]
+    public async Task AReadFailureStopsTheCommandBeforeItIsSent()
+    {
+        var backend = new FakeBackend { ReadError = new MediaException(MediaFailure.Other, 31, "x") };
+        await using var service = Create(backend);
+
+        var result = await service.NextAsync("player.exe", Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Empty(backend.Sent);
+    }
+
+    [Fact]
+    public async Task CommandsNeverRunAtTheSameTimeOnTheBackend()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], SendDelay = TimeSpan.FromMilliseconds(5) };
+        await using var service = Create(backend);
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 30).Select(i => i % 2 == 0 ? service.NextAsync("player.exe", Ct) : service.PreviousAsync("player.exe", Ct)));
+
+        Assert.All(results, r => Assert.True(r.IsSuccess, r.Error?.SafeMessage));
+        Assert.Equal(30, backend.Sent.Count);
+        Assert.Equal(1, backend.MaxConcurrentSends);
+    }
+
+    [Fact]
+    public async Task ACommandDoesNotGuessTheNewStateItOnlyReportsWhatThePlayerAccepted()
+    {
+        var backend = new FakeBackend { Readings = [Reading(status: GsmtcStatus.Playing)] };
+        await using var service = Create(backend);
+        var recorder = new Recorder();
+        using var subscription = service.Changes.Subscribe(recorder);
+        _ = await service.GetSessionsAsync(Ct);
+
+        Assert.True((await service.PlayPauseAsync("player.exe", Ct)).IsSuccess);
+        await Task.Delay(100, Ct);
+
+        Assert.Single(recorder.Snapshot()); // the state changes only when Windows says so (the player did not change in this fake)
+    }
+
+    [Fact]
+    public async Task CommandFailuresNeverPutMediaDetailsInTheLog()
+    {
+        var log = new CollectingLog();
+        var backend = new FakeBackend
+        {
+            Readings = [Reading(title: "Secret Song", artist: "Secret Artist")],
+            SendError = new MediaException(MediaFailure.Other, 31, "Secret Song by Secret Artist in Player")
+        };
+        await using var service = Create(backend, log);
+
+        _ = await service.NextAsync("player.exe", Ct);
+        backend.SendError = null;
+        backend.SendDelay = TimeSpan.FromSeconds(30);
+        _ = await Create(backend, log, timeout: TimeSpan.FromMilliseconds(30)).NextAsync("player.exe", Ct);
+
+        Assert.NotEmpty(log.Events);
+        foreach (var entry in log.Events)
+        {
+            Assert.DoesNotContain("Secret", entry.ToString(), StringComparison.Ordinal);
+            Assert.StartsWith("media.", entry.EventId, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task SeekingIsStillNotAvailableUntilItsOwnTask()
+    {
+        var backend = new FakeBackend { Readings = [Reading()] };
+        await using var service = Create(backend);
+
+        var result = await service.SeekAsync("player.exe", TimeSpan.FromSeconds(5), Ct);
+
+        Assert.Equal(ErrorCode.Unsupported, result.Error!.Code);
+        Assert.Empty(backend.Sent);
     }
 
     [Fact]
     public async Task CommandsHonourCancellationAndDisposal()
     {
-        var service = Create(new FakeBackend());
+        var service = Create(new FakeBackend { Readings = [Reading()] });
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
-        Assert.True((await service.PlayPauseAsync("x", cts.Token)).IsCancelled);
+        Assert.True((await service.PlayPauseAsync("player.exe", cts.Token)).IsCancelled);
 
         await service.DisposeAsync();
 
-        Assert.Equal(ErrorCode.DeviceUnavailable, (await service.NextAsync("x", Ct)).Error!.Code);
+        Assert.Equal(ErrorCode.DeviceUnavailable, (await service.NextAsync("player.exe", Ct)).Error!.Code);
     }
 
     // ---- lifetime and privacy ----------------------------------------------------------------------------------------

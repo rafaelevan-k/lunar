@@ -58,7 +58,8 @@ internal sealed record MediaSessionReading(
     bool CanPrevious,
     bool CanSeek,
     bool IsCurrent,
-    byte[] Artwork)
+    byte[] Artwork,
+    bool CanToggle = false)
 {
     /// <summary>Content equality (an artwork buffer compares by its bytes), used to tell a real change from a repeat.</summary>
     public bool SameAs(MediaSessionReading? other) =>
@@ -67,8 +68,31 @@ internal sealed record MediaSessionReading(
         && Status == other.Status && Start == other.Start && End == other.End && Position == other.Position
         && PositionStamp == other.PositionStamp && Rate.Equals(other.Rate)
         && CanPlay == other.CanPlay && CanPause == other.CanPause && CanNext == other.CanNext
-        && CanPrevious == other.CanPrevious && CanSeek == other.CanSeek && IsCurrent == other.IsCurrent
+        && CanPrevious == other.CanPrevious && CanSeek == other.CanSeek && CanToggle == other.CanToggle && IsCurrent == other.IsCurrent
         && (ReferenceEquals(Artwork, other.Artwork) || Artwork.AsSpan().SequenceEqual(other.Artwork));
+}
+
+/// <summary>What a transport command asks Windows to do. Chosen by <see cref="MediaCommandPlanner"/> from what the session advertises.</summary>
+internal enum GsmtcAction
+{
+    Play,
+    Pause,
+    Toggle,
+    Next,
+    Previous
+}
+
+/// <summary>How a command ended at the player.</summary>
+internal enum GsmtcCommandResult
+{
+    /// <summary>The player accepted the command.</summary>
+    Accepted,
+
+    /// <summary>Windows delivered it but the player did not accept it.</summary>
+    Refused,
+
+    /// <summary>The session is not there any more.</summary>
+    SessionGone
 }
 
 /// <summary>
@@ -80,6 +104,12 @@ internal interface IGsmtcBackend : IDisposable
 {
     /// <summary>Reads every media session (none is an empty list). Throws <see cref="MediaException"/> on failure.</summary>
     Task<IReadOnlyList<MediaSessionReading>> ReadAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Sends one transport command to the session with this id (as listed by the last read) and reports how it ended.
+    /// Throws <see cref="MediaException"/> on failure.
+    /// </summary>
+    Task<GsmtcCommandResult> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct);
 
     /// <summary>
     /// Raised on an arbitrary thread when the session list, the current session, or anything about a session (its media,

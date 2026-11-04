@@ -43,6 +43,31 @@ public sealed class GsmtcRealSessionTests
         });
     }
 
+    // Regression for a real bug: a second read right after the first lost every session (the session objects are bound to the
+    // thread that first used them). Counting on a real player being open, so it only asserts when the first read saw one.
+    [Fact]
+    public async Task ReadsOneAfterTheOtherAgreeInsteadOfLosingTheSessions()
+    {
+        await using var service = new GsmtcMediaService();
+        var first = (await service.GetSessionsAsync(Ct)).Value;
+        if (first.Count == 0)
+        {
+            Assert.Skip("No media session is open on this machine, so there is nothing to lose between reads.");
+            return;
+        }
+
+        var seen = 0;
+        for (var i = 0; i < 10; i++)
+        {
+            var read = await service.GetSessionsAsync(Ct);
+            Assert.True(read.IsSuccess);
+            if (read.Value.Any(s => s.Id == first[0].Id))
+                seen++;
+        }
+
+        Assert.True(seen >= 9, $"The first session was in {seen} of 10 immediate reads.");
+    }
+
     [Fact]
     public async Task ReadingRepeatedlyAndDisposingReleasesEverythingCleanly()
     {
@@ -68,25 +93,72 @@ public sealed class GsmtcRealSessionTests
         await completed.Task.WaitAsync(TimeSpan.FromSeconds(5), Ct);
     }
 
+    // The one test in this file that sends a real command. It is skipped unless LUNAR_REAL_MEDIA_COMMANDS=1 is set, because it
+    // really pauses and resumes whatever the current player is playing for a moment. It sends nothing else (no next, no
+    // previous, no seek) and leaves the player playing again; it never prints or asserts anything about the media itself.
     [Fact]
-    public async Task CommandsDoNotTouchTheRealPlayers()
+    public async Task RealSmokePauseThenPlayTheCurrentPlayer()
     {
+        if (System.Environment.GetEnvironmentVariable("LUNAR_REAL_MEDIA_COMMANDS") != "1")
+        {
+            Assert.Skip("Set LUNAR_REAL_MEDIA_COMMANDS=1 to pause and resume the current player once.");
+            return;
+        }
+
         await using var service = new GsmtcMediaService();
         var sessions = (await service.GetSessionsAsync(Ct)).Value;
-        var id = sessions.Count > 0 ? sessions[0].Id : "no-such-session";
+        var current = sessions.FirstOrDefault(s => s.IsCurrent && s.Status == MediaPlaybackStatus.Playing && s.Capabilities.CanPlayPause);
+        if (current is null)
+        {
+            Assert.Skip("No current session is playing and offering play/pause.");
+            return;
+        }
+
+        var paused = false;
+        try
+        {
+            var pause = await service.PlayPauseAsync(current.Id, Ct);
+            Assert.True(pause.IsSuccess, $"Pause failed: {pause.Error?.Code} {pause.Error?.SafeMessage}");
+            paused = true;
+            Assert.Equal(MediaPlaybackStatus.Paused, await StatusOf(service, current.Id, MediaPlaybackStatus.Paused));
+        }
+        finally
+        {
+            if (paused)
+            {
+                Assert.True((await service.PlayPauseAsync(current.Id, CancellationToken.None)).IsSuccess);
+                Assert.Equal(MediaPlaybackStatus.Playing, await StatusOf(service, current.Id, MediaPlaybackStatus.Playing));
+            }
+        }
+    }
+
+    // Reads until the session shows the wanted state (the player needs a moment) or two seconds pass, and returns what it saw last.
+    private static async Task<MediaPlaybackStatus> StatusOf(GsmtcMediaService service, string id, MediaPlaybackStatus wanted)
+    {
+        var seen = MediaPlaybackStatus.Unknown;
+        for (var i = 0; i < 20 && seen != wanted; i++)
+        {
+            await Task.Delay(100, Ct);
+            var read = await service.GetSessionsAsync(Ct);
+            seen = read.Value.FirstOrDefault(s => s.Id == id)?.Status ?? MediaPlaybackStatus.Unknown;
+        }
+
+        return seen;
+    }
+
+    [Fact]
+    public async Task CommandsToAnUnknownSessionAreRefusedWithoutTouchingAnyRealPlayer()
+    {
+        await using var service = new GsmtcMediaService();
 
         var results = new[]
         {
-            await service.PlayPauseAsync(id, Ct),
-            await service.NextAsync(id, Ct),
-            await service.PreviousAsync(id, Ct),
-            await service.SeekAsync(id, TimeSpan.FromSeconds(1), Ct)
+            await service.PlayPauseAsync("no-such-session", Ct),
+            await service.NextAsync("no-such-session", Ct),
+            await service.PreviousAsync("no-such-session", Ct)
         };
 
-        // They fail before reaching Windows (the service has no code path that sends a command yet), and the service still reads.
-        // What the sessions do meanwhile is the user's own doing and is not compared.
-        Assert.All(results, r => Assert.Equal(ErrorCode.Unsupported, r.Error!.Code));
-        Assert.True((await service.GetSessionsAsync(Ct)).IsSuccess);
+        Assert.All(results, r => Assert.Equal(ErrorCode.InvalidInput, r.Error!.Code));
     }
 
     private sealed class Completion(TaskCompletionSource done) : IObserver<IReadOnlyList<MediaSessionSnapshot>>

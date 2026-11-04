@@ -18,7 +18,7 @@ internal static class MediaSnapshotMapper
 
         var duration = DurationOf(reading);
         var capabilities = new MediaCapabilities(
-            CanPlayPause: reading.CanPlay || reading.CanPause,
+            CanPlayPause: reading.CanPlay || reading.CanPause || reading.CanToggle,
             CanNext: reading.CanNext,
             CanPrevious: reading.CanPrevious,
             CanSeek: reading.CanSeek);

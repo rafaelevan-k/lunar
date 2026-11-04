@@ -25,10 +25,16 @@ namespace Lunar.Windows.Media;
 /// - Subscriptions to Windows are removed when a session leaves the list and on disposal; disposal completes the observers
 ///   and is idempotent.
 ///
-/// What it does not do yet: the four commands (<see cref="PlayPauseAsync"/>, <see cref="NextAsync"/>,
-/// <see cref="PreviousAsync"/>, <see cref="SeekAsync"/>) belong to BE-16 and BE-17 and fail with
-/// <see cref="ErrorCode.Unsupported"/> until then, so nothing can claim a command worked that was never sent. The service is
-/// not registered in the composition root for the same reason: a half-finished port should not be handed to the UI.
+/// Transport commands (BE-16): <see cref="PlayPauseAsync"/>, <see cref="NextAsync"/> and <see cref="PreviousAsync"/>
+/// look the session up in a fresh read, check the command against what that session advertises right now
+/// (<see cref="MediaCommandPlanner"/>), and only then ask the player. An unknown or closed session is
+/// <see cref="ErrorCode.InvalidInput"/>; a command the session does not offer is <see cref="ErrorCode.Unsupported"/> and is
+/// never sent; a command the player does not accept is <see cref="ErrorCode.Unexpected"/> (retryable); success means the
+/// player accepted it, and the new state arrives through <see cref="Changes"/>. Commands go one at a time with the reads.
+///
+/// What it does not do yet: <see cref="SeekAsync"/> belongs to BE-17 and fails with <see cref="ErrorCode.Unsupported"/> until
+/// then. The service is not registered in the composition root until the port is complete, so a half-finished port is not
+/// handed to the UI.
 /// Thread-safe.
 /// </summary>
 public sealed class GsmtcMediaService : IMediaService, IDisposable
@@ -94,13 +100,21 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
         }
     }
 
-    public Task<Result> PlayPauseAsync(string sessionId, CancellationToken ct) => NotYetAsync(ct);
+    public Task<Result> PlayPauseAsync(string sessionId, CancellationToken ct) => CommandAsync(sessionId, MediaCommand.PlayPause, ct);
 
-    public Task<Result> NextAsync(string sessionId, CancellationToken ct) => NotYetAsync(ct);
+    public Task<Result> NextAsync(string sessionId, CancellationToken ct) => CommandAsync(sessionId, MediaCommand.Next, ct);
 
-    public Task<Result> PreviousAsync(string sessionId, CancellationToken ct) => NotYetAsync(ct);
+    public Task<Result> PreviousAsync(string sessionId, CancellationToken ct) => CommandAsync(sessionId, MediaCommand.Previous, ct);
 
-    public Task<Result> SeekAsync(string sessionId, TimeSpan position, CancellationToken ct) => NotYetAsync(ct);
+    // Seeking is BE-17. Until then it says so, instead of pretending.
+    public Task<Result> SeekAsync(string sessionId, TimeSpan position, CancellationToken ct)
+    {
+        if (ct.IsCancellationRequested)
+            return Task.FromResult(Result.Cancelled());
+        if (_core.IsDisposed)
+            return Task.FromResult(Result.Failure(Closed));
+        return Task.FromResult(Result.Failure(new OperationError(ErrorCode.Unsupported, "Seeking is not available yet.")));
+    }
 
     public ValueTask DisposeAsync() => _core.DisposeAsync();
 
@@ -109,14 +123,79 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
 
     private static OperationError Closed => new(ErrorCode.DeviceUnavailable, "The media service is closed.");
 
-    // Commands arrive with BE-16 and BE-17. Until then they say so, instead of pretending.
-    private Task<Result> NotYetAsync(CancellationToken ct)
+    // One transport command: the session is looked up in a fresh read, the command is checked against what that session advertises
+    // right now, and only then is it sent. A command succeeds only when the player accepted it.
+    private async Task<Result> CommandAsync(string sessionId, MediaCommand command, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(sessionId))
+            return Result.Failure(new OperationError(ErrorCode.InvalidInput, "A media session id is required."));
         if (ct.IsCancellationRequested)
-            return Task.FromResult(Result.Cancelled());
+            return Result.Cancelled();
         if (_core.IsDisposed)
-            return Task.FromResult(Result.Failure(Closed));
-        return Task.FromResult(Result.Failure(new OperationError(ErrorCode.Unsupported, "Media commands are not available yet.")));
+            return Result.Failure(Closed);
+
+        if (!await _core.EnterAsync(ct).ConfigureAwait(false))
+            return ct.IsCancellationRequested ? Result.Cancelled() : Result.Failure(Closed);
+
+        try
+        {
+            if (_core.IsDisposed)
+                return Result.Failure(Closed);
+
+            var read = await ReadAsync(ct).ConfigureAwait(false);
+            if (read.IsCancelled)
+                return Result.Cancelled();
+            if (read.IsFailure)
+                return Result.Failure(read.Error!);
+
+            var reading = _lastReadings?.Find(r => r.Id == sessionId);
+            if (reading is null)
+                return Result.Failure(new OperationError(ErrorCode.InvalidInput, "That media session is not open any more."));
+
+            if (MediaCommandPlanner.Plan(reading, command) is not { } action)
+                return Result.Failure(new OperationError(ErrorCode.Unsupported, "This player does not offer that command right now."));
+
+            return await SendAsync(sessionId, action, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _core.Exit();
+        }
+    }
+
+    private async Task<Result> SendAsync(string sessionId, GsmtcAction action, CancellationToken ct)
+    {
+        try
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            linked.CancelAfter(_readTimeout);
+            var outcome = await _backend.SendAsync(sessionId, action, linked.Token).ConfigureAwait(false);
+            return outcome switch
+            {
+                GsmtcCommandResult.Accepted => Result.Success(),
+                GsmtcCommandResult.SessionGone => Result.Failure(new OperationError(ErrorCode.InvalidInput, "That media session closed before the command was sent.")),
+                _ => Result.Failure(new OperationError(ErrorCode.Unexpected, "The player did not accept the command.", retryable: true))
+            };
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Cancelled(); // a command already sent is not undone
+        }
+        catch (OperationCanceledException)
+        {
+            _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "media.command.timeout", Component, "Command", ErrorCode.Timeout));
+            return Result.Failure(new OperationError(ErrorCode.Timeout, "The player did not answer in time.", retryable: true));
+        }
+        catch (MediaException ex)
+        {
+            LogFailure("media.command." + ex.Failure, ex);
+            return Result.Failure(ex.Failure switch
+            {
+                MediaFailure.NotSupported => new OperationError(ErrorCode.Unsupported, "Media controls are not available on this PC."),
+                MediaFailure.AccessDenied => new OperationError(ErrorCode.AccessDenied, "Windows did not allow the command."),
+                _ => new OperationError(ErrorCode.Unexpected, "The command could not be sent.", retryable: true)
+            });
+        }
     }
 
     // Reads every session, publishes the list when it really changed, and returns it. Callers hold the gate.
