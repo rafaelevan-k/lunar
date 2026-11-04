@@ -11,6 +11,15 @@ using Lunar.Domain.Shared;
 
 namespace Lunar.Desktop.Features.Converter;
 
+/// <summary>The page shows one step at a time: the files, the format, the tweaks, and then the conversions that were started.</summary>
+public enum ConverterStep
+{
+    Files,
+    Format,
+    Tweaks,
+    Progress
+}
+
 /// <summary>
 /// What the Converter page shows and can do for choosing files and a format (FE-20): the list of files, why a file is refused,
 /// and the output formats that fit the list. It reads the Application layer only (<see cref="IConversionPlanner"/>,
@@ -57,6 +66,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private bool _dragActive;
     private bool _isChecking;
     private bool _confirmingOverwrite;
+    private ConverterStep _step = ConverterStep.Files;
     private string? _notice;
     private string? _errorMessage;
 
@@ -78,6 +88,10 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         StartCommand = new AsyncRelayCommand(ct => StartAsync(confirmed: false, ct), () => CanStart && !_confirmingOverwrite, OnStartFault, _lifetime.Token);
         ConfirmOverwriteCommand = new AsyncRelayCommand(ct => StartAsync(confirmed: true, ct), () => _confirmingOverwrite && CanStart, OnStartFault, _lifetime.Token);
         CancelOverwriteCommand = new RelayCommand(() => IsConfirmingOverwrite = false, () => _confirmingOverwrite);
+        NextCommand = new RelayCommand(Next, () => CanNext);
+        BackCommand = new RelayCommand(Back, () => CanGoBack);
+        ConvertMoreCommand = new RelayCommand(() => Step = ConverterStep.Files);
+        ShowConversionsCommand = new RelayCommand(() => Step = ConverterStep.Progress);
         _post = post;
         _log = log;
         Items = new ReadOnlyObservableCollection<ConverterItem>(_items);
@@ -111,6 +125,20 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     public string OutputFolder { get; private set; } = string.Empty;
 
     public string SummaryText { get; private set; } = string.Empty;
+
+    /// <summary>The tweaks in a few words for the folded header, ending with where the results go ("Saving to Pictures").</summary>
+    public string TweaksSummary
+    {
+        get
+        {
+            var parts = new List<string>(Options.SummaryParts());
+            var folder = OutputFolder.TrimEnd('\\', '/');
+            var cut = folder.LastIndexOfAny(['\\', '/']);
+            var name = cut >= 0 ? folder[(cut + 1)..] : folder;
+            parts.Add(name.Length == 0 ? "saving next to the originals" : "saving to " + name);
+            return string.Join(" · ", parts);
+        }
+    }
 
     public string? Notice
     {
@@ -206,6 +234,77 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>The conversions that were started: their state, progress, cancel, retry and show in folder (FE-22).</summary>
     public ConverterQueueViewModel Queue { get; }
+
+    // ---- the steps -----------------------------------------------------------------------------------------------------
+
+    /// <summary>Which step is on screen. Only one is shown at a time; the page moves on with Next and back with Back.</summary>
+    public ConverterStep Step
+    {
+        get => _step;
+        private set
+        {
+            if (!Set(ref _step, value))
+                return;
+            IsConfirmingOverwrite = false;
+            Raise(nameof(IsFilesStep));
+            Raise(nameof(IsFormatStep));
+            Raise(nameof(IsTweaksStep));
+            Raise(nameof(IsProgressStep));
+            RaiseStart();
+        }
+    }
+
+    public bool IsFilesStep => _step == ConverterStep.Files;
+
+    public bool IsFormatStep => _step == ConverterStep.Format;
+
+    public bool IsTweaksStep => _step == ConverterStep.Tweaks;
+
+    public bool IsProgressStep => _step == ConverterStep.Progress;
+
+    /// <summary>Next is offered on the first two steps; it works when the step is complete (files that passed the check, then a format that fits).</summary>
+    public bool ShowNext => _step is ConverterStep.Files or ConverterStep.Format;
+
+    public bool CanGoBack => _step is ConverterStep.Format or ConverterStep.Tweaks;
+
+    public bool CanNext => !_disposed && !_isChecking && _step switch
+    {
+        ConverterStep.Files => _items.Any(i => i.Status == ConverterItemStatus.Ready),
+        ConverterStep.Format => _selected is not null,
+        _ => false
+    };
+
+    /// <summary>A line under the main button: why Next or Convert cannot be pressed yet, in words; empty when it can.</summary>
+    public string StepHint => _step switch
+    {
+        ConverterStep.Files => CanNext ? string.Empty : (_isChecking ? "Checking the files..." : "Add at least one file that can be converted."),
+        ConverterStep.Format => CanNext ? string.Empty : "No format fits every file in the list.",
+        ConverterStep.Tweaks => StartHint,
+        _ => string.Empty
+    };
+
+    public ICommand NextCommand { get; }
+
+    public ICommand BackCommand { get; }
+
+    /// <summary>From the conversions back to a fresh first step.</summary>
+    public ICommand ConvertMoreCommand { get; }
+
+    /// <summary>From the first step to the conversions that were started (shown only when there are some).</summary>
+    public ICommand ShowConversionsCommand { get; }
+
+    private void Next()
+    {
+        if (!CanNext)
+            return;
+        Step = _step == ConverterStep.Files ? ConverterStep.Format : ConverterStep.Tweaks;
+    }
+
+    private void Back()
+    {
+        if (CanGoBack)
+            Step = _step == ConverterStep.Tweaks ? ConverterStep.Format : ConverterStep.Files;
+    }
 
     /// <summary>Starts the conversion of the files that passed the check. Replacing existing results asks first (<see cref="IsConfirmingOverwrite"/>).</summary>
     public ICommand StartCommand { get; }
@@ -320,6 +419,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         ResetList();
         Notice = null;
         ErrorMessage = null;
+        Step = ConverterStep.Files;
     }
 
     // Empties the list of files to convert (not the conversions already started) and forgets the PDF password.
@@ -364,7 +464,8 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         // The jobs now live in the queue below; the list is emptied so the same files cannot be started twice.
         var count = started.Value.JobIds.Count;
         ResetList();
-        Notice = count == 1 ? "1 conversion started." : $"{count} conversions started.";
+        Notice = null;
+        Step = ConverterStep.Progress; // the started conversions are shown, one step of their own
     }
 
     private void OnStartFault(Exception ex)
@@ -561,6 +662,9 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     // The answer of the newest check is in: the summary, the choices that fit and whether starting is possible all follow it.
     private void Finish()
     {
+        // A step that depends on files or a format cannot stay on screen once they are gone.
+        if (_step is ConverterStep.Format or ConverterStep.Tweaks && (_selected is null || !_items.Any(i => i.Status == ConverterItemStatus.Ready)))
+            Step = ConverterStep.Files;
         RefreshSummary();
         var routes = new List<ConversionRoute>();
         if (_selected is { } target)
@@ -614,6 +718,12 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
     private void RaiseStart()
     {
+        Raise(nameof(StepHint));
+        Raise(nameof(ShowNext));
+        Raise(nameof(CanGoBack));
+        ((RelayCommand)NextCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)BackCommand).NotifyCanExecuteChanged();
+        Raise(nameof(TweaksSummary));
         Raise(nameof(CanStart));
         Raise(nameof(StartHint));
         ((AsyncRelayCommand)StartCommand).NotifyCanExecuteChanged();

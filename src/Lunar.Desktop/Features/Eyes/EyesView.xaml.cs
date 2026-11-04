@@ -56,6 +56,40 @@ public partial class EyesView : UserControl
 
     private bool MotionAllowed => _controller is null || !_controller.ReduceMotion;
 
+    /// <summary>
+    /// A happy moment (a conversion finished): both eyes smile (arched, as in ^ ^) for about a second and, with motion allowed, hop a little.
+    /// With reduced motion the smile is shown without any movement. Safe to call at any time; a second call simply restarts it.
+    /// </summary>
+    public void Celebrate()
+    {
+        var motion = MotionAllowed;
+        foreach (var cheek in new[] { LeftCheekOffset, RightCheekOffset })
+        {
+            var smile = new DoubleAnimationUsingKeyFrames { FillBehavior = FillBehavior.Stop };
+            if (motion)
+            {
+                smile.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(170)), new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }));
+                smile.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1200))));
+                smile.KeyFrames.Add(new EasingDoubleKeyFrame(30, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1420)), new CubicEase { EasingMode = EasingMode.EaseIn }));
+            }
+            else
+            {
+                // No movement: the smile simply appears and goes again.
+                smile.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                smile.KeyFrames.Add(new DiscreteDoubleKeyFrame(30, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1200))));
+            }
+
+            cheek.BeginAnimation(TranslateTransform.YProperty, smile);
+        }
+
+        if (!motion)
+            return;
+        var hop = new DoubleAnimationUsingKeyFrames { FillBehavior = FillBehavior.Stop };
+        hop.KeyFrames.Add(new EasingDoubleKeyFrame(-4, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(130)), new CubicEase { EasingMode = EasingMode.EaseOut }));
+        hop.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(330)), new BounceEase { EasingMode = EasingMode.EaseOut, Bounces = 2, Bounciness = 3 }));
+        JumpOffset.BeginAnimation(TranslateTransform.YProperty, hop);
+    }
+
     /// <summary>Starts following <paramref name="controller"/>. The view does not own it and never disposes it.</summary>
     public void Attach(EyeAnimationController controller)
     {

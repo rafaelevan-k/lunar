@@ -17,6 +17,7 @@
   <SolidColorBrush x:Key="Lunar.Brush.Error" Color="{DynamicResource Lunar.Color.Error}" />
   <SolidColorBrush x:Key="Lunar.Brush.Success" Color="{DynamicResource Lunar.Color.Success}" />
 
+
   <!-- Visible keyboard focus indicator for every focusable control (PRD §3.5). -->
   <Style x:Key="Lunar.Style.FocusVisual" TargetType="Control">
     <Setter Property="Template">

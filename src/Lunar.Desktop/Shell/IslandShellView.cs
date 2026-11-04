@@ -22,6 +22,8 @@ public sealed class IslandShellView : Grid, IDisposable
     internal static readonly TimeSpan FadeOut = TimeSpan.FromMilliseconds(80);
 
     private readonly IslandViewModel _viewModel;
+    private readonly EyesView _eyes;
+    private readonly ConfettiBurst _confetti = new();
     private readonly bool _reduceMotion;
     private bool _disposed;
 
@@ -31,6 +33,7 @@ public sealed class IslandShellView : Grid, IDisposable
         ArgumentNullException.ThrowIfNull(swiper);
         ArgumentNullException.ThrowIfNull(viewModel);
         _viewModel = viewModel;
+        _eyes = eyes;
         _reduceMotion = reduceMotion;
         Swiper = swiper;
 
@@ -50,6 +53,10 @@ public sealed class IslandShellView : Grid, IDisposable
         SetRow(Error, 2);
         Children.Add(Error);
 
+        // The celebration layer covers everything and takes no input.
+        SetRowSpan(_confetti, 3);
+        Children.Add(_confetti);
+
         // Every reusable control below reads reduced motion from here.
         Motion.SetReduceMotion(this, reduceMotion);
 
@@ -58,6 +65,19 @@ public sealed class IslandShellView : Grid, IDisposable
     }
 
     public SwiperView Swiper { get; }
+
+    /// <summary>
+    /// Something good happened (a conversion finished): the eyes smile, and while the island is open a little confetti bursts. Reduced motion
+    /// keeps the smile and drops the confetti and the hop. Must be called on the UI thread.
+    /// </summary>
+    public void Celebrate()
+    {
+        if (_disposed)
+            return;
+        _eyes.Celebrate();
+        if (_viewModel.IsExpanded)
+            _confetti.Burst();
+    }
 
     public InlineError Error { get; }
 

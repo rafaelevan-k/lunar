@@ -59,6 +59,9 @@ public sealed class RadioCardViewModel : INotifyPropertyChanged
 
     public string Title { get; }
 
+    /// <summary>The icon in the card's colored tile: the Bluetooth symbol for Bluetooth, the Wi-Fi symbol otherwise.</summary>
+    public string Glyph => Title == "Bluetooth" ? "\uE702" : "\uE701";
+
     /// <summary>False until the first reading arrives; the page shows a placeholder meanwhile.</summary>
     public bool IsLoaded
     {

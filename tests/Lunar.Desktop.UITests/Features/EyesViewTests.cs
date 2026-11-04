@@ -95,7 +95,7 @@ public sealed class EyesViewTests
         var all = Descendants(view).ToList();
         Assert.DoesNotContain(all, node => node is Image);
         Assert.All(all.OfType<Shape>(), shape => Assert.True(shape is Ellipse or Rectangle));
-        Assert.Equal(6, all.OfType<Ellipse>().Count()); // per eye: eye white, pupil, highlight
+        Assert.Equal(8, all.OfType<Ellipse>().Count()); // per eye: eye white, pupil, highlight, and the cheek that makes the celebration smile
         Assert.Equal(2, all.OfType<Rectangle>().Count()); // two eyelids
     });
 

@@ -532,6 +532,83 @@ public sealed class ConverterPageViewModelTests : IDisposable
         Assert.Equal(["a.png"], Directory.GetFiles(_root).Select(f => Path.GetFileName(f)));
     }
 
+    // ---- the page shows one step at a time ---------------------------------------------------------------------------
+
+    private static bool OnlyThisStep(ConverterPageViewModel m, ConverterStep step) =>
+        m.Step == step && m.IsFilesStep == (step == ConverterStep.Files) && m.IsFormatStep == (step == ConverterStep.Format)
+        && m.IsTweaksStep == (step == ConverterStep.Tweaks) && m.IsProgressStep == (step == ConverterStep.Progress);
+
+    [Fact]
+    public async Task ThePageStartsOnTheFirstStepAndNextNeedsAFileThatPassed()
+    {
+        var model = Model();
+        Assert.True(OnlyThisStep(model, ConverterStep.Files));
+        Assert.False(model.NextCommand.CanExecute(null));
+        Assert.Contains("Add at least one file", model.StepHint, StringComparison.Ordinal);
+
+        await Added(model, Junk("notes.txt", [1]));
+        Assert.False(model.NextCommand.CanExecute(null)); // refused files do not count
+
+        await Added(model, Png("a.png"));
+        Assert.True(model.NextCommand.CanExecute(null));
+        Assert.Equal(string.Empty, model.StepHint);
+    }
+
+    [Fact]
+    public async Task NextAndBackWalkTheStepsOneAtATime()
+    {
+        var model = await Added(Model(), Png("a.png"));
+
+        model.NextCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Format));
+        Assert.True(model.CanGoBack);
+        Assert.True(model.ShowNext);
+
+        model.NextCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Tweaks));
+        Assert.False(model.ShowNext); // the last step has Convert instead
+        Assert.False(model.NextCommand.CanExecute(null));
+
+        model.BackCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Format));
+        model.BackCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Files));
+        Assert.False(model.CanGoBack);
+        Assert.Equal(FileFormat.Jpg, model.SelectedFormat); // going back keeps what was chosen
+    }
+
+    [Fact]
+    public async Task AStepThatNeedsFilesCannotStayWhenTheyAreGone()
+    {
+        var model = await Added(Model(), Png("a.png"));
+        model.NextCommand.Execute(null);
+        model.NextCommand.Execute(null);
+        Assert.Equal(ConverterStep.Tweaks, model.Step);
+
+        model.Items[0].RemoveCommand.Execute(null);
+        await model.WhenCheckedAsync();
+
+        Assert.Equal(ConverterStep.Files, model.Step);
+
+        await Added(model, Png("b.png"));
+        model.NextCommand.Execute(null);
+        model.ClearCommand.Execute(null);
+        Assert.Equal(ConverterStep.Files, model.Step);
+    }
+
+    [Fact]
+    public void TheConversionsHaveTheirOwnStepAndConvertMoreStartsOver()
+    {
+        var model = Model();
+
+        model.ShowConversionsCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Progress));
+        Assert.False(model.ShowNext || model.CanGoBack);
+
+        model.ConvertMoreCommand.Execute(null);
+        Assert.True(OnlyThisStep(model, ConverterStep.Files));
+    }
+
     // ---- FE-21: options per route, notices, who may start ------------------------------------------------------------
 
     private async Task<ConverterOptionsViewModel> Options(FileFormat target, params string[] paths)

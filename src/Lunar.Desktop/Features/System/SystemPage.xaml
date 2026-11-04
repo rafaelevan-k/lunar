@@ -16,12 +16,22 @@
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
+
     <Style x:Key="Card" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource Lunar.Brush.Surface}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Border}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="12" />
-      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Padding" Value="8,6" />
+    </Style>
+
+    <!-- A small rounded tile in the page gradient that holds an icon: the playful touch of each card. -->
+    <Style x:Key="IconTile" TargetType="Border">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Background" Value="{DynamicResource Lunar.Brush.Accent}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <!-- A Wi-Fi or Bluetooth card: title and switch on one row, the confirmed status under it, a one-line reason when there
@@ -30,7 +40,11 @@
       <Border Style="{StaticResource Card}" automation:AutomationProperties.Name="{Binding Title}">
         <StackPanel>
           <Grid MinHeight="22">
-            <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" />
+            <!-- The icon tile on the left and the switch on the right; the name goes under them, so a long name never runs into the switch. -->
+            <Border Style="{StaticResource IconTile}" HorizontalAlignment="Left">
+              <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" HorizontalAlignment="Center"
+                         VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.OnAccent}" />
+            </Border>
             <Button x:Name="Switch" HorizontalAlignment="Right" VerticalAlignment="Center"
                     Style="{DynamicResource Lunar.Style.SwitchButton}"
                     c:SwitchState.IsOn="{Binding IsOn}" Command="{Binding ToggleCommand}"
@@ -44,7 +58,8 @@
                     Visibility="{Binding ShowSettingsLink, Converter={StaticResource BoolToVisible}}"
                     automation:AutomationProperties.Name="Open Settings" />
           </Grid>
-          <Grid Margin="0,6,0,0" x:Name="Placeholder">
+          <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Body}" FontWeight="SemiBold" Margin="0,4,0,0" />
+          <Grid Margin="0,4,0,0" x:Name="Placeholder">
             <Grid.Style>
               <Style TargetType="Grid">
                 <Setter Property="Visibility" Value="Collapsed" />
@@ -58,7 +73,7 @@
             <c:SkeletonBlock Height="18" />
           </Grid>
           <StackPanel Visibility="{Binding IsLoaded, Converter={StaticResource BoolToVisible}}">
-            <c:StatusChip Text="{Binding ShownStatusText}" Kind="{Binding ShownStatusKind}" HorizontalAlignment="Left" Margin="0,4,0,0" />
+            <c:StatusChip Text="{Binding ShownStatusText}" Kind="{Binding ShownStatusKind}" HorizontalAlignment="Left" Margin="0,3,0,0" />
             <TextBlock x:Name="HintText" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0"
                        Style="{DynamicResource Lunar.Text.Caption}"
                        Visibility="{Binding Hint, Converter={x:Static c:NullToVisibilityConverter.Instance}}" />
@@ -68,7 +83,7 @@
     </DataTemplate>
   </UserControl.Resources>
 
-  <Grid Margin="40,4,40,0">
+  <Grid Margin="38,0,38,0">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -77,16 +92,16 @@
     </Grid.RowDefinitions>
 
     <!-- Date and time. -->
-    <StackPanel x:Name="Clock" Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,6" Background="Transparent"
+    <StackPanel x:Name="Clock" Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,4" Background="Transparent"
                 ToolTip="{Binding TimeZoneText}"
                 automation:AutomationProperties.Name="{Binding ClockLabel}"
                 automation:AutomationProperties.HelpText="{Binding TimeZoneText}">
-      <TextBlock x:Name="Time" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Title}" />
+      <TextBlock x:Name="Time" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Title}" Foreground="{DynamicResource Lunar.Brush.Accent}" />
       <TextBlock x:Name="Date" Text="{Binding DateText}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Bottom" Margin="10,0,0,3" />
     </StackPanel>
 
     <!-- Volume and mute. -->
-    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,6" automation:AutomationProperties.Name="Volume">
+    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,4" automation:AutomationProperties.Name="Volume">
       <StackPanel>
         <Grid>
           <Grid.ColumnDefinitions>
@@ -96,7 +111,7 @@
           </Grid.ColumnDefinitions>
 
           <c:IconButton x:Name="MuteButton" Grid.Column="0" Glyph="{Binding MuteGlyph}" Label="{Binding MuteLabel}"
-                        Command="{Binding ToggleMuteCommand}" />
+                        Command="{Binding ToggleMuteCommand}" Style="{DynamicResource Lunar.Style.IconButtonPrimary}" Width="32" Height="32" />
 
           <Grid x:Name="VolumePlaceholder" Grid.Column="1" Margin="8,0" VerticalAlignment="Center">
             <Grid.Style>
@@ -156,6 +171,6 @@
     </Grid>
 
     <!-- One shared error line for the page: errors take no room while there is none, and never push the cards. -->
-    <c:InlineError x:Name="PageError" Grid.Row="3" Margin="0,6,0,0" MaxHeight="44" ClipToBounds="True" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
+    <c:InlineError x:Name="PageError" Grid.Row="3" Margin="0,4,0,0" MaxHeight="44" ClipToBounds="True" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
   </Grid>
 </UserControl>

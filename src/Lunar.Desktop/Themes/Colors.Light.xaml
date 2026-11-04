@@ -6,9 +6,9 @@
   <Color x:Key="Lunar.Color.TextPrimary">#0B0C10</Color>
   <Color x:Key="Lunar.Color.TextSecondary">#4A4F63</Color>
   <Color x:Key="Lunar.Color.TextDisabled">#8A8FA3</Color>
-  <Color x:Key="Lunar.Color.Accent">#4B45C9</Color>
+  <Color x:Key="Lunar.Color.Accent">#0B0C10</Color>
   <Color x:Key="Lunar.Color.OnAccent">#FFFFFF</Color>
-  <Color x:Key="Lunar.Color.Focus">#4B45C9</Color>
+  <Color x:Key="Lunar.Color.Focus">#0B0C10</Color>
   <Color x:Key="Lunar.Color.Border">#D4D7E2</Color>
   <Color x:Key="Lunar.Color.Error">#B3261E</Color>
   <Color x:Key="Lunar.Color.Success">#1B7F4B</Color>

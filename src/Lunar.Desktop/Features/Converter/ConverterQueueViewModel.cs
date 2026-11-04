@@ -109,6 +109,9 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>Raised on the UI thread each time a conversion newly reaches Done (the island celebrates).</summary>
+    public event EventHandler? JobSucceeded;
+
     public ReadOnlyObservableCollection<JobRow> Rows { get; }
 
     public bool HasRows => _rows.Count > 0;
@@ -161,9 +164,12 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
         {
             if (_disposed)
                 return;
+            var wasDone = _latest.TryGetValue(snapshot.JobId, out var before) && before.State == ConversionJobState.Succeeded;
             _latest[snapshot.JobId] = snapshot;
             Upsert(snapshot);
             Refresh();
+            if (snapshot.State == ConversionJobState.Succeeded && !wasDone)
+                JobSucceeded?.Invoke(this, EventArgs.Empty);
         });
     }
 

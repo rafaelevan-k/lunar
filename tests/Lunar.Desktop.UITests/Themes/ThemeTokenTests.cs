@@ -63,7 +63,7 @@ public sealed class ThemeTokenTests
         Assert.Equal("#181A22", dark["Lunar.Color.Surface"]);
         Assert.Equal("#F6F7FB", dark["Lunar.Color.TextPrimary"]);
         Assert.Equal("#A8ADBE", dark["Lunar.Color.TextSecondary"]);
-        Assert.Equal("#B6B2FF", dark["Lunar.Color.Accent"]);
+        Assert.Equal("#F6F7FB", dark["Lunar.Color.Accent"]);
         Assert.Equal("#FF737E", dark["Lunar.Color.Error"]);
         Assert.Equal("#86D7B0", dark["Lunar.Color.Success"]);
     }

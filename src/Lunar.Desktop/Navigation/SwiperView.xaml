@@ -2,12 +2,15 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:behaviors="clr-namespace:Lunar.Desktop.Behaviors"
+             xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              Focusable="True" Background="Transparent"
              FocusVisualStyle="{DynamicResource Lunar.Style.FocusVisual}"
              automation:AutomationProperties.Name="Pages">
   <UserControl.Resources>
     <!-- Round arrow button: not a tab stop and never takes focus, so using it cannot pull focus out of a slider. -->
     <Style x:Key="SwiperArrow" TargetType="Button">
+      <Setter Property="c:Squish.Enabled" Value="True" />
       <Setter Property="Focusable" Value="False" />
       <Setter Property="Width" Value="28" />
       <Setter Property="Height" Value="28" />
@@ -46,16 +49,15 @@
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
             <Border Background="Transparent" Padding="3">
-              <Ellipse x:Name="Dot" Width="8" Height="8" Fill="{DynamicResource Lunar.Brush.TextDisabled}" />
+              <!-- Every dot is the same small circle; the current page's dot is white (the accent), the others are gray. -->
+              <Border x:Name="Dot" Width="8" Height="8" CornerRadius="4" Background="{DynamicResource Lunar.Brush.TextDisabled}" />
             </Border>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsChecked" Value="True">
-                <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource Lunar.Brush.Accent}" />
-                <Setter TargetName="Dot" Property="Width" Value="10" />
-                <Setter TargetName="Dot" Property="Height" Value="10" />
-              </Trigger>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource Lunar.Brush.TextSecondary}" />
+                <Setter TargetName="Dot" Property="Background" Value="{DynamicResource Lunar.Brush.TextSecondary}" />
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Dot" Property="Background" Value="{DynamicResource Lunar.Brush.Accent}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>

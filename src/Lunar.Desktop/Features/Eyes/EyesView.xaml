@@ -14,6 +14,10 @@
     The transparent view background makes the whole pill area receive the pointer, not only the shapes.
   -->
   <Viewbox Stretch="Uniform" StretchDirection="Both" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Viewbox.RenderTransform>
+      <!-- The little jump of a celebration (EyesView.Celebrate); at rest it is zero. -->
+      <TranslateTransform x:Name="JumpOffset" />
+    </Viewbox.RenderTransform>
     <Grid Width="62" Height="26" Background="Transparent" RenderTransformOrigin="0.5,0.5">
       <Grid.RenderTransform>
         <ScaleTransform x:Name="FeedbackScale" />
@@ -42,6 +46,12 @@
               <ScaleTransform ScaleY="0" />
             </Rectangle.RenderTransform>
           </Rectangle>
+          <!-- The smile: a round cheek rises from below and cuts the lower part of the eye away, so the eye becomes an arch (^). Hidden below the eye at rest. -->
+          <Ellipse x:Name="LeftCheek" Fill="{DynamicResource Lunar.Brush.Background}" Width="34" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,-9">
+            <Ellipse.RenderTransform>
+              <TranslateTransform x:Name="LeftCheekOffset" Y="30" />
+            </Ellipse.RenderTransform>
+          </Ellipse>
         </Grid>
       </Grid>
 
@@ -63,6 +73,11 @@
               <ScaleTransform ScaleY="0" />
             </Rectangle.RenderTransform>
           </Rectangle>
+          <Ellipse x:Name="RightCheek" Fill="{DynamicResource Lunar.Brush.Background}" Width="34" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,-9">
+            <Ellipse.RenderTransform>
+              <TranslateTransform x:Name="RightCheekOffset" Y="30" />
+            </Ellipse.RenderTransform>
+          </Ellipse>
         </Grid>
       </Grid>
     </Grid>

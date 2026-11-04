@@ -138,13 +138,35 @@ public sealed class ConverterQueueTests : IDisposable
         await Idle();
 
         Assert.True(Page.IsEmpty);
-        Assert.Equal("2 conversions started.", Page.Notice);
+        Assert.Equal(ConverterStep.Progress, Page.Step); // the started conversions are shown, one step of their own
         Assert.Equal(2, Queue.Rows.Count);
         Assert.All(Queue.Rows, r => Assert.Equal(ConversionJobState.Succeeded, r.State));
         Assert.Equal(["Saved as a.jpg", "Saved as b.jpg"], Queue.Rows.Select(r => r.ResultText));
         Assert.Equal(["a.jpg", "b.jpg"], OutNames());
         Assert.Equal("2 done", Queue.SummaryText);
         Assert.False(Queue.IsBusy);
+    }
+
+    [Fact]
+    public async Task EachFinishedConversionRaisesOneCelebrationAndNothingElseDoes()
+    {
+        var done = 0;
+        Queue.JobSucceeded += (_, _) => Interlocked.Increment(ref done);
+        await Choose(FileFormat.Jpg, Png("a.png"), Png("b.png"));
+        await Start();
+        await Idle();
+        Assert.Equal(2, done);
+
+        Queue.ClearFinishedCommand.Execute(null);
+        await Choose(FileFormat.Png, Pdf("long.pdf", 100, 600, 800));
+        Page.Options.Dpi.Select(PdfRasterizationOptions.Dpi300);
+        await Page.WhenCheckedAsync();
+        await Start();
+        await WaitUntil(() => Queue.Rows.Any(r => r.Fraction is > 0.02));
+        Queue.CancelAllCommand.Execute(null);
+        await Idle();
+
+        Assert.Equal(2, done); // a cancelled conversion is not a celebration
     }
 
     [Fact]

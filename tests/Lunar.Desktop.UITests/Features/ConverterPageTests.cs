@@ -279,7 +279,7 @@ public sealed class ConverterPageTests
         Settle(window);
         Assert.Equal(Visibility.Visible, Shown(page, "PagesProblemText"));
         Assert.False(model.CanStart);
-        Assert.Contains("pages", ((TextBlock)page.FindName("StartHintText")).Text, StringComparison.Ordinal);
+        Assert.Contains("pages", model.StartHint, StringComparison.Ordinal);
 
         ((TextBox)page.FindName("PagesBox")).Text = "1";
         ((PasswordBox)page.FindName("PdfPasswordBox")).Password = "pw-123";
@@ -326,7 +326,7 @@ public sealed class ConverterPageTests
         Assert.Equal(Visibility.Collapsed, Shown(page, "QueuePanel"));
         var convert = (Button)page.FindName("ConvertButton");
         Assert.False(convert.IsEnabled);
-        Assert.Contains("Add files", ((TextBlock)page.FindName("StartHintText")).Text, StringComparison.Ordinal);
+        Assert.Contains("Add at least one file", ((TextBlock)page.FindName("StartHintText")).Text, StringComparison.Ordinal);
 
         rig.Page.AddFiles([MakePng(folder, "a.png")]);
         Pump(rig.Page.WhenCheckedAsync());

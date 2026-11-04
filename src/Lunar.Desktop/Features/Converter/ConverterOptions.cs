@@ -88,12 +88,14 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
     private string? _pagesProblem;
     private string? _password;
     private string? _chosenFolder;
+    private bool _tweaksOpen;
 
     /// <param name="changed">Called after any change; the argument is true when the files must be checked again (the results folder or the name policy changed).</param>
     public ConverterOptionsViewModel(Action<bool> changed)
     {
         ArgumentNullException.ThrowIfNull(changed);
         _changed = changed;
+        ToggleTweaksCommand = new RelayCommand(() => IsTweaksOpen = !IsTweaksOpen);
         void Same() => Changed(recheck: false);
         Background = new ChoiceGroup<RgbColor>("Background for transparent areas",
             [("White", RgbColor.White), ("Light gray", new RgbColor(230, 230, 230)), ("Black", new RgbColor(0, 0, 0))], RgbColor.White, Same);
@@ -108,6 +110,57 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    // ---- the "Tweaks" fold -------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Whether the tweaks (quality, resolution, pages, layout, name policy, folder) are unfolded. They start folded so the page is a short
+    /// guided path (files, format, Convert); the fold opens by itself when something in it needs attention (unreadable pages).
+    /// </summary>
+    public bool IsTweaksOpen
+    {
+        get => _tweaksOpen;
+        set
+        {
+            if (_tweaksOpen == value)
+                return;
+            _tweaksOpen = value;
+            Raise();
+            Raise(nameof(TweaksToggleText));
+        }
+    }
+
+    public ICommand ToggleTweaksCommand { get; }
+
+    public string TweaksToggleText => _tweaksOpen ? "Done" : "Edit";
+
+    /// <summary>The current choices in a few words, for the folded header: what will happen without opening it.</summary>
+    public IReadOnlyList<string> SummaryParts()
+    {
+        var parts = new List<string>();
+        if (_showQuality)
+            parts.Add($"Quality {(int)_jpegQuality}");
+        if (_showPdf)
+        {
+            parts.Add($"{Dpi.Value} ppi");
+            parts.Add(_pages.IsAll ? "all pages" : $"pages {_pages}");
+        }
+
+        if (_showLayout)
+        {
+            parts.Add(PageSizes.Value == PageSize.Auto ? "page fits the picture" : PageSizes.Value.ToString());
+            if (Margins.Value > 0)
+                parts.Add("with margin");
+        }
+
+        parts.Add(Collision switch
+        {
+            CollisionPolicy.Overwrite => "replace if taken",
+            CollisionPolicy.Skip => "skip if taken",
+            _ => "keep both if taken"
+        });
+        return parts;
+    }
 
     // ---- what is on screen -------------------------------------------------------------------------------------------
 
@@ -174,6 +227,8 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
             Raise();
             Raise(nameof(PagesProblem));
             Raise(nameof(HasPagesProblem));
+            if (HasPagesProblem)
+                IsTweaksOpen = true; // the problem is inside the fold, so show it
             Changed(recheck: false);
         }
     }

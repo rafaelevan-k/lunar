@@ -16,6 +16,7 @@
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
+
   </UserControl.Resources>
 
   <Grid Margin="40,4,40,0">
@@ -65,11 +66,11 @@
         </Grid.ColumnDefinitions>
 
         <!-- Fixed square: the image when there is one, otherwise a music note on the surface colour. -->
-        <Border x:Name="ArtworkFrame" Grid.Column="0" Width="72" Height="72" CornerRadius="10" ClipToBounds="True"
-                Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+        <Border x:Name="ArtworkFrame" Grid.Column="0" Width="72" Height="72" CornerRadius="18" ClipToBounds="True"
+                Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1">
           <Grid>
             <TextBlock x:Name="ArtworkPlaceholder" Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.TextSecondary}">
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.Accent}">
               <TextBlock.Style>
                 <Style TargetType="TextBlock">
                   <Setter Property="Visibility" Value="Visible" />
@@ -143,7 +144,8 @@
       <!-- Transport. A button is enabled only when the player offers that command. -->
       <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
         <c:IconButton x:Name="PreviousButton" Margin="6,0" Glyph="&#xE892;" Label="Previous" Command="{Binding PreviousCommand}" />
-        <c:IconButton x:Name="PlayPauseButton" Margin="6,0" Glyph="{Binding PlayPauseGlyph}" Label="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" />
+        <c:IconButton x:Name="PlayPauseButton" Margin="6,0" Glyph="{Binding PlayPauseGlyph}" Label="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}"
+                      Style="{DynamicResource Lunar.Style.IconButtonPrimary}" />
         <c:IconButton x:Name="NextButton" Margin="6,0" Glyph="&#xE893;" Label="Next" Command="{Binding NextCommand}" />
 
         <!-- Only with several players open: switch to the next one, see which one this is, and give the choice back to the page. -->

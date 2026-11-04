@@ -155,6 +155,8 @@ public partial class App : System.Windows.Application
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
+        // A finished conversion makes the eyes smile and, while the island is open, throws a little confetti.
+        _converterQueue.JobSucceeded += (_, _) => _shell?.Celebrate();
         _window = new IslandWindow { DataContext = viewModel, ViewContent = _shell };
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);

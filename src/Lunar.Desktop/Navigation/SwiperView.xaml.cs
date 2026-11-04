@@ -101,6 +101,15 @@ public partial class SwiperView : UserControl
         LayoutStrip();
     }
 
+    private static readonly BackEase Overshoot = CreateOvershoot();
+
+    private static BackEase CreateOvershoot()
+    {
+        var ease = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.35 };
+        ease.Freeze();
+        return ease;
+    }
+
     private static CubicEase CreateEase()
     {
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
@@ -357,7 +366,7 @@ public partial class SwiperView : UserControl
 
         var animation = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(SwipeRules.SettleMilliseconds))
         {
-            EasingFunction = EaseOut,
+            EasingFunction = Overshoot, // the page settles with a small spring
             FillBehavior = FillBehavior.Stop
         };
         // A newer move replaces this animation; nothing more to do when this one ends (the resting value is already set).
