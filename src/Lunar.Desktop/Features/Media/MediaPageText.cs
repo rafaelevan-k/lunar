@@ -75,6 +75,15 @@ internal static class MediaPageText
         _ => "The player didn't accept that."
     };
 
+    /// <summary>Why a seek (moving the position) failed. The page has already gone back to the real position.</summary>
+    public static string SeekFailed(ErrorCode code) => code switch
+    {
+        ErrorCode.Unsupported => "This app doesn't allow seeking.",
+        ErrorCode.InvalidInput => "The media changed, so that position no longer applies.",
+        ErrorCode.Timeout => "The player didn't answer.",
+        _ => "The player didn't move to that position."
+    };
+
     /// <summary>The whole session in one sentence for assistive technology.</summary>
     public static string Summary(MediaSessionSnapshot session)
     {

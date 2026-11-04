@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
+             xmlns:behaviors="clr-namespace:Lunar.Desktop.Behaviors"
              Focusable="False" IsTabStop="False" Background="Transparent"
              automation:AutomationProperties.Name="Media">
   <!--
@@ -114,9 +115,23 @@
           </Style>
         </Grid.Style>
         <TextBlock x:Name="PositionTextBlock" Grid.Column="0" Text="{Binding PositionText}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" MinWidth="40" />
-        <ProgressBar x:Name="TimelineBar" Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}" Height="4" Margin="6,0"
-                     BorderThickness="0" VerticalAlignment="Center"
-                     Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}" />
+        <Grid Grid.Column="1" Margin="6,0" VerticalAlignment="Center">
+          <!-- A timeline that cannot be seeked: a read-only bar. -->
+          <ProgressBar x:Name="TimelineBar" Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}" Height="4"
+                       BorderThickness="0" VerticalAlignment="Center"
+                       Visibility="{Binding ShowReadOnlyBar, Converter={StaticResource BoolToVisible}}"
+                       Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}" />
+          <!-- A timeline that can be seeked: the thumb follows the player until the user holds it; the seek is sent on release. -->
+          <Slider x:Name="SeekSlider" Minimum="0" Maximum="1"
+                  SmallChange="{Binding SeekSmallChange, Mode=OneWay}" LargeChange="{Binding SeekLargeChange, Mode=OneWay}"
+                  Style="{DynamicResource Lunar.Style.Slider}"
+                  behaviors:SliderInteraction.IsTracking="True"
+                  behaviors:SliderInteraction.IsAdjusting="{Binding IsScrubbing, Mode=OneWayToSource}"
+                  Value="{Binding SeekValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                  Visibility="{Binding CanSeek, Converter={StaticResource BoolToVisible}}"
+                  automation:AutomationProperties.Name="Seek"
+                  automation:AutomationProperties.HelpText="{Binding TimelineLabel}" />
+        </Grid>
         <TextBlock x:Name="DurationTextBlock" Grid.Column="2" Text="{Binding DurationText}" Style="{DynamicResource Lunar.Text.Caption}"
                    VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="40" TextAlignment="Right" />
       </Grid>

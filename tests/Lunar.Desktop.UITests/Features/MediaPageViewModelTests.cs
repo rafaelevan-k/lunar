@@ -117,7 +117,7 @@ public sealed class MediaPageViewModelTests
         public Rig()
         {
             Tracker = new MediaSessionTracker(Media);
-            Model = new MediaPageViewModel(Tracker, new MediaTransport(Media), work => work(), null, Time, Timer);
+            Model = new MediaPageViewModel(Tracker, new MediaTransport(Media), new SeekMedia(Media), work => work(), null, Time, Timer);
         }
 
         public Rig Started(params MediaSessionSnapshot[] sessions)
@@ -373,7 +373,7 @@ public sealed class MediaPageViewModelTests
         var held = new HoldingMedia(gate);
         using var tracker = new MediaSessionTracker(held);
         held.Set(S());
-        using var model = new MediaPageViewModel(tracker, new MediaTransport(held), work => work(), null, new FakeTime(), new FakeTimer());
+        using var model = new MediaPageViewModel(tracker, new MediaTransport(held), new SeekMedia(held), work => work(), null, new FakeTime(), new FakeTimer());
         await model.InitializeAsync(Ct);
 
         Press(model.NextCommand);
@@ -816,10 +816,11 @@ public sealed class MediaPageViewModelTests
         var media = new ScriptedMedia();
         var tracker = new MediaSessionTracker(media);
         var transport = new MediaTransport(media);
+        var seek = new SeekMedia(media);
 
-        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(null!, transport, w => w()));
-        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(tracker, null!, w => w()));
-        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(tracker, transport, null!));
+        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(null!, transport, seek, w => w()));
+        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(tracker, null!, seek, w => w()));
+        Assert.Throws<ArgumentNullException>(() => new MediaPageViewModel(tracker, transport, seek, null!));
         tracker.Dispose();
     }
 }

@@ -57,7 +57,7 @@ public sealed class MediaPageTests
         media.SetSessions(sessions);
         var tracker = new MediaSessionTracker(media);
         var dispatcher = Dispatcher.CurrentDispatcher;
-        var model = new MediaPageViewModel(tracker, new MediaTransport(media),
+        var model = new MediaPageViewModel(tracker, new MediaTransport(media), new SeekMedia(media),
             work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
         var page = new MediaPage { DataContext = model };
         var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
@@ -277,6 +277,45 @@ public sealed class MediaPageTests
         Assert.Equal("Live or no timeline", note.Text);
     });
 
+    // FE-18: a seekable timeline shows the slider (named, with the time in words); one that cannot be seeked shows the read-only bar.
+    [Fact]
+    public void ASeekableTimelineShowsASliderAndNotTheReadOnlyBar() => RunOnSta(() =>
+    {
+        using var rig = Create(sessions: S());
+
+        var slider = Named<Slider>(rig, "SeekSlider");
+        Assert.Equal(Visibility.Visible, slider.Visibility);
+        Assert.Equal(Visibility.Collapsed, Named<ProgressBar>(rig, "TimelineBar").Visibility);
+        Assert.Equal("Seek", AutomationProperties.GetName(slider));
+        Assert.Equal("00:30 of 03:20", AutomationProperties.GetHelpText(slider));
+        Assert.Equal(0.15, slider.Value, 3);
+        Assert.True(slider.IsEnabled);
+    });
+
+    [Fact]
+    public void ATimelineThatCannotBeSeekedHasNoSlider() => RunOnSta(() =>
+    {
+        using var rig = Create(sessions: S(seek: false));
+
+        Assert.Equal(Visibility.Collapsed, Named<Slider>(rig, "SeekSlider").Visibility);
+        Assert.Equal(Visibility.Visible, Named<ProgressBar>(rig, "TimelineBar").Visibility);
+    });
+
+    [Fact]
+    public void MovingTheSliderShowsTheDragTimeAndSendsNothingUntilTheDragEnds() => RunOnSta(() =>
+    {
+        using var rig = Create(sessions: S());
+        var slider = Named<Slider>(rig, "SeekSlider");
+
+        // The slider's drag signal reaches the view model through the real binding.
+        Behaviors.SliderInteraction.SetIsAdjusting(slider, true);
+        slider.Value = 0.5;
+
+        Assert.True(rig.Model.IsScrubbing);
+        Assert.Equal("01:40", Named<TextBlock>(rig, "PositionTextBlock").Text);
+        Assert.Equal(0.5, rig.Model.SeekValue, 6);
+    });
+
     [Fact]
     public void ATimelineThatCannotBeSeekedShowsTimesAndANote() => RunOnSta(() =>
     {
@@ -344,7 +383,7 @@ public sealed class MediaPageTests
         var media = new UnreadableMedia();
         var tracker = new MediaSessionTracker(media);
         var dispatcher = Dispatcher.CurrentDispatcher;
-        var model = new MediaPageViewModel(tracker, new MediaTransport(media), work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
+        var model = new MediaPageViewModel(tracker, new MediaTransport(media), new SeekMedia(media), work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
         var page = new MediaPage { DataContext = model };
         var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
         window.Resources.MergedDictionaries.Add(Load("Themes", "Colors.Dark.xaml"));

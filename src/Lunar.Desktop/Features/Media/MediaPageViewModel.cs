@@ -38,7 +38,14 @@ public enum MediaPageMode
 /// player reports through the tracker, so a refused command leaves it as it was and says so.
 ///
 /// While the island is open the position moves along once a second while playing (<see cref="StartTicker"/>); nothing runs
-/// while it is closed. The seek slider belongs to FE-18, the session selector to FE-19.
+/// while it is closed. The session selector belongs to FE-19.
+///
+/// Seeking (FE-18): the position the player reports and the position the user is dragging to are two different things. While
+/// the thumb is held (<see cref="IsScrubbing"/>) the page shows the drag position and ignores the ticker and the player's
+/// reports, so the thumb never jumps under the hand. Nothing is sent during the drag; on release one seek goes to
+/// <see cref="SeekMedia"/> and the page keeps showing the released position (no snap back and forth) until the outcome is
+/// known. A seek that succeeds continues from what the player then reports; one that fails says so in words and the page
+/// goes back to the real position. A drag whose media changed or stopped being seekable meanwhile is dropped, never sent.
 ///
 /// Port callbacks arrive on other threads and are marshalled through <c>post</c> before any property changes. Use on the UI thread.
 /// </summary>
@@ -48,6 +55,7 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
 
     private readonly MediaSessionTracker _tracker;
     private readonly MediaTransport _transport;
+    private readonly SeekMedia _seek;
     private readonly Action<Action> _post;
     private readonly IDiagnosticLog? _log;
     private readonly TimeProvider _time;
@@ -63,6 +71,13 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     private MediaPageMode _mode = MediaPageMode.Loading;
     private MediaSessionSnapshot? _active;
     private DateTimeOffset _activeAt;
+    private (TimeSpan Position, DateTimeOffset At)? _seekAnchor;
+    private bool _isScrubbing;
+    private bool _userMoved;
+    private bool _ignoreUntilRelease;
+    private bool _seeking;
+    private int _seekGeneration;
+    private double _seekValue;
     private ImageSource? _artwork;
     private string _title = string.Empty;
     private string _artist = string.Empty;
@@ -77,14 +92,15 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     private string? _unavailableText;
     private string? _errorMessage;
 
-    public MediaPageViewModel(MediaSessionTracker tracker, MediaTransport transport, Action<Action> post, IDiagnosticLog? log = null)
-        : this(tracker, transport, post, log, TimeProvider.System, timer: null)
+    public MediaPageViewModel(MediaSessionTracker tracker, MediaTransport transport, SeekMedia seek, Action<Action> post, IDiagnosticLog? log = null)
+        : this(tracker, transport, seek, post, log, TimeProvider.System, timer: null)
     {
     }
 
     internal MediaPageViewModel(
         MediaSessionTracker tracker,
         MediaTransport transport,
+        SeekMedia seek,
         Action<Action> post,
         IDiagnosticLog? log,
         TimeProvider time,
@@ -92,10 +108,12 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     {
         ArgumentNullException.ThrowIfNull(tracker);
         ArgumentNullException.ThrowIfNull(transport);
+        ArgumentNullException.ThrowIfNull(seek);
         ArgumentNullException.ThrowIfNull(post);
         ArgumentNullException.ThrowIfNull(time);
         _tracker = tracker;
         _transport = transport;
+        _seek = seek;
         _post = post;
         _log = log;
         _time = time;
@@ -240,6 +258,77 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>The timeline in one sentence for assistive technology, for example "01:12 of 03:45".</summary>
     public string TimelineLabel => HasTimeline ? $"{_positionText} of {_durationText}" : _timelineNote ?? string.Empty;
 
+    // ---- seeking (FE-18) ---------------------------------------------------------------------------------------------
+
+    /// <summary>True when the timeline is finite and the player offers seeking: the page shows a slider instead of a read-only bar.</summary>
+    public bool CanSeek => _active?.CanSeek == true;
+
+    /// <summary>True for a finite timeline that cannot be seeked: the page shows the read-only bar and says why.</summary>
+    public bool ShowReadOnlyBar => HasTimeline && !CanSeek;
+
+    /// <summary>
+    /// Set by the slider (one way to source) while the user holds it. While true the page shows the drag position and ignores
+    /// the ticker and the player's reports; the seek is sent when it turns false.
+    /// </summary>
+    public bool IsScrubbing
+    {
+        get => _isScrubbing;
+        set
+        {
+            if (_isScrubbing == value)
+                return;
+            _isScrubbing = value;
+            if (value)
+            {
+                // The user takes over the thumb: any seek still waiting for its outcome no longer owns the display.
+                _seekGeneration++;
+                _seeking = false;
+                _seekAnchor = null;
+                return;
+            }
+
+            _ignoreUntilRelease = false;
+            if (_userMoved)
+                CommitSeek();
+            else
+                RefreshPosition();
+        }
+    }
+
+    /// <summary>
+    /// The slider value, 0 to 1 of the media. It follows the player while the user is not holding it; while they are, it is
+    /// where they dragged to, and the page makes no write of its own during that time.
+    /// </summary>
+    public double SeekValue
+    {
+        get => _seekValue;
+        set
+        {
+            if (double.IsNaN(value))
+                return;
+            value = Math.Clamp(value, 0.0, 1.0);
+            // The slider echoes what the page just set: that is not the user moving it.
+            if (Math.Abs(value - _seekValue) < 1e-9)
+                return;
+            if (!CanSeek || _ignoreUntilRelease)
+                return;
+
+            _seekValue = value;
+            _userMoved = true;
+            OnChanged(nameof(SeekValue));
+            ShowDragPosition();
+            // Not held (a screen reader, or a click whose drag has not started yet): decide once the current input is done.
+            if (!_isScrubbing)
+                _post(CommitIfReleased);
+        }
+    }
+
+    /// <summary>A small keyboard step (about 5 seconds) as a fraction of the media.</summary>
+    public double SeekSmallChange => StepFraction(TimeSpan.FromSeconds(5));
+
+    /// <summary>A large keyboard step (about 30 seconds) as a fraction of the media.</summary>
+    public double SeekLargeChange => StepFraction(TimeSpan.FromSeconds(30));
+
     // ---- transport ---------------------------------------------------------------------------------------------------
 
     public bool IsPlaying => _active?.Status == MediaPlaybackStatus.Playing;
@@ -353,10 +442,16 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
 
         _hasState = true;
         UnavailableText = null;
-        var previousId = _active?.Id;
+        var previous = _active;
+        var previousId = previous?.Id;
         var session = state.Active;
         _active = session;
         _activeAt = _time.GetUtcNow();
+        _seekAnchor = null; // the player's own report is the truth again
+
+        // A position picked on other media, or on media that cannot be seeked, means nothing: drop the drag and the wait.
+        if (session is null || previous is null || !SameMedia(previous, session) || !session.CanSeek)
+            AbandonSeek();
 
         if (session is null)
         {
@@ -389,6 +484,10 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         OnChanged(nameof(PlayPauseGlyph));
         OnChanged(nameof(PlayPauseLabel));
         OnChanged(nameof(HasTimeline));
+        OnChanged(nameof(CanSeek));
+        OnChanged(nameof(ShowReadOnlyBar));
+        OnChanged(nameof(SeekSmallChange));
+        OnChanged(nameof(SeekLargeChange));
         RefreshPosition();
         if (_tickerRunning)
             ScheduleTick();
@@ -407,7 +506,10 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         OnChanged(nameof(PlayPauseGlyph));
         OnChanged(nameof(PlayPauseLabel));
         OnChanged(nameof(HasTimeline));
+        OnChanged(nameof(CanSeek));
+        OnChanged(nameof(ShowReadOnlyBar));
         OnChanged(nameof(TimelineLabel));
+        SetSeekValueFromPlayer(0);
         _timer?.Cancel();
     }
 
@@ -439,12 +541,30 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     /// </summary>
     internal TimeSpan? CurrentPosition()
     {
-        if (_active is not { Duration: { } duration, Position: { } position } || duration <= TimeSpan.Zero)
+        if (_active is not { Duration: { } duration } || duration <= TimeSpan.Zero)
             return null;
+
+        // After an accepted seek the position the player then reported (or the target) is the starting point.
+        TimeSpan position;
+        DateTimeOffset since;
+        if (_seekAnchor is { } anchor)
+        {
+            position = anchor.Position;
+            since = anchor.At;
+        }
+        else if (_active.Position is { } reported)
+        {
+            position = reported;
+            since = _activeAt;
+        }
+        else
+        {
+            return null;
+        }
 
         if (_active.Status == MediaPlaybackStatus.Playing)
         {
-            var elapsed = _time.GetUtcNow() - _activeAt;
+            var elapsed = _time.GetUtcNow() - since;
             if (elapsed > TimeSpan.Zero)
                 position += elapsed;
         }
@@ -454,6 +574,10 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
 
     private void RefreshPosition()
     {
+        // The user's hand (or a seek waiting for its answer) owns the display: nothing the player says moves it meanwhile.
+        if ((_isScrubbing && !_ignoreUntilRelease) || _seeking || _userMoved)
+            return;
+
         if (CurrentPosition() is { } position && _active?.Duration is { } duration)
         {
             PositionText = MediaPageText.FormatTime(position);
@@ -466,7 +590,123 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
             Progress = 0;
         }
 
+        SetSeekValueFromPlayer(Progress);
         OnChanged(nameof(TimelineLabel));
+    }
+
+    // The page's own write to the slider value: never mistaken for the user (the setter ignores an echo of the same value).
+    private void SetSeekValueFromPlayer(double value)
+    {
+        if (Math.Abs(value - _seekValue) < 1e-9)
+            return;
+        _seekValue = value;
+        OnChanged(nameof(SeekValue));
+    }
+
+    private double StepFraction(TimeSpan step) =>
+        _active?.Duration is { } d && d > TimeSpan.Zero ? Math.Clamp(step / d, 0.0, 1.0) : 0.0;
+
+    private static bool SameMedia(MediaSessionSnapshot a, MediaSessionSnapshot b) =>
+        a.Id == b.Id && a.Title == b.Title && a.Artist == b.Artist && a.Duration == b.Duration;
+
+    // ---- seeking -----------------------------------------------------------------------------------------------------
+
+    // While the thumb moves, the time shows where the user is dragging to. Nothing is sent.
+    private void ShowDragPosition()
+    {
+        if (_active?.Duration is not { } duration || duration <= TimeSpan.Zero)
+            return;
+        PositionText = MediaPageText.FormatTime(SeekMedia.FromFraction(_seekValue, duration));
+        OnChanged(nameof(TimelineLabel));
+    }
+
+    private void CommitIfReleased()
+    {
+        if (!_disposed && !_isScrubbing && _userMoved)
+            CommitSeek();
+    }
+
+    // Drops a drag or a wait that no longer applies. A held thumb stays ignored until it is released.
+    private void AbandonSeek()
+    {
+        _seekGeneration++;
+        _seeking = false;
+        _userMoved = false;
+        if (_isScrubbing)
+            _ignoreUntilRelease = true;
+    }
+
+    // The thumb was released: one seek goes to the session that is active now, and the page keeps the released position.
+    private void CommitSeek()
+    {
+        _userMoved = false;
+        if (_disposed)
+            return;
+
+        var session = _active;
+        if (session is null || !session.CanSeek || session.Duration is not { } duration)
+        {
+            RefreshPosition();
+            return;
+        }
+
+        var target = SeekMedia.FromFraction(_seekValue, duration);
+        var generation = ++_seekGeneration;
+        _seeking = true;
+        PositionText = MediaPageText.FormatTime(target);
+        OnChanged(nameof(TimelineLabel));
+        ErrorMessage = null;
+
+        // One short-lived command per seek: it keeps the async entry point guarded and lets a later seek queue behind this one
+        // inside SeekMedia instead of being dropped here.
+        new AsyncRelayCommand(ct => SeekAsync(session, target, generation, ct), null, OnFault, _lifetime.Token).Execute(null);
+    }
+
+    private async Task SeekAsync(MediaSessionSnapshot session, TimeSpan target, int generation, CancellationToken ct)
+    {
+        Result<SeekOutcome> result;
+        try
+        {
+            result = await _seek.ExecuteAsync(session, target, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            OnFault(ex);
+            result = Result.Failure<SeekOutcome>(new OperationError(ErrorCode.Unexpected, "The seek failed."));
+        }
+
+        if (result.IsCancelled)
+            return;
+        _post(() => FinishSeek(generation, result));
+    }
+
+    private void FinishSeek(int generation, Result<SeekOutcome> result)
+    {
+        // A newer drag, a seek, or other media owns the display now: this answer is about the past.
+        if (_disposed || generation != _seekGeneration)
+            return;
+
+        _seeking = false;
+        if (result.IsSuccess)
+        {
+            // What the player reports after the seek is the truth; when it could not be read the accepted target stands.
+            var outcome = result.Value;
+            _seekAnchor = (outcome.Position ?? outcome.Target, _time.GetUtcNow());
+        }
+        else
+        {
+            // Back to the real position, and say why in words.
+            _seekAnchor = null;
+            ErrorMessage = MediaPageText.SeekFailed(result.Error!.Code);
+        }
+
+        RefreshPosition();
+        if (_tickerRunning)
+            ScheduleTick();
     }
 
     private void ScheduleTick()

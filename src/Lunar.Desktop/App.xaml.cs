@@ -122,6 +122,7 @@ public partial class App : System.Windows.Application
         _media = new MediaPageViewModel(
             _services.GetRequiredService<MediaSessionTracker>(),
             _services.GetRequiredService<MediaTransport>(),
+            _services.GetRequiredService<SeekMedia>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
