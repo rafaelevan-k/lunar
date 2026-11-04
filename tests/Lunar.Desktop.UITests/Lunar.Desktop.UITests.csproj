@@ -14,6 +14,7 @@
     <!-- Reuse the Application port fakes for composition tests; these tests do not exercise UI. -->
     <Compile Include="..\Lunar.Application.Tests\Fakes\TestObservable.cs" Link="Fakes\TestObservable.cs" />
     <Compile Include="..\Lunar.Application.Tests\Fakes\FakeVolumeService.cs" Link="Fakes\FakeVolumeService.cs" />
+    <Compile Include="..\Lunar.Application.Tests\Fakes\FakeRadioServices.cs" Link="Fakes\FakeRadioServices.cs" />
     <AssemblyMetadata Include="LayerUnderTest" Value="Lunar.Desktop" />
   </ItemGroup>
 </Project>

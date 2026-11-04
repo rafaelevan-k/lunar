@@ -26,7 +26,7 @@ namespace Lunar.Application.System.UseCases;
 /// Disposal cancels what is waiting, unsubscribes from the service and completes observers; it does not dispose the
 /// service, which the container owns. Thread-safe; snapshots are delivered serialized on an arbitrary thread.
 /// </summary>
-public sealed class VolumeController : IAsyncDisposable
+public sealed class VolumeController : IAsyncDisposable, IDisposable
 {
     private readonly IVolumeService _service;
     private readonly IClock _clock;
@@ -144,21 +144,8 @@ public sealed class VolumeController : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        Task drain;
-        IDisposable? subscription;
-        lock (_lock)
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-            subscription = _subscription;
-            _subscription = null;
-            drain = _drain;
-            _pendingVolume?.Complete(Result.Cancelled());
-            _pendingMute?.Complete(Result.Cancelled());
-            _pendingVolume = null;
-            _pendingMute = null;
-        }
+        if (!BeginDispose(out var drain, out var subscription))
+            return;
 
         subscription?.Dispose();
         await _lifetime.CancelAsync().ConfigureAwait(false);
@@ -173,6 +160,43 @@ public sealed class VolumeController : IAsyncDisposable
 
         _snapshots.Complete();
         _lifetime.Dispose();
+    }
+
+    /// <summary>
+    /// Synchronous disposal for owners that cannot await (a window closing). Everything that is waiting is cancelled and the
+    /// observers complete at once; a write already talking to Windows is cancelled but not waited for.
+    /// </summary>
+    public void Dispose()
+    {
+        if (!BeginDispose(out _, out var subscription))
+            return;
+
+        subscription?.Dispose();
+        _lifetime.Cancel();
+        _snapshots.Complete();
+    }
+
+    private bool BeginDispose(out Task drain, out IDisposable? subscription)
+    {
+        lock (_lock)
+        {
+            if (_disposed)
+            {
+                drain = Task.CompletedTask;
+                subscription = null;
+                return false;
+            }
+
+            _disposed = true;
+            subscription = _subscription;
+            _subscription = null;
+            drain = _drain;
+            _pendingVolume?.Complete(Result.Cancelled());
+            _pendingMute?.Complete(Result.Cancelled());
+            _pendingVolume = null;
+            _pendingMute = null;
+            return true;
+        }
     }
 
     private static OperationError Closed => new(ErrorCode.DeviceUnavailable, "The volume controller is closed.");

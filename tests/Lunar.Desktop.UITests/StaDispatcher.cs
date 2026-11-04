@@ -11,7 +11,17 @@ internal static class StaDispatcher
     /// </summary>
     public static void ShutDownCurrent()
     {
-        Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-        Dispatcher.Run();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+        if (dispatcher.HasShutdownStarted)
+            return; // the test already shut it down itself
+        try
+        {
+            dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+            Dispatcher.Run();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.Error.WriteLine("StaDispatcher: " + ex.Message);
+        }
     }
 }
