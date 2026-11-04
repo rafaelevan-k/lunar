@@ -316,9 +316,18 @@ public sealed class VolumeController : IAsyncDisposable
 
         lock (_lock)
             _expectations.Remove(expected);
-        write.Complete(result);
-        if (!result.IsCancelled)
-            await RollbackAsync().ConfigureAwait(false);
+
+        // The correction is published before the failure is returned, so a caller that reacts to the error always finds
+        // the Corrected snapshot already delivered.
+        try
+        {
+            if (!result.IsCancelled)
+                await RollbackAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            write.Complete(result);
+        }
     }
 
     // After a failed write: read what Windows really has and tell the UI, so it can undo its optimistic change.

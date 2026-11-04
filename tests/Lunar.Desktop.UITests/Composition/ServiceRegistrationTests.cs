@@ -197,12 +197,26 @@ public sealed class ServiceRegistrationTests
     public void MissingRegistrationFailsAtBuildNotAtFirstUse()
     {
         Assert.ThrowsAny<Exception>(() => ServiceRegistration.BuildServiceProvider(
-            services => services.AddSingleton<WifiConsumer>())); // no Wi-Fi adapter is registered until BE-12
+            services => services.AddSingleton<BluetoothConsumer>())); // no Bluetooth adapter is registered until BE-13
     }
 
-    private sealed class WifiConsumer(IWifiService wifi)
+    [Fact]
+    public async Task WifiServiceIsOneSingletonAndTheContainerCanDisposeIt()
     {
-        public IWifiService Wifi { get; } = wifi;
+        var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var wifi = provider.GetRequiredService<IWifiService>();
+
+        Assert.Same(wifi, provider.GetRequiredService<IWifiService>());
+        Assert.IsType<Lunar.Windows.Network.NativeWifiService>(wifi);
+        provider.Dispose(); // synchronous disposal at shutdown must not throw for a service that is also IAsyncDisposable
+        Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await wifi.GetAsync(CancellationToken.None)).Error?.Code);
+    }
+
+    private sealed class BluetoothConsumer(IBluetoothService bluetooth)
+    {
+        public IBluetoothService Bluetooth { get; } = bluetooth;
     }
 
     private sealed class VolumeConsumer(IVolumeService volume)

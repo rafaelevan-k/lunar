@@ -9,6 +9,7 @@ using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
 using Lunar.Windows.Audio;
 using Lunar.Windows.Environment;
+using Lunar.Windows.Network;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop.Composition;
@@ -48,6 +49,7 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
 
         services.AddSingleton<IVolumeService>(sp => new CoreAudioVolumeService(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IWifiService>(sp => new NativeWifiService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 
