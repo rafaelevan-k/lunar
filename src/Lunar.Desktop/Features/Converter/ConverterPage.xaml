@@ -147,6 +147,47 @@
       </Grid>
     </Border>
 
+    <!-- The conversions that were started (FE-22): state, honest progress, cancel, retry, show in folder. They keep running when the island closes. -->
+    <StackPanel x:Name="QueuePanel" DataContext="{Binding Queue}" Margin="0,10,0,0" Visibility="{Binding HasRows, Converter={StaticResource BoolToVisible}}">
+      <DockPanel LastChildFill="False" Margin="0,0,0,4">
+        <Button x:Name="ClearFinishedButton" DockPanel.Dock="Right" Content="Clear finished" Command="{Binding ClearFinishedCommand}"
+                Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Remove finished conversions from the list" />
+        <Button x:Name="CancelAllButton" DockPanel.Dock="Right" Content="Cancel all" Command="{Binding CancelAllCommand}" Margin="0,0,6,0"
+                Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Cancel every waiting and running conversion" />
+        <TextBlock x:Name="QueueSummary" DockPanel.Dock="Left" Text="{Binding SummaryText}" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center"
+                   automation:AutomationProperties.LiveSetting="Polite" />
+      </DockPanel>
+      <c:InlineError x:Name="QueueError" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" Margin="0,0,0,6" />
+      <ItemsControl x:Name="JobList" ItemsSource="{Binding Rows}" Focusable="False">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Margin="0,0,0,6" Padding="8" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource Lunar.Brush.Border}"
+                    Background="{DynamicResource Lunar.Brush.Surface}" automation:AutomationProperties.Name="{Binding AutomationName}" ToolTip="{Binding FirstOutputPath}">
+              <StackPanel>
+                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Style="{DynamicResource Lunar.Text.Body}" />
+                <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Style="{DynamicResource Lunar.Text.Caption}" Visibility="{Binding IsNotFailed, Converter={StaticResource BoolToVisible}}" />
+                <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Style="{DynamicResource Lunar.Text.Error}" Visibility="{Binding IsFailed, Converter={StaticResource BoolToVisible}}" />
+                <!-- Progress is shown only as the converter reports it: a value and "n of m pages" when the page count is known, an indeterminate bar otherwise. -->
+                <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay, TargetNullValue=0}" IsIndeterminate="{Binding IsIndeterminate}" Height="4" Margin="0,6,0,0"
+                             BorderThickness="0" Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}"
+                             Visibility="{Binding ShowProgressBar, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Progress" />
+                <TextBlock Text="{Binding ProgressText}" Style="{DynamicResource Lunar.Text.Caption}" Margin="0,2,0,0" />
+                <TextBlock Text="{Binding ResultText}" Style="{DynamicResource Lunar.Text.Caption}" TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                  <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
+                          Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Cancel this conversion" />
+                  <Button Content="Try again" Command="{Binding RetryCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
+                          Visibility="{Binding CanRetry, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Try this conversion again" />
+                  <Button Content="Show in folder" Command="{Binding RevealCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                          Visibility="{Binding CanReveal, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Show the result in its folder" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+
     <!-- Notice and error. -->
     <Border Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisible}}" Margin="0,8,0,0">
       <DockPanel automation:AutomationProperties.LiveSetting="Polite">
@@ -232,7 +273,26 @@
                  VerticalAlignment="Center" />
     </DockPanel>
 
-    <!-- Why starting is not possible yet (the Convert button comes with FE-22). -->
+    <!-- Replacing existing results is asked about here, at the moment of starting. -->
+    <Border x:Name="OverwriteConfirm" Margin="0,10,0,0" Padding="8" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource Lunar.Brush.Error}"
+            Background="{DynamicResource Lunar.Brush.Surface}" Visibility="{Binding IsConfirmingOverwrite, Converter={StaticResource BoolToVisible}}"
+            automation:AutomationProperties.LiveSetting="Assertive">
+      <StackPanel>
+        <TextBlock Text="Replace existing results with the same name? Your original files are never replaced." Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+          <Button x:Name="ConfirmReplaceButton" Content="Replace and convert" Command="{Binding ConfirmOverwriteCommand}" Margin="0,0,6,0"
+                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Replace existing results and convert" />
+          <Button x:Name="CancelReplaceButton" Content="Cancel" Command="{Binding CancelOverwriteCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                  automation:AutomationProperties.Name="Do not replace; go back" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Button x:Name="ConvertButton" Content="Convert" Command="{Binding StartCommand}" HorizontalAlignment="Left" Margin="0,10,0,0"
+            Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Convert the listed files"
+            automation:AutomationProperties.HelpText="{Binding StartHint}" />
+
+    <!-- Why starting is not possible, when it is not. -->
     <TextBlock x:Name="StartHintText" Text="{Binding StartHint}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="0,10,0,0"
                automation:AutomationProperties.LiveSetting="Polite" />
   </StackPanel>

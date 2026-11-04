@@ -35,7 +35,14 @@ internal sealed class ConverterGuardLink : IDisposable
 
     private void OnPageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!_disposed && e.PropertyName is nameof(ConverterPageViewModel.IsDialogOpen) or nameof(ConverterPageViewModel.IsDragActive))
-            _island.SetGuards(new IslandGuards { DialogOpen = _page.IsDialogOpen, DragActive = _page.IsDragActive });
+        if (!_disposed && e.PropertyName is nameof(ConverterPageViewModel.IsDialogOpen) or nameof(ConverterPageViewModel.IsDragActive) or nameof(ConverterPageViewModel.IsConfirmingOverwrite))
+        {
+            _island.SetGuards(new IslandGuards
+            {
+                DialogOpen = _page.IsDialogOpen,
+                DragActive = _page.IsDragActive,
+                ConfirmationPending = _page.IsConfirmingOverwrite
+            });
+        }
     }
 }

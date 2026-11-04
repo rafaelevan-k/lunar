@@ -207,6 +207,16 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
         Changed(recheck: false);
     }
 
+    /// <summary>Raised when the password is forgotten, so the box on screen can be emptied too.</summary>
+    public event EventHandler? PdfPasswordReset;
+
+    /// <summary>Forgets the password (the list was emptied or the files were handed to the queue, which keeps its own copy in memory for a retry).</summary>
+    public void ResetPdfPassword()
+    {
+        SetPdfPassword(null);
+        PdfPasswordReset?.Invoke(this, EventArgs.Empty);
+    }
+
     public void SetChosenFolder(string? folder)
     {
         var next = string.IsNullOrWhiteSpace(folder) ? null : folder;

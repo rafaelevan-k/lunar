@@ -56,15 +56,17 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private bool _dialogOpen;
     private bool _dragActive;
     private bool _isChecking;
+    private bool _confirmingOverwrite;
     private string? _notice;
     private string? _errorMessage;
 
-    public ConverterPageViewModel(IConversionPlanner planner, IRendererAvailability renderer, IFilePicker picker, IFolderPicker folders, Action<Action> post, IDiagnosticLog? log = null)
+    public ConverterPageViewModel(IConversionPlanner planner, IRendererAvailability renderer, IFilePicker picker, IFolderPicker folders, ConverterQueueViewModel queue, Action<Action> post, IDiagnosticLog? log = null)
     {
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(renderer);
         ArgumentNullException.ThrowIfNull(picker);
         ArgumentNullException.ThrowIfNull(folders);
+        ArgumentNullException.ThrowIfNull(queue);
         ArgumentNullException.ThrowIfNull(post);
         _planner = planner;
         _renderer = renderer;
@@ -72,6 +74,10 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         _folders = folders;
         Options = new ConverterOptionsViewModel(OnOptionsChanged);
         ChooseFolderCommand = new RelayCommand(ChooseFolder, () => !_disposed && !_dialogOpen);
+        Queue = queue;
+        StartCommand = new AsyncRelayCommand(ct => StartAsync(confirmed: false, ct), () => CanStart && !_confirmingOverwrite, OnStartFault, _lifetime.Token);
+        ConfirmOverwriteCommand = new AsyncRelayCommand(ct => StartAsync(confirmed: true, ct), () => _confirmingOverwrite && CanStart, OnStartFault, _lifetime.Token);
+        CancelOverwriteCommand = new RelayCommand(() => IsConfirmingOverwrite = false, () => _confirmingOverwrite);
         _post = post;
         _log = log;
         Items = new ReadOnlyObservableCollection<ConverterItem>(_items);
@@ -198,6 +204,31 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>The conversion choices as set now, to go with <see cref="CurrentRequest"/>.</summary>
     public ConversionChoices CurrentChoices => Options.BuildChoices();
 
+    /// <summary>The conversions that were started: their state, progress, cancel, retry and show in folder (FE-22).</summary>
+    public ConverterQueueViewModel Queue { get; }
+
+    /// <summary>Starts the conversion of the files that passed the check. Replacing existing results asks first (<see cref="IsConfirmingOverwrite"/>).</summary>
+    public ICommand StartCommand { get; }
+
+    public ICommand ConfirmOverwriteCommand { get; }
+
+    public ICommand CancelOverwriteCommand { get; }
+
+    /// <summary>True while the page waits for the user to confirm that existing results may be replaced; the island must not close then.</summary>
+    public bool IsConfirmingOverwrite
+    {
+        get => _confirmingOverwrite;
+        private set
+        {
+            if (Set(ref _confirmingOverwrite, value))
+            {
+                ((AsyncRelayCommand)StartCommand).NotifyCanExecuteChanged();
+                ((AsyncRelayCommand)ConfirmOverwriteCommand).NotifyCanExecuteChanged();
+                ((RelayCommand)CancelOverwriteCommand).NotifyCanExecuteChanged();
+            }
+        }
+    }
+
     public ICommand ChooseFolderCommand { get; }
 
     public ICommand AddFilesCommand { get; }
@@ -286,11 +317,60 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         if (_disposed)
             return;
 
-        _items.Clear();
-        _keys.Clear();
+        ResetList();
         Notice = null;
         ErrorMessage = null;
+    }
+
+    // Empties the list of files to convert (not the conversions already started) and forgets the PDF password.
+    private void ResetList()
+    {
+        _items.Clear();
+        _keys.Clear();
+        Options.ResetPdfPassword();
         Changed();
+    }
+
+    private async Task StartAsync(bool confirmed, CancellationToken ct)
+    {
+        var request = CurrentRequest;
+        if (request is null)
+            return;
+
+        // Replacing existing results is only done after the user says so, here, at the moment of starting.
+        if (request.Collision == CollisionPolicy.Overwrite && !confirmed)
+        {
+            IsConfirmingOverwrite = true;
+            return;
+        }
+
+        IsConfirmingOverwrite = false;
+        ErrorMessage = null;
+        var started = await Queue.StartAsync(request, CurrentChoices, ct);
+        if (_disposed || started.IsCancelled)
+            return;
+        if (started.IsFailure)
+        {
+            ErrorMessage = started.Error!.SafeMessage;
+            return;
+        }
+
+        if (started.Value.JobIds.Count == 0)
+        {
+            Notice = "Nothing was left to convert. Check the list and try again.";
+            return;
+        }
+
+        // The jobs now live in the queue below; the list is emptied so the same files cannot be started twice.
+        var count = started.Value.JobIds.Count;
+        ResetList();
+        Notice = count == 1 ? "1 conversion started." : $"{count} conversions started.";
+    }
+
+    private void OnStartFault(Exception ex)
+    {
+        _log?.Write(new DiagnosticEvent(DiagnosticLevel.Error, "converter.start.failed", Component, "Start", ExceptionType: ex.GetType()));
+        ErrorMessage = "Lunar couldn't start the conversion. Try again.";
     }
 
     private void Remove(string fullPath)
@@ -330,6 +410,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
     private void Changed()
     {
+        IsConfirmingOverwrite = false; // what was asked about is no longer what is on the page
         OutputFolder = Options.ChosenFolder ?? (_items.Count == 0 ? string.Empty : FolderOf(_items[0].FullPath));
         Raise(nameof(OutputFolder));
         Raise(nameof(IsEmpty));
@@ -535,6 +616,8 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     {
         Raise(nameof(CanStart));
         Raise(nameof(StartHint));
+        ((AsyncRelayCommand)StartCommand).NotifyCanExecuteChanged();
+        ((AsyncRelayCommand)ConfirmOverwriteCommand).NotifyCanExecuteChanged();
     }
 
     private void MarkAll(ConverterItemStatus status, string message)

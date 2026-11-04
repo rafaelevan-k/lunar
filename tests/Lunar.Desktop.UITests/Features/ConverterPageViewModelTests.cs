@@ -16,11 +16,6 @@ namespace Lunar.Desktop.UITests.Features;
 // file dialog and the log are fakes.
 public sealed class ConverterPageViewModelTests : IDisposable
 {
-    private sealed class Renderer(bool available, bool throws = false) : IRendererAvailability
-    {
-        public Task<bool> IsAvailableAsync(CancellationToken ct) => throws ? throw new InvalidOperationException("boom") : Task.FromResult(available);
-    }
-
     private sealed class Picker : IFilePicker
     {
         public IReadOnlyList<string>? Answer { get; set; }
@@ -73,17 +68,26 @@ public sealed class ConverterPageViewModelTests : IDisposable
     private readonly Picker _picker = new();
     private readonly Folders _folders = new();
     private readonly RecordingLog _log = new();
-    private readonly List<ConverterPageViewModel> _models = [];
+    private readonly List<ConverterRig> _rigs = [];
 
     public ConverterPageViewModelTests() => Directory.CreateDirectory(_root);
 
     public void Dispose()
     {
-        foreach (var model in _models)
-            model.Dispose();
+        foreach (var rig in _rigs)
+        {
+            rig.Dispose();
+            Delete(Path.GetDirectoryName(rig.Work)!);
+        }
+
+        Delete(_root);
+    }
+
+    private static void Delete(string folder)
+    {
         try
         {
-            Directory.Delete(_root, recursive: true);
+            Directory.Delete(folder, recursive: true);
         }
         catch (IOException)
         {
@@ -92,12 +96,14 @@ public sealed class ConverterPageViewModelTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private ConverterPageViewModel Model(bool renderer = false, bool rendererThrows = false)
+    private ConverterRig Rig(bool renderer = false, bool rendererThrows = false, Action<Action>? post = null)
     {
-        var model = new ConverterPageViewModel(new ConversionPlanner(new Renderer(renderer, rendererThrows)), new Renderer(renderer, rendererThrows), _picker, _folders, work => work(), _log);
-        _models.Add(model);
-        return model;
+        var rig = ConverterRig.Create(_root + "-rig" + _rigs.Count, _picker, _folders, _log, new StubRenderer(renderer, rendererThrows), post);
+        _rigs.Add(rig);
+        return rig;
     }
+
+    private ConverterPageViewModel Model(bool renderer = false, bool rendererThrows = false) => Rig(renderer, rendererThrows).Page;
 
     private string Png(string name)
     {

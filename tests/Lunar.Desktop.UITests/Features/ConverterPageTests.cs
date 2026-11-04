@@ -32,11 +32,6 @@ public sealed class ConverterPageTests
         public string? PickFolder() => null;
     }
 
-    private sealed class NoRenderer : IRendererAvailability
-    {
-        public Task<bool> IsAvailableAsync(CancellationToken ct) => Task.FromResult(false);
-    }
-
     private static ResourceDictionary Load(params string[] relative)
     {
         var path = System.IO.Path.Combine([ThemeTokenTests.DesktopDirectory, .. relative]);
@@ -108,16 +103,28 @@ public sealed class ConverterPageTests
         return path;
     }
 
-    private static void WithPage(string colors, Action<ConverterPage, ConverterPageViewModel, Window, string> check)
+    private sealed class NullLog : Lunar.Application.Abstractions.Diagnostics.IDiagnosticLog
+    {
+        public void Write(Lunar.Application.Abstractions.Diagnostics.DiagnosticEvent diagnosticEvent)
+        {
+        }
+    }
+
+    private static void WithPage(string colors, Action<ConverterPage, ConverterPageViewModel, Window, string> check) =>
+        WithRigPage(colors, (page, rig, window, folder) => check(page, rig.Page, window, folder));
+
+    private static void WithRigPage(string colors, Action<ConverterPage, ConverterRig, Window, string> check)
     {
         RunOnSta(() =>
         {
             var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "lunar-fe20ui-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var model = new ConverterPageViewModel(new ConversionPlanner(new NoRenderer()), new NoRenderer(), new NoPicker(), new NoFolders(),
+            // The application's dispatcher loop sets this; the pumping used here does not, and without it an awaited command would resume on the pool.
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(dispatcher));
+            var rig = ConverterRig.Create(folder + "-rig", new NoPicker(), new NoFolders(), new NullLog(), new StubRenderer(false),
                 work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
-            var page = new ConverterPage { DataContext = model };
+            var page = new ConverterPage { DataContext = rig.Page };
             var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
             window.Resources.MergedDictionaries.Add(Load("Themes", colors));
             window.Resources.MergedDictionaries.Add(Load("Themes", "Typography.xaml"));
@@ -128,23 +135,25 @@ public sealed class ConverterPageTests
             window.UpdateLayout();
             try
             {
-                check(page, model, window, folder);
+                check(page, rig, window, folder);
             }
             finally
             {
-                model.Dispose();
                 window.Close();
-                try
+                rig.Dispose();
+                foreach (var dir in new[] { folder, folder + "-rig" })
                 {
-                    Directory.Delete(folder, recursive: true);
-                }
-                catch (IOException)
-                {
+                    try
+                    {
+                        Directory.Delete(dir, recursive: true);
+                    }
+                    catch (IOException)
+                    {
+                    }
                 }
             }
         });
     }
-
     private static void Settle(Window window)
     {
         window.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
@@ -295,6 +304,102 @@ public sealed class ConverterPageTests
         Settle(window);
         Assert.Equal(Visibility.Visible, Shown(page, "OverwriteWarning"));
         Assert.True(((Button)page.FindName("FolderButton")).IsEnabled);
+    });
+
+    private static void PumpUntil(Func<bool> condition)
+    {
+        var end = DateTime.UtcNow.AddSeconds(30);
+        while (!condition() && DateTime.UtcNow < end)
+        {
+            Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
+            Thread.Sleep(5);
+        }
+
+        Assert.True(condition(), "The condition was not met in time.");
+    }
+
+    [Theory]
+    [InlineData("Colors.Dark.xaml")]
+    [InlineData("Colors.HighContrast.xaml")]
+    public void AStartedConversionAppearsWithItsStateAndButtons(string colors) => WithRigPage(colors, (page, rig, window, folder) =>
+    {
+        Assert.Equal(Visibility.Collapsed, Shown(page, "QueuePanel"));
+        var convert = (Button)page.FindName("ConvertButton");
+        Assert.False(convert.IsEnabled);
+        Assert.Contains("Add files", ((TextBlock)page.FindName("StartHintText")).Text, StringComparison.Ordinal);
+
+        rig.Page.AddFiles([MakePng(folder, "a.png")]);
+        Pump(rig.Page.WhenCheckedAsync());
+        rig.Page.Options.SetChosenFolder(folder);
+        Pump(rig.Page.WhenCheckedAsync());
+        Settle(window);
+        Assert.True(convert.IsEnabled);
+        Assert.Equal(string.Empty, ((TextBlock)page.FindName("StartHintText")).Text);
+
+        convert.Command.Execute(null);
+        PumpUntil(() => rig.Queue.Rows.Count == 1 && rig.Queue.Rows[0].IsFinal);
+        Settle(window);
+
+        Assert.Equal(Visibility.Visible, Shown(page, "QueuePanel"));
+        var list = (ItemsControl)page.FindName("JobList");
+        Assert.Single(list.Items);
+        var texts = Descendants<TextBlock>(list).Select(t => t.Text).ToList();
+        Assert.Contains("Done", texts);
+        Assert.Contains("Saved as a.jpg", texts);
+        var buttons = Descendants<Button>(list).Where(b => b.Visibility == Visibility.Visible).Select(b => b.Content as string).ToList();
+        Assert.Contains("Show in folder", buttons);
+        Assert.DoesNotContain("Cancel", buttons);
+        Assert.Equal("1 done", ((TextBlock)page.FindName("QueueSummary")).Text);
+        Assert.True(page.IsEnabled && rig.Page.IsEmpty);
+    });
+
+    [Fact]
+    public void AFailedConversionShowsItsReasonInTheErrorStyleWithTryAgain() => WithRigPage("Colors.Dark.xaml", (page, rig, window, folder) =>
+    {
+        var broken = System.IO.Path.Combine(folder, "broken.pdf");
+        File.WriteAllText(broken, "%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\nstartxref\n0\n%%EOF\n");
+        rig.Page.AddFiles([broken]);
+        Pump(rig.Page.WhenCheckedAsync());
+        rig.Page.Options.SetChosenFolder(folder);
+        Pump(rig.Page.WhenCheckedAsync());
+
+        ((Button)page.FindName("ConvertButton")).Command.Execute(null);
+        PumpUntil(() => rig.Queue.Rows.Count == 1 && rig.Queue.Rows[0].IsFinal);
+        Settle(window);
+
+        var list = (ItemsControl)page.FindName("JobList");
+        var failed = Descendants<TextBlock>(list).Where(t => t.Visibility == Visibility.Visible && t.Text.EndsWith("Nothing was saved.", StringComparison.Ordinal)).ToList();
+        Assert.Single(failed);
+        var buttons = Descendants<Button>(list).Where(b => b.Visibility == Visibility.Visible).Select(b => b.Content as string).ToList();
+        Assert.Contains("Try again", buttons);
+        Assert.DoesNotContain("Show in folder", buttons);
+    });
+
+    [Fact]
+    public void ReplacingAsksOnThePageBeforeAnythingStarts() => WithRigPage("Colors.Dark.xaml", (page, rig, window, folder) =>
+    {
+        File.WriteAllBytes(System.IO.Path.Combine(folder, "a.jpg"), [1, 2, 3]);
+        rig.Page.AddFiles([MakePng(folder, "a.png")]);
+        Pump(rig.Page.WhenCheckedAsync());
+        rig.Page.Options.SetChosenFolder(folder);
+        Pump(rig.Page.WhenCheckedAsync());
+        rig.Page.Options.Collisions.Select(Lunar.Application.Conversion.Models.CollisionPolicy.Overwrite);
+        Pump(rig.Page.WhenCheckedAsync());
+        Settle(window);
+        Assert.Equal(Visibility.Collapsed, Shown(page, "OverwriteConfirm"));
+
+        ((Button)page.FindName("ConvertButton")).Command.Execute(null);
+        PumpUntil(() => rig.Page.IsConfirmingOverwrite);
+        Settle(window);
+
+        Assert.Equal(Visibility.Visible, Shown(page, "OverwriteConfirm"));
+        Assert.False(((Button)page.FindName("ConvertButton")).IsEnabled);
+        Assert.Equal([1, 2, 3], File.ReadAllBytes(System.IO.Path.Combine(folder, "a.jpg")));
+        Assert.Empty(rig.Queue.Rows);
+
+        ((Button)page.FindName("CancelReplaceButton")).Command.Execute(null);
+        Settle(window);
+        Assert.Equal(Visibility.Collapsed, Shown(page, "OverwriteConfirm"));
     });
 
     [Fact]

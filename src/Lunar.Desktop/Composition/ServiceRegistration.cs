@@ -89,6 +89,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IConversionQueue>(sp => new ConversionJobQueue(sp.GetRequiredService<ConversionOrchestrator>()));
         services.AddTransient<StartConversion>(sp => new StartConversion(sp.GetRequiredService<IConversionPlanner>(), sp.GetRequiredService<IConversionQueue>()));
+        services.AddSingleton<IOutputRevealer>(sp => new WindowsOutputRevealer(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IFilePicker, WindowsFilePicker>();
         services.AddSingleton<IFolderPicker, WindowsFolderPicker>();
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));

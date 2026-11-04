@@ -5,8 +5,10 @@ using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Settings.Models;
+using Lunar.Conversion.Pipeline;
 using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Features.Eyes;
@@ -45,6 +47,8 @@ public partial class App : System.Windows.Application
     private MediaLifetime? _mediaLifetime;
     private ConverterPageViewModel? _converter;
     private ConverterGuardLink? _converterGuards;
+    private ConverterQueueViewModel? _converterQueue;
+    private ConverterBusyLink? _converterBusy;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -129,12 +133,20 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<SeekMedia>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
+        Action<Action> toUi = work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); };
+        _converterQueue = new ConverterQueueViewModel(
+            _services.GetRequiredService<StartConversion>(),
+            _services.GetRequiredService<IConversionQueue>(),
+            _services.GetRequiredService<IOutputRevealer>(),
+            toUi,
+            _log);
         _converter = new ConverterPageViewModel(
             _services.GetRequiredService<IConversionPlanner>(),
             _services.GetRequiredService<IRendererAvailability>(),
             _services.GetRequiredService<IFilePicker>(),
             _services.GetRequiredService<IFolderPicker>(),
-            work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
+            _converterQueue,
+            toUi,
             _log);
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
         pages[0] = new SystemPage { DataContext = _system };
@@ -154,12 +166,17 @@ public partial class App : System.Windows.Application
         _clockLifetime = new ClockLifetime(viewModel, _system);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
+        _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
         // The window is already on screen; the cards fill in as each reading arrives.
-        await Task.WhenAll(_system.InitializeAsync(_lifetime.Token), _media.InitializeAsync(_lifetime.Token));
+        // Working folders that a killed run left behind are removed now, off the UI thread, before any conversion of this run starts.
+        await Task.WhenAll(
+            _system.InitializeAsync(_lifetime.Token),
+            _media.InitializeAsync(_lifetime.Token),
+            _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
@@ -184,8 +201,12 @@ public partial class App : System.Windows.Application
         _mediaLifetime = null;
         _media?.Dispose();
         _media = null;
+        _converterBusy?.Dispose();
+        _converterBusy = null;
         _converterGuards?.Dispose();
         _converterGuards = null;
+        _converterQueue?.Dispose();
+        _converterQueue = null;
         _converter?.Dispose();
         _converter = null;
         _system?.Dispose();

@@ -19,7 +19,17 @@ public partial class ConverterPage : UserControl
         Drop += OnDrop;
         // A PasswordBox cannot be bound. The typed password goes straight to the options (memory only) and is never read back here.
         PdfPasswordBox.PasswordChanged += (_, _) => Model?.Options.SetPdfPassword(PdfPasswordBox.Password);
+        DataContextChanged += (_, e) =>
+        {
+            if (e.OldValue is ConverterPageViewModel old)
+                old.Options.PdfPasswordReset -= OnPasswordReset;
+            if (e.NewValue is ConverterPageViewModel now)
+                now.Options.PdfPasswordReset += OnPasswordReset;
+        };
     }
+
+    // The options forgot the password (the list was emptied or handed to the queue): empty the box on screen as well.
+    private void OnPasswordReset(object? sender, EventArgs e) => PdfPasswordBox.Clear();
 
     private ConverterPageViewModel? Model => DataContext as ConverterPageViewModel;
 
