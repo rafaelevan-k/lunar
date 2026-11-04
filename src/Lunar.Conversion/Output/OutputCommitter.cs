@@ -51,10 +51,23 @@ public sealed partial class OutputCommitter
     /// Publishes the staged results of <paramref name="job"/>. A route with one output per page takes one staged file per page in page
     /// order; any other route takes exactly one. Returns the full paths of the published files, in order.
     /// </summary>
+    public Task<Result<IReadOnlyList<string>>> CommitAsync(
+        PlannedConversion job,
+        TempWorkspace workspace,
+        IReadOnlyList<string> stagedFiles,
+        ConversionLimits limits,
+        CancellationToken ct) =>
+        CommitAsync(job, workspace, stagedFiles, numbering: null, limits, ct);
+
+    /// <summary>
+    /// As the other overload, for a route with one output per page where the pictures are only some pages of the document:
+    /// <paramref name="numbering"/> says which page each picture is, so the names keep the document's own numbers.
+    /// </summary>
     public async Task<Result<IReadOnlyList<string>>> CommitAsync(
         PlannedConversion job,
         TempWorkspace workspace,
         IReadOnlyList<string> stagedFiles,
+        PageNumbering? numbering,
         ConversionLimits limits,
         CancellationToken ct)
     {
@@ -68,6 +81,8 @@ public sealed partial class OutputCommitter
         var perPage = job.Route.ProducesOneOutputPerPage;
         if (!job.Route.IsSupported || stagedFiles.Count == 0 || stagedFiles.Count > limits.MaxPages || (!perPage && stagedFiles.Count != 1))
             return Fail(ErrorCode.Unexpected, "The conversion produced an unexpected number of results, so nothing was saved. Your original file is untouched.");
+        if (numbering is not null && (!perPage || !numbering.IsValidFor(stagedFiles.Count)))
+            return Fail(ErrorCode.Unexpected, "The page numbers of the results did not match them, so nothing was saved. Your original file is untouched.");
 
         var directory = job.OutputDirectory;
         if (!_fileSystem.DirectoryExists(directory))
@@ -121,7 +136,7 @@ public sealed partial class OutputCommitter
                 return Result.Cancelled<IReadOnlyList<string>>();
 
             // 4. publish by renaming
-            var outcome = Publish(job, directory, parts, perPage);
+            var outcome = Publish(job, directory, parts, perPage, numbering);
             published = outcome.IsSuccess;
             return outcome;
         }
@@ -132,14 +147,16 @@ public sealed partial class OutputCommitter
         }
     }
 
-    private Result<IReadOnlyList<string>> Publish(PlannedConversion job, string directory, List<string> parts, bool perPage)
+    private Result<IReadOnlyList<string>> Publish(PlannedConversion job, string directory, List<string> parts, bool perPage, PageNumbering? numbering)
     {
         var (stem, start) = StartingName(job);
         for (var counter = start; counter < start + MaxCounter; counter++)
         {
             var baseName = OutputNaming.WithCounter(stem, counter);
             var names = perPage
-                ? Enumerable.Range(1, parts.Count).Select(page => OutputNaming.PageFileName(baseName, page, parts.Count, job.OutputExtension)).ToArray()
+                ? Enumerable.Range(0, parts.Count)
+                    .Select(i => OutputNaming.PageFileName(baseName, numbering?.PageNumbers[i] ?? (i + 1), numbering?.DocumentPageCount ?? parts.Count, job.OutputExtension))
+                    .ToArray()
                 : [baseName + job.OutputExtension];
             var finals = names.Select(name => Path.Combine(directory, name)).ToArray();
 

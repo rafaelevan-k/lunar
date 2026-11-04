@@ -1,3 +1,4 @@
+using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Media;
 using Lunar.Application.Abstractions.Settings;
@@ -14,6 +15,7 @@ using Lunar.Windows.Bluetooth;
 using Lunar.Windows.Environment;
 using Lunar.Windows.Media;
 using Lunar.Windows.Network;
+using Lunar.Windows.Pdf;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop.Composition;
@@ -61,6 +63,8 @@ public static class ServiceRegistration
         services.AddSingleton<MediaSessionTracker>(sp => new MediaSessionTracker(sp.GetRequiredService<IMediaService>()));
         services.AddSingleton<MediaTransport>(sp => new MediaTransport(sp.GetRequiredService<IMediaService>()));
         services.AddSingleton<SeekMedia>(sp => new SeekMedia(sp.GetRequiredService<IMediaService>()));
+        // PDF pages to pictures (BE-24): the operating system's renderer behind the Application port; the conversion layer never sees it.
+        services.AddSingleton<IPdfPageRasterizer>(sp => new WindowsPdfPageRasterizer(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 

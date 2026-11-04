@@ -16,6 +16,8 @@
     <Compile Include="..\Lunar.Application.Tests\Fakes\FakeVolumeService.cs" Link="Fakes\FakeVolumeService.cs" />
     <Compile Include="..\Lunar.Application.Tests\Fakes\FakeRadioServices.cs" Link="Fakes\FakeRadioServices.cs" />
     <Compile Include="..\Lunar.Application.Tests\Fakes\FakeMediaService.cs" Link="Fakes\FakeMediaService.cs" />
+    <!-- Hand-written PDFs (also password protected) shared with the Windows tests, to run the whole PDF route on a real operating-system renderer. -->
+    <Compile Include="..\Lunar.Windows.IntegrationTests\Support\PdfFixtures.cs" Link="Fakes\PdfFixtures.cs" />
     <AssemblyMetadata Include="LayerUnderTest" Value="Lunar.Desktop" />
   </ItemGroup>
 </Project>
