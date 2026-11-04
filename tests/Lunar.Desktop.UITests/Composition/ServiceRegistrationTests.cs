@@ -197,7 +197,7 @@ public sealed class ServiceRegistrationTests
     public void MissingRegistrationFailsAtBuildNotAtFirstUse()
     {
         Assert.ThrowsAny<Exception>(() => ServiceRegistration.BuildServiceProvider(
-            services => services.AddSingleton<MediaConsumer>())); // no media adapter is registered until BE-15
+            services => services.AddSingleton<MissingConsumer>())); // nothing registers IMissingPort
     }
 
     [Fact]
@@ -228,9 +228,32 @@ public sealed class ServiceRegistrationTests
         Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await bluetooth.GetAsync(CancellationToken.None)).Error?.Code);
     }
 
-    private sealed class MediaConsumer(Lunar.Application.Abstractions.Media.IMediaService media)
+    private interface IMissingPort;
+
+    private sealed class MissingConsumer(IMissingPort port)
     {
-        public Lunar.Application.Abstractions.Media.IMediaService Media { get; } = media;
+        public IMissingPort Port { get; } = port;
+    }
+
+    [Fact]
+    public async Task MediaServicesAreSingletonsAndTheContainerDisposesThemInOrder()
+    {
+        var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var media = provider.GetRequiredService<Lunar.Application.Abstractions.Media.IMediaService>();
+        var tracker = provider.GetRequiredService<Lunar.Application.Media.UseCases.MediaSessionTracker>();
+
+        Assert.Same(media, provider.GetRequiredService<Lunar.Application.Abstractions.Media.IMediaService>());
+        Assert.Same(tracker, provider.GetRequiredService<Lunar.Application.Media.UseCases.MediaSessionTracker>());
+        Assert.Same(provider.GetRequiredService<Lunar.Application.Media.UseCases.MediaTransport>(), provider.GetRequiredService<Lunar.Application.Media.UseCases.MediaTransport>());
+        Assert.Same(provider.GetRequiredService<Lunar.Application.Media.UseCases.SeekMedia>(), provider.GetRequiredService<Lunar.Application.Media.UseCases.SeekMedia>());
+        Assert.IsType<Lunar.Windows.Media.GsmtcMediaService>(media);
+
+        provider.Dispose(); // the tracker stops listening before the service closes
+
+        Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await media.GetSessionsAsync(CancellationToken.None)).Error?.Code);
+        Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, tracker.Select("a").Error?.Code);
     }
 
     private sealed class VolumeConsumer(IVolumeService volume)

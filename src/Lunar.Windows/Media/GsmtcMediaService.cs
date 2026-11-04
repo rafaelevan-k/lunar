@@ -32,6 +32,12 @@ namespace Lunar.Windows.Media;
 /// never sent; a command the player does not accept is <see cref="ErrorCode.Unexpected"/> (retryable); success means the
 /// player accepted it, and the new state arrives through <see cref="Changes"/>. Commands go one at a time with the reads.
 ///
+/// Lifecycle (BE-18): notifications from Windows are throttled (a burst is one refresh per interval); a refresh that fails is
+/// tried again a few times so the list recovers by itself, and the backend reconnects on its next read; a session that
+/// leaves the list loses its subscriptions in that same read; disposal stops the timers, completes the observers and
+/// releases every subscription. Which session is "the" active one is not decided here (the list says which one Windows
+/// treats as current); that is the policy of <c>MediaSessionTracker</c> in the Application layer.
+///
 /// Seeking (BE-17): <see cref="SeekAsync"/> follows the same path (fresh read, check against what the session advertises now,
 /// then ask the player), keeps the target inside the media and converts it to the timeline of the player.
 /// Thread-safe.
@@ -47,14 +53,19 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
     private readonly TimeSpan _readTimeout;
     private readonly ServiceCore<IReadOnlyList<MediaSessionSnapshot>> _core;
 
+    private readonly MediaServiceTimings _timings;
+    private readonly CancellationTokenSource _stop = new();
+
     private List<MediaSessionReading>? _lastReadings;
+    private int _retries;
+    private int _throttling;
 
     public GsmtcMediaService(IDiagnosticLog? log = null)
         : this(new WinRtGsmtcBackend(), log, TimeProvider.System, DefaultReadTimeout)
     {
     }
 
-    internal GsmtcMediaService(IGsmtcBackend backend, IDiagnosticLog? log, TimeProvider time, TimeSpan readTimeout)
+    internal GsmtcMediaService(IGsmtcBackend backend, IDiagnosticLog? log, TimeProvider time, TimeSpan readTimeout, MediaServiceTimings? timings = null)
     {
         _backend = backend ?? throw new ArgumentNullException(nameof(backend));
         _time = time ?? throw new ArgumentNullException(nameof(time));
@@ -62,9 +73,10 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
             throw new ArgumentOutOfRangeException(nameof(readTimeout), readTimeout, "The read timeout must be positive.");
         _log = log;
         _readTimeout = readTimeout;
+        _timings = timings ?? MediaServiceTimings.Default;
 
         _core = new ServiceCore<IReadOnlyList<MediaSessionSnapshot>>(
-            refresh: async () => _ = await ReadAsync(CancellationToken.None).ConfigureAwait(false),
+            refresh: RefreshAsync,
             detach: () => _backend.Changed -= OnBackendChanged,
             release: _backend.Dispose);
         _backend.Changed += OnBackendChanged;
@@ -122,10 +134,30 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
             return await SendAsync(sessionId, GsmtcAction.Seek, reading.Start + inside, ct).ConfigureAwait(false);
         });
 
-    public ValueTask DisposeAsync() => _core.DisposeAsync();
+    public ValueTask DisposeAsync()
+    {
+        StopTimers();
+        return _core.DisposeAsync();
+    }
 
     /// <summary>Synchronous disposal for containers that dispose singletons with <c>Dispose()</c> at shutdown.</summary>
-    public void Dispose() => _core.Dispose();
+    public void Dispose()
+    {
+        StopTimers();
+        _core.Dispose();
+    }
+
+    private void StopTimers()
+    {
+        try
+        {
+            _stop.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already stopped.
+        }
+    }
 
     private static OperationError Closed => new(ErrorCode.DeviceUnavailable, "The media service is closed.");
 
@@ -254,9 +286,80 @@ public sealed class GsmtcMediaService : IMediaService, IDisposable
         _core.Publish(snapshots);
     }
 
-    // From a Windows thread: only asks for a refresh. Never calls back into Windows.
-    private void OnBackendChanged() => _core.RequestRefresh();
+    // From a Windows thread: only asks for a refresh. Never calls back into Windows. A burst of notifications (some players report
+    // their timeline many times a second) becomes one refresh per throttle interval: the first notification starts the interval,
+    // and the refresh at its end reads everything that happened meanwhile.
+    private void OnBackendChanged()
+    {
+        if (_timings.EventThrottle <= TimeSpan.Zero)
+        {
+            _core.RequestRefresh();
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _throttling, 1) == 0)
+            _ = ThrottledRefreshAsync();
+    }
+
+    private async Task ThrottledRefreshAsync()
+    {
+        try
+        {
+            await Task.Delay(_timings.EventThrottle, _time, _stop.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // disposed
+        }
+        finally
+        {
+            Volatile.Write(ref _throttling, 0);
+        }
+
+        _core.RequestRefresh();
+    }
+
+    // A refresh that Windows notified about. When it fails (the media service restarted, a read timed out) the list the observers
+    // hold may now be wrong and no further notification is guaranteed, so it is tried again a few times, a moment apart; the backend
+    // reconnects on the next read. A read made by a caller is not retried: the caller has the failure.
+    private async Task RefreshAsync()
+    {
+        var result = await ReadAsync(CancellationToken.None).ConfigureAwait(false);
+        if (result.IsSuccess)
+        {
+            Volatile.Write(ref _retries, 0);
+            return;
+        }
+
+        if (result.IsCancelled || Interlocked.Increment(ref _retries) > _timings.MaxRetries)
+            return;
+
+        _ = RetryLaterAsync();
+    }
+
+    private async Task RetryLaterAsync()
+    {
+        try
+        {
+            await Task.Delay(_timings.RetryDelay, _time, _stop.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // disposed
+        }
+
+        _core.RequestRefresh();
+    }
 
     private void LogFailure(string eventId, MediaException ex) =>
         _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, eventId, Component, "Call", ErrorCode.DeviceUnavailable, ExceptionType: ex.GetType()));
+}
+
+/// <summary>How the media service paces notifications and recovery. Tests shorten these; the defaults suit the real machine.</summary>
+/// <param name="EventThrottle">The shortest time between two refreshes caused by notifications (zero: every notification refreshes at once).</param>
+/// <param name="RetryDelay">The wait before a failed refresh is tried again.</param>
+/// <param name="MaxRetries">How many times in a row a failed refresh is retried (zero: never).</param>
+internal sealed record MediaServiceTimings(TimeSpan EventThrottle, TimeSpan RetryDelay, int MaxRetries)
+{
+    public static MediaServiceTimings Default { get; } = new(TimeSpan.FromMilliseconds(150), TimeSpan.FromSeconds(1), 3);
 }

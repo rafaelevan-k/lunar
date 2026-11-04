@@ -1,7 +1,9 @@
 using Lunar.Application.Abstractions.Diagnostics;
+using Lunar.Application.Abstractions.Media;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Media.UseCases;
 using Lunar.Application.Shell.UseCases;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
@@ -10,6 +12,7 @@ using Lunar.Infrastructure.Startup;
 using Lunar.Windows.Audio;
 using Lunar.Windows.Bluetooth;
 using Lunar.Windows.Environment;
+using Lunar.Windows.Media;
 using Lunar.Windows.Network;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,6 +55,12 @@ public static class ServiceRegistration
         services.AddSingleton<IVolumeService>(sp => new CoreAudioVolumeService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWifiService>(sp => new NativeWifiService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IBluetoothService>(sp => new WindowsBluetoothService(sp.GetRequiredService<IDiagnosticLog>()));
+        // Media (BE-15..BE-18): one session service, and one of each use case so their ordering gates and the user's session pick are
+        // shared by everything that shows or controls media. The service starts its Windows thread only when first resolved.
+        services.AddSingleton<IMediaService>(sp => new GsmtcMediaService(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<MediaSessionTracker>(sp => new MediaSessionTracker(sp.GetRequiredService<IMediaService>()));
+        services.AddSingleton<MediaTransport>(sp => new MediaTransport(sp.GetRequiredService<IMediaService>()));
+        services.AddSingleton<SeekMedia>(sp => new SeekMedia(sp.GetRequiredService<IMediaService>()));
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 

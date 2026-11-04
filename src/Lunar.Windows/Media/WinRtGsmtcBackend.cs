@@ -20,6 +20,8 @@ namespace Lunar.Windows.Media;
 /// raise <see cref="Changed"/>; nothing calls back into Windows from them. A session that closes under a read is left out
 /// of that read. Artwork is read once per track (cached by title, artist and album) and only when it is at most
 /// <see cref="Lunar.Application.Media.Models.MediaSessionSnapshot.MaxArtworkBytes"/>.
+/// A failed read releases the manager and every subscription, so the next read reconnects (for example after the media service
+/// restarted); a player that exits is simply gone from the next list and its subscriptions go with it.
 /// Every call into Windows runs on one dedicated thread (<see cref="GsmtcWorker"/>), because the session objects are bound to
 /// the thread that first used them. Calls are serialized by the owning service.
 /// </summary>
@@ -82,6 +84,9 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
         {
+            // The manager or a session may be dead (the media service restarted, the app behind it is gone): drop everything,
+            // including every subscription, so the next read connects afresh instead of reusing a broken object.
+            ReleaseWindowsObjects();
             throw Translate(ex);
         }
     }
@@ -133,6 +138,7 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
         _worker.Complete(ReleaseWindowsObjects);
     }
 
+    // Unsubscribes from the manager and from every tracked session and forgets them. On the worker thread, which owns the objects.
     private void ReleaseWindowsObjects()
     {
         GlobalSystemMediaTransportControlsSessionManager? manager;
@@ -214,9 +220,10 @@ internal sealed class WinRtGsmtcBackend : IGsmtcBackend
             _ids = ids;
         }
 
-        foreach (var session in previous.Where(p => !sessions.Any(s => ReferenceEquals(s, p))))
+        var (added, removed) = SubscriptionDiff.Compare(previous, sessions);
+        foreach (var session in removed)
             Unsubscribe(session);
-        foreach (var session in sessions.Where(s => !previous.Any(p => ReferenceEquals(s, p))))
+        foreach (var session in added)
             Subscribe(session);
     }
 

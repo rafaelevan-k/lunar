@@ -142,8 +142,11 @@ public sealed class GsmtcMediaServiceTests
         new(id, "Player", title, artist, status, TimeSpan.Zero, TimeSpan.FromSeconds(durationSeconds), TimeSpan.FromSeconds(positionSeconds), T0,
             1.0, CanPlay: true, CanPause: true, CanNext: true, CanPrevious: true, CanSeek: true, current, artwork ?? []);
 
-    private static GsmtcMediaService Create(FakeBackend backend, IDiagnosticLog? log = null, FixedTime? time = null, TimeSpan? timeout = null) =>
-        new(backend, log, time ?? new FixedTime(T0), timeout ?? TimeSpan.FromSeconds(5));
+    // By default no throttling and no retrying, so every notification is one read and a failed read stays failed.
+    private static readonly MediaServiceTimings Immediate = new(TimeSpan.Zero, TimeSpan.Zero, 0);
+
+    private static GsmtcMediaService Create(FakeBackend backend, IDiagnosticLog? log = null, FixedTime? time = null, TimeSpan? timeout = null, MediaServiceTimings? timings = null) =>
+        new(backend, log, time ?? new FixedTime(T0), timeout ?? TimeSpan.FromSeconds(5), timings ?? Immediate);
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -895,6 +898,173 @@ public sealed class GsmtcMediaServiceTests
         await service.DisposeAsync();
 
         Assert.Equal(ErrorCode.DeviceUnavailable, (await service.NextAsync("player.exe", Ct)).Error!.Code);
+    }
+
+    // ---- lifecycle (BE-18) -------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task ABurstOfNotificationsBecomesAFewReadsAndTheLastStateWins()
+    {
+        var backend = new FakeBackend { Readings = [Reading(positionSeconds: 1)] };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.FromMilliseconds(120), TimeSpan.Zero, 0));
+        var recorder = new Recorder();
+        service.Changes.Subscribe(recorder);
+
+        for (var i = 0; i < 200; i++)
+        {
+            backend.Readings = [Reading(positionSeconds: i)];
+            backend.Raise();
+        }
+
+        await WaitFor(() => recorder.Snapshot().Length >= 1);
+        await Task.Delay(300, Ct);
+
+        Assert.InRange(backend.Reads, 1, 4);
+        Assert.Equal(TimeSpan.FromSeconds(199), recorder.Snapshot()[^1][0].Position);
+    }
+
+    [Fact]
+    public async Task NotificationsAfterTheThrottleIntervalAreServedAgain()
+    {
+        var backend = new FakeBackend { Readings = [Reading(title: "One")] };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.FromMilliseconds(30), TimeSpan.Zero, 0));
+        var recorder = new Recorder();
+        service.Changes.Subscribe(recorder);
+
+        backend.Raise();
+        await WaitFor(() => recorder.Snapshot().Length == 1);
+        backend.Readings = [Reading(title: "Two")];
+        backend.Raise();
+        await WaitFor(() => recorder.Snapshot().Length == 2);
+
+        Assert.Equal("Two", recorder.Snapshot()[1][0].Title);
+    }
+
+    [Fact]
+    public async Task APlayerThatExitsDisappearsFromTheListAndIsPickedUpWhenItStartsAgain()
+    {
+        var backend = new FakeBackend { Readings = [Reading("a.exe")] };
+        await using var service = Create(backend);
+        var recorder = new Recorder();
+        service.Changes.Subscribe(recorder);
+        backend.Raise();
+        await WaitFor(() => recorder.Snapshot().Length == 1);
+
+        backend.Readings = [];
+        backend.Raise();
+        await WaitFor(() => recorder.Snapshot().Length == 2);
+        backend.Readings = [Reading("a.exe")];
+        backend.Raise();
+        await WaitFor(() => recorder.Snapshot().Length == 3);
+
+        var seen = recorder.Snapshot();
+        Assert.Single(seen[0]);
+        Assert.Empty(seen[1]);
+        Assert.Equal("a.exe", Assert.Single(seen[2]).Id);
+    }
+
+    [Fact]
+    public async Task AFailedRefreshIsRetriedAFewTimesAndThenLeftAlone()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], ReadError = new MediaException(MediaFailure.Other, 1, "x") };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.Zero, TimeSpan.FromMilliseconds(20), 3));
+
+        backend.Raise();
+        await WaitFor(() => backend.Reads == 4);
+        await Task.Delay(300, Ct);
+
+        Assert.Equal(4, backend.Reads); // the notified read and three retries, then it stops
+    }
+
+    [Fact]
+    public async Task TheListRecoversByItselfWhenWindowsComesBack()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], ReadError = new MediaException(MediaFailure.Other, 1, "x") };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.Zero, TimeSpan.FromMilliseconds(40), 3));
+        var recorder = new Recorder();
+        service.Changes.Subscribe(recorder);
+
+        backend.Raise();
+        await WaitFor(() => backend.Reads >= 1);
+        backend.ReadError = null;
+        await WaitFor(() => recorder.Snapshot().Length == 1);
+
+        Assert.Equal("player.exe", recorder.Snapshot()[0][0].Id);
+    }
+
+    [Fact]
+    public async Task ASuccessfulReadRestoresTheFullRetryBudget()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], ReadError = new MediaException(MediaFailure.Other, 1, "x") };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.Zero, TimeSpan.FromMilliseconds(15), 2));
+        backend.Raise();
+        await WaitFor(() => backend.Reads == 3);
+        await Task.Delay(100, Ct);
+        Assert.Equal(3, backend.Reads);
+
+        backend.ReadError = null;
+        backend.Raise();
+        await WaitFor(() => backend.Reads == 4);
+        backend.ReadError = new MediaException(MediaFailure.Other, 1, "x");
+        backend.Raise();
+        await WaitFor(() => backend.Reads == 7);
+
+        Assert.Equal(7, backend.Reads);
+    }
+
+    [Fact]
+    public async Task ACallersReadThatFailsIsNotRetriedBehindTheirBack()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], ReadError = new MediaException(MediaFailure.Other, 1, "x") };
+        await using var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.Zero, TimeSpan.FromMilliseconds(10), 3));
+
+        var read = await service.GetSessionsAsync(Ct);
+        await Task.Delay(150, Ct);
+
+        Assert.True(read.IsFailure);
+        Assert.Equal(1, backend.Reads);
+    }
+
+    [Fact]
+    public async Task DisposalCancelsAPendingRetryAndAPendingThrottle()
+    {
+        var backend = new FakeBackend { Readings = [Reading()], ReadError = new MediaException(MediaFailure.Other, 1, "x") };
+        var service = Create(backend, timings: new MediaServiceTimings(TimeSpan.Zero, TimeSpan.FromMilliseconds(200), 3));
+        backend.Raise();
+        await WaitFor(() => backend.Reads == 1);
+        await service.DisposeAsync();
+        await Task.Delay(400, Ct);
+        Assert.Equal(1, backend.Reads);
+
+        var throttled = Create(backend = new FakeBackend { Readings = [Reading()] }, timings: new MediaServiceTimings(TimeSpan.FromMilliseconds(200), TimeSpan.Zero, 0));
+        backend.Raise();
+        throttled.Dispose();
+        await Task.Delay(400, Ct);
+        Assert.Equal(0, backend.Reads);
+    }
+
+    [Fact]
+    public async Task ManyServicesComingAndGoingLeaveNoHandlerBehind()
+    {
+        var backends = new List<FakeBackend>();
+        for (var i = 0; i < 50; i++)
+        {
+            var backend = new FakeBackend { Readings = [Reading()] };
+            backends.Add(backend);
+            var service = Create(backend);
+            _ = await service.GetSessionsAsync(Ct);
+            Assert.True(backend.HasSubscribers);
+            if (i % 2 == 0)
+                await service.DisposeAsync();
+            else
+                service.Dispose();
+        }
+
+        Assert.All(backends, b =>
+        {
+            Assert.False(b.HasSubscribers);
+            Assert.True(b.Disposed);
+        });
     }
 
     // ---- lifetime and privacy ----------------------------------------------------------------------------------------
