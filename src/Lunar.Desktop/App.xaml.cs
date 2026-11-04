@@ -4,9 +4,11 @@ using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Media.UseCases;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Eyes;
+using Lunar.Desktop.Features.MediaControls;
 using Lunar.Desktop.Features.SystemControls;
 using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
@@ -37,6 +39,8 @@ public partial class App : System.Windows.Application
     private IslandShellView? _shell;
     private SystemPageViewModel? _system;
     private ClockLifetime? _clockLifetime;
+    private MediaPageViewModel? _media;
+    private MediaLifetime? _mediaLifetime;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -106,7 +110,7 @@ public partial class App : System.Windows.Application
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
         var navigation = new PageNavigationViewModel(["System", "Media", "File converter"]);
-        // The System page shows the real volume, clock, Wi-Fi and Bluetooth; the Media and Converter pages are still stand-ins.
+        // The System and Media pages are real; the Converter page is still a stand-in.
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -115,8 +119,14 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<ISystemSettingsLauncher>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
+        _media = new MediaPageViewModel(
+            _services.GetRequiredService<MediaSessionTracker>(),
+            _services.GetRequiredService<MediaTransport>(),
+            work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
+            _log);
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
         pages[0] = new SystemPage { DataContext = _system };
+        pages[1] = new MediaPage { DataContext = _media };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
@@ -129,12 +139,13 @@ public partial class App : System.Windows.Application
 
         // The clock starts and stops with the island.
         _clockLifetime = new ClockLifetime(viewModel, _system);
+        _mediaLifetime = new MediaLifetime(viewModel, _media);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
         // The window is already on screen; the cards fill in as each reading arrives.
-        await _system.InitializeAsync(_lifetime.Token);
+        await Task.WhenAll(_system.InitializeAsync(_lifetime.Token), _media.InitializeAsync(_lifetime.Token));
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
@@ -155,6 +166,10 @@ public partial class App : System.Windows.Application
         _transition = null;
         _clockLifetime?.Dispose();
         _clockLifetime = null;
+        _mediaLifetime?.Dispose();
+        _mediaLifetime = null;
+        _media?.Dispose();
+        _media = null;
         _system?.Dispose();
         _system = null;
         _shell?.Dispose();

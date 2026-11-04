@@ -1,0 +1,140 @@
+<UserControl x:Class="Lunar.Desktop.Features.MediaControls.MediaPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:c="clr-namespace:Lunar.Desktop.Controls"
+             Focusable="False" IsTabStop="False" Background="Transparent"
+             automation:AutomationProperties.Name="Media">
+  <!--
+    FE-17: the Media page. It only binds to MediaPageViewModel (state and commands); there is no Windows API here and no logic
+    in the code-behind. Four faces, one visible at a time: loading (placeholder), no session (an explanation), unavailable
+    (the reason and Retry) and a session (artwork, title, artist, source, timeline, transport). Every colour, size and font
+    comes from the theme tokens. Long text is cut with an ellipsis on one line and shown in full in its tooltip. The side
+    margins keep the content clear of the swiper's arrow buttons.
+  -->
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+
+  </UserControl.Resources>
+
+  <Grid Margin="40,4,40,0">
+    <!-- Loading. -->
+    <StackPanel x:Name="LoadingFace" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisible}}" VerticalAlignment="Center">
+      <c:SkeletonBlock Height="72" Margin="0,0,0,10" />
+      <c:SkeletonBlock Height="16" Margin="0,0,0,6" />
+      <c:SkeletonBlock Height="16" />
+    </StackPanel>
+
+    <!-- No session: what it means and what to do. -->
+    <StackPanel x:Name="NoSessionFace" Visibility="{Binding IsNoSession, Converter={StaticResource BoolToVisible}}"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                automation:AutomationProperties.Name="{Binding NoSessionTitle}"
+                automation:AutomationProperties.HelpText="{Binding NoSessionHint}">
+      <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="32" HorizontalAlignment="Center"
+                 Foreground="{DynamicResource Lunar.Brush.TextSecondary}" />
+      <TextBlock x:Name="NoSessionTitleText" Text="{Binding NoSessionTitle}" Style="{DynamicResource Lunar.Text.Subtitle}"
+                 HorizontalAlignment="Center" Margin="0,6,0,0" />
+      <TextBlock x:Name="NoSessionHintText" Text="{Binding NoSessionHint}" Style="{DynamicResource Lunar.Text.Secondary}"
+                 TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0" />
+    </StackPanel>
+
+    <!-- Unavailable: why, and a way to try again. -->
+    <StackPanel x:Name="UnavailableFace" Visibility="{Binding IsUnavailable, Converter={StaticResource BoolToVisible}}"
+                VerticalAlignment="Center" HorizontalAlignment="Center">
+      <TextBlock x:Name="UnavailableText" Text="{Binding UnavailableText}" Style="{DynamicResource Lunar.Text.Secondary}"
+                 TextWrapping="Wrap" TextAlignment="Center" />
+      <Button x:Name="RetryButton" Content="Retry" Command="{Binding RetryCommand}" HorizontalAlignment="Center" Margin="0,8,0,0"
+              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Retry reading media" />
+    </StackPanel>
+
+    <!-- A session. -->
+    <Grid x:Name="SessionFace" VerticalAlignment="Center" Visibility="{Binding HasSession, Converter={StaticResource BoolToVisible}}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <!-- Artwork, then title, artist and source. -->
+      <Grid Grid.Row="0" automation:AutomationProperties.Name="{Binding Summary}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Fixed square: the image when there is one, otherwise a music note on the surface colour. -->
+        <Border x:Name="ArtworkFrame" Grid.Column="0" Width="72" Height="72" CornerRadius="10" ClipToBounds="True"
+                Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+          <Grid>
+            <TextBlock x:Name="ArtworkPlaceholder" Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.TextSecondary}">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Visibility" Value="Visible" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasArtwork}" Value="True">
+                      <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+            <Image x:Name="ArtworkImage" Source="{Binding Artwork}" Stretch="UniformToFill"
+                   Visibility="{Binding HasArtwork, Converter={StaticResource BoolToVisible}}" />
+          </Grid>
+        </Border>
+
+        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+          <TextBlock x:Name="TitleText" Text="{Binding Title}" ToolTip="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                     Style="{DynamicResource Lunar.Text.Subtitle}" />
+          <TextBlock x:Name="ArtistText" Text="{Binding Artist}" ToolTip="{Binding Artist}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                     Style="{DynamicResource Lunar.Text.Body}" Margin="0,2,0,0" />
+          <TextBlock x:Name="SourceText" Text="{Binding SourceLine}" ToolTip="{Binding SourceLine}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                     Style="{DynamicResource Lunar.Text.Caption}" Margin="0,4,0,0" />
+        </StackPanel>
+      </Grid>
+
+      <!-- Timeline: position, a read-only bar, length. A stream without a timeline or a timeline that cannot be seeked says so. -->
+      <Grid x:Name="Timeline" Grid.Row="1" Margin="0,10,0,0" automation:AutomationProperties.Name="Playback position"
+            automation:AutomationProperties.HelpText="{Binding TimelineLabel}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.Style>
+          <Style TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding HasTimeline}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Grid.Style>
+        <TextBlock x:Name="PositionTextBlock" Grid.Column="0" Text="{Binding PositionText}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" MinWidth="40" />
+        <ProgressBar x:Name="TimelineBar" Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}" Height="4" Margin="6,0"
+                     BorderThickness="0" VerticalAlignment="Center"
+                     Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}" />
+        <TextBlock x:Name="DurationTextBlock" Grid.Column="2" Text="{Binding DurationText}" Style="{DynamicResource Lunar.Text.Caption}"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="40" TextAlignment="Right" />
+      </Grid>
+
+      <TextBlock x:Name="TimelineNoteText" Grid.Row="2" Text="{Binding TimelineNote}" Style="{DynamicResource Lunar.Text.Caption}"
+                 TextTrimming="CharacterEllipsis" Margin="0,4,0,0" HorizontalAlignment="Center"
+                 Visibility="{Binding TimelineNote, Converter={x:Static c:NullToVisibilityConverter.Instance}}" />
+
+      <!-- Transport. A button is enabled only when the player offers that command. -->
+      <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+        <c:IconButton x:Name="PreviousButton" Margin="6,0" Glyph="&#xE892;" Label="Previous" Command="{Binding PreviousCommand}" />
+        <c:IconButton x:Name="PlayPauseButton" Margin="6,0" Glyph="{Binding PlayPauseGlyph}" Label="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" />
+        <c:IconButton x:Name="NextButton" Margin="6,0" Glyph="&#xE893;" Label="Next" Command="{Binding NextCommand}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- One error line, in place; it takes no room while there is none. -->
+    <c:InlineError x:Name="PageError" VerticalAlignment="Bottom" MaxHeight="40" ClipToBounds="True"
+                   Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
+  </Grid>
+</UserControl>
