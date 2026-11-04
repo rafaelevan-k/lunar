@@ -96,6 +96,12 @@ public sealed record PlannedConversion(
     bool WasRenamed,
     bool ReplacesExisting)
 {
+    /// <summary>How to convert (JPEG quality, page layout, PDF resolution and pages, PDF password). Set when the job is queued; the defaults otherwise.</summary>
+    public ConversionChoices Choices { get; init; } = ConversionChoices.Default;
+
+    /// <summary>The caps this job runs under: the ones planning used. The steps that run later enforce the rest with them.</summary>
+    public ConversionLimits Limits { get; init; } = new();
+
     /// <summary>The file name of the result for a route with a single output; null when each page is its own file.</summary>
     public string? OutputFileName => Route.ProducesOneOutputPerPage ? null : OutputBaseName + OutputExtension;
 

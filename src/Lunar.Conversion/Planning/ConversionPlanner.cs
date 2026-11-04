@@ -127,7 +127,10 @@ public sealed class ConversionPlanner : IConversionPlanner
                 default:
                     jobs.Add(new PlannedConversion(
                         index, path, sourceFormat, inspected!.Length, inspected.LastWriteUtc, route!,
-                        outputDirectory, named.BaseName!, FileFormats.Extension(request.Target), named.Renamed, named.Replaces));
+                        outputDirectory, named.BaseName!, FileFormats.Extension(request.Target), named.Renamed, named.Replaces)
+                    {
+                        Limits = limits
+                    });
                     break;
             }
         }

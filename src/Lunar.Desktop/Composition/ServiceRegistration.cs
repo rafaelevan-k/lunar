@@ -4,8 +4,13 @@ using Lunar.Application.Abstractions.Media;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Shell.UseCases;
+using Lunar.Conversion.Output;
+using Lunar.Conversion.Pipeline;
+using Lunar.Conversion.Planning;
+using Lunar.Conversion.Providers;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Settings;
@@ -27,6 +32,10 @@ public static class ServiceRegistration
 {
     /// <summary>Fixed identifier of the production single-instance scope (ADR-0008).</summary>
     internal const string InstanceName = "Lunar.Desktop.v1";
+
+    /// <summary>Where conversions make their private working folders: under the user's own profile, whose permissions keep them private.</summary>
+    internal static string DefaultConversionWorkRoot { get; } = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunar", "Temp");
 
     /// <summary>
     /// Builds the container with scope and dependency validation so lifetime mistakes fail at startup.
@@ -65,6 +74,20 @@ public static class ServiceRegistration
         services.AddSingleton<SeekMedia>(sp => new SeekMedia(sp.GetRequiredService<IMediaService>()));
         // PDF pages to pictures (BE-24): the operating system's renderer behind the Application port; the conversion layer never sees it.
         services.AddSingleton<IPdfPageRasterizer>(sp => new WindowsPdfPageRasterizer(sp.GetRequiredService<IDiagnosticLog>()));
+        // Conversion (BE-27): the planner, the providers, the output step and the orchestrator that joins them, behind the queue and the use
+        // case the screens call. No document layout engine is wired yet (BE-25), so Word routes are refused with "needs LibreOffice".
+        services.AddSingleton<IRendererAvailability, RendererNotInstalled>();
+        services.AddSingleton<IConversionPlanner>(sp => new ConversionPlanner(sp.GetRequiredService<IRendererAvailability>()));
+        services.AddSingleton<ConversionOrchestrator>(sp => new ConversionOrchestrator(
+            DefaultConversionWorkRoot,
+            new ImageConversionProvider(sp.GetRequiredService<IDiagnosticLog>()),
+            new PdfCreationProvider(sp.GetRequiredService<IDiagnosticLog>()),
+            new DocxEmbeddingProvider(sp.GetRequiredService<IDiagnosticLog>()),
+            new PdfRasterizationProvider(sp.GetRequiredService<IPdfPageRasterizer>(), sp.GetRequiredService<IDiagnosticLog>()),
+            new OutputCommitter(sp.GetRequiredService<IDiagnosticLog>()),
+            sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IConversionQueue>(sp => new ConversionJobQueue(sp.GetRequiredService<ConversionOrchestrator>()));
+        services.AddTransient<StartConversion>(sp => new StartConversion(sp.GetRequiredService<IConversionPlanner>(), sp.GetRequiredService<IConversionQueue>()));
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 

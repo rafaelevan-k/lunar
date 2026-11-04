@@ -25,7 +25,7 @@ namespace Lunar.Conversion.Pipeline;
 /// A job whose executor ignores cancellation keeps its place and shows Cancelling until it returns; the queue does not abandon it,
 /// because an abandoned job could still write files. Thread-safe.
 /// </summary>
-public sealed class ConversionJobQueue : IConversionQueue
+public sealed class ConversionJobQueue : IConversionQueue, IDisposable
 {
     private readonly IConversionJobExecutor _executor;
     private readonly ConversionQueueOptions _options;
@@ -335,6 +335,13 @@ public sealed class ConversionJobQueue : IConversionQueue
             _disposeTask ??= DisposeCoreAsync();
         return new ValueTask(_disposeTask);
     }
+
+    /// <summary>
+    /// For the service container, which is disposed synchronously when the app exits: the same as <see cref="DisposeAsync"/>, waited
+    /// for. It is the one place the queue blocks, on purpose, because exiting must not abandon a running job half way. Every other
+    /// caller uses <see cref="DisposeAsync"/>.
+    /// </summary>
+    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
     private async Task DisposeCoreAsync()
     {
