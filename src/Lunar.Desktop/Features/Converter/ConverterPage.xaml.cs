@@ -17,6 +17,8 @@ public partial class ConverterPage : UserControl
         DragOver += OnDrag;
         DragLeave += (_, _) => Model?.SetDragActive(false);
         Drop += OnDrop;
+        // A PasswordBox cannot be bound. The typed password goes straight to the options (memory only) and is never read back here.
+        PdfPasswordBox.PasswordChanged += (_, _) => Model?.Options.SetPdfPassword(PdfPasswordBox.Password);
     }
 
     private ConverterPageViewModel? Model => DataContext as ConverterPageViewModel;

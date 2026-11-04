@@ -133,6 +133,7 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<IConversionPlanner>(),
             _services.GetRequiredService<IRendererAvailability>(),
             _services.GetRequiredService<IFilePicker>(),
+            _services.GetRequiredService<IFolderPicker>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();

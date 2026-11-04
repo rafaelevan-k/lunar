@@ -27,6 +27,11 @@ public sealed class ConverterPageTests
         public IReadOnlyList<string>? PickFiles() => null;
     }
 
+    private sealed class NoFolders : IFolderPicker
+    {
+        public string? PickFolder() => null;
+    }
+
     private sealed class NoRenderer : IRendererAvailability
     {
         public Task<bool> IsAvailableAsync(CancellationToken ct) => Task.FromResult(false);
@@ -110,7 +115,7 @@ public sealed class ConverterPageTests
             var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "lunar-fe20ui-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var model = new ConverterPageViewModel(new ConversionPlanner(new NoRenderer()), new NoRenderer(), new NoPicker(),
+            var model = new ConverterPageViewModel(new ConversionPlanner(new NoRenderer()), new NoRenderer(), new NoPicker(), new NoFolders(),
                 work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
             var page = new ConverterPage { DataContext = model };
             var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
@@ -208,6 +213,88 @@ public sealed class ConverterPageTests
         Assert.True(png.IsEnabled);
         Assert.Contains("not available", AutomationProperties.GetName(word), StringComparison.Ordinal);
         Assert.Contains("selected", AutomationProperties.GetName(png), StringComparison.Ordinal);
+    });
+
+    private static string MakePdfFile(string folder, string name)
+    {
+        var path = System.IO.Path.Combine(folder, name);
+        using var stream = new FileStream(path, FileMode.Create);
+        using var document = SKDocument.CreatePdf(stream);
+        document.BeginPage(100, 100);
+        document.EndPage();
+        document.Close();
+        return path;
+    }
+
+    private static void Choose(ConverterPageViewModel model, FileFormat format)
+    {
+        model.Targets.Single(t => t.Format == format).SelectCommand.Execute(null);
+        Pump(model.WhenCheckedAsync());
+    }
+
+    private static Visibility Shown(ConverterPage page, string name) => ((FrameworkElement)page.FindName(name)).Visibility;
+
+    [Theory]
+    [InlineData("Colors.Dark.xaml")]
+    [InlineData("Colors.Light.xaml")]
+    [InlineData("Colors.HighContrast.xaml")]
+    public void OnlyTheChoicesThatFitTheRouteAreOnScreen(string colors) => WithPage(colors, (page, model, window, folder) =>
+    {
+        model.AddFiles([MakePng(folder, "a.png")]);
+        Pump(model.WhenCheckedAsync());
+        Choose(model, FileFormat.Jpg);
+        Settle(window);
+        Assert.Equal(Visibility.Visible, Shown(page, "QualityBlock"));
+        Assert.Equal(Visibility.Visible, Shown(page, "BackgroundBlock"));
+        Assert.Equal(Visibility.Collapsed, Shown(page, "PdfBlock"));
+        Assert.Equal(Visibility.Collapsed, Shown(page, "LayoutBlock"));
+        Assert.Equal(Visibility.Visible, Shown(page, "NoticeList"));
+        Assert.Equal("JPEG quality: 90", ((TextBlock)page.FindName("QualityLabel")).Text);
+
+        Choose(model, FileFormat.Pdf);
+        Settle(window);
+        Assert.Equal(Visibility.Collapsed, Shown(page, "QualityBlock"));
+        Assert.Equal(Visibility.Visible, Shown(page, "LayoutBlock"));
+    });
+
+    [Fact]
+    public void PdfChoicesPasswordAndPageProblemsWorkOnTheRealPage() => WithPage("Colors.Dark.xaml", (page, model, window, folder) =>
+    {
+        model.AddFiles([MakePdfFile(folder, "a.pdf")]);
+        Pump(model.WhenCheckedAsync());
+        Settle(window);
+        Assert.Equal(Visibility.Visible, Shown(page, "PdfBlock"));
+        Assert.Equal(Visibility.Collapsed, Shown(page, "PagesProblemText"));
+
+        ((TextBox)page.FindName("PagesBox")).Text = "x-y";
+        Settle(window);
+        Assert.Equal(Visibility.Visible, Shown(page, "PagesProblemText"));
+        Assert.False(model.CanStart);
+        Assert.Contains("pages", ((TextBlock)page.FindName("StartHintText")).Text, StringComparison.Ordinal);
+
+        ((TextBox)page.FindName("PagesBox")).Text = "1";
+        ((PasswordBox)page.FindName("PdfPasswordBox")).Password = "pw-123";
+        Settle(window);
+        Assert.Equal(Visibility.Collapsed, Shown(page, "PagesProblemText"));
+        Assert.True(model.Options.HasPassword);
+        Assert.Equal("pw-123", model.CurrentChoices.PdfPassword);
+        Assert.True(model.CanStart);
+    });
+
+    [Fact]
+    public void ReplacingShowsItsWarningAndTheFolderIsShown() => WithPage("Colors.Dark.xaml", (page, model, window, folder) =>
+    {
+        model.AddFiles([MakePng(folder, "a.png")]);
+        Pump(model.WhenCheckedAsync());
+        Settle(window);
+        Assert.Equal(Visibility.Collapsed, Shown(page, "OverwriteWarning"));
+        Assert.Equal(folder, ((TextBlock)page.FindName("FolderText")).Text);
+
+        model.Options.Collisions.Select(Lunar.Application.Conversion.Models.CollisionPolicy.Overwrite);
+        Pump(model.WhenCheckedAsync());
+        Settle(window);
+        Assert.Equal(Visibility.Visible, Shown(page, "OverwriteWarning"));
+        Assert.True(((Button)page.FindName("FolderButton")).IsEnabled);
     });
 
     [Fact]

@@ -39,6 +39,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private readonly IConversionPlanner _planner;
     private readonly IRendererAvailability _renderer;
     private readonly IFilePicker _picker;
+    private readonly IFolderPicker _folders;
     private readonly Action<Action> _post;
     private readonly IDiagnosticLog? _log;
     private readonly CancellationTokenSource _lifetime = new();
@@ -54,18 +55,23 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private bool _disposed;
     private bool _dialogOpen;
     private bool _dragActive;
+    private bool _isChecking;
     private string? _notice;
     private string? _errorMessage;
 
-    public ConverterPageViewModel(IConversionPlanner planner, IRendererAvailability renderer, IFilePicker picker, Action<Action> post, IDiagnosticLog? log = null)
+    public ConverterPageViewModel(IConversionPlanner planner, IRendererAvailability renderer, IFilePicker picker, IFolderPicker folders, Action<Action> post, IDiagnosticLog? log = null)
     {
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(renderer);
         ArgumentNullException.ThrowIfNull(picker);
+        ArgumentNullException.ThrowIfNull(folders);
         ArgumentNullException.ThrowIfNull(post);
         _planner = planner;
         _renderer = renderer;
         _picker = picker;
+        _folders = folders;
+        Options = new ConverterOptionsViewModel(OnOptionsChanged);
+        ChooseFolderCommand = new RelayCommand(ChooseFolder, () => !_disposed && !_dialogOpen);
         _post = post;
         _log = log;
         Items = new ReadOnlyObservableCollection<ConverterItem>(_items);
@@ -129,7 +135,10 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         private set
         {
             if (Set(ref _dialogOpen, value))
+            {
                 ((RelayCommand)AddFilesCommand).NotifyCanExecuteChanged();
+                ((RelayCommand)ChooseFolderCommand).NotifyCanExecuteChanged();
+            }
         }
     }
 
@@ -139,6 +148,57 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         get => _dragActive;
         private set => Set(ref _dragActive, value);
     }
+
+    /// <summary>The choices that shape the conversion and the notices about the chosen route (FE-21).</summary>
+    public ConverterOptionsViewModel Options { get; }
+
+    /// <summary>True from a change of the list, format or results folder until the planner's answer for it has been applied.</summary>
+    public bool IsChecking
+    {
+        get => _isChecking;
+        private set
+        {
+            if (Set(ref _isChecking, value))
+                RaiseStart();
+        }
+    }
+
+    /// <summary>
+    /// True only when there is something to convert and nothing blocks it: a format is chosen that fits the files, at least one file passed
+    /// the check, the check is finished, and every shown choice is valid. A format that is not available can never be chosen, so a route
+    /// that is disabled cannot start. The Convert button of FE-22 binds to this.
+    /// </summary>
+    public bool CanStart => !_disposed && !_isChecking && _selected is not null && _plan is { IsEmpty: false } && Options.IsValid
+        && _items.Any(i => i.Status == ConverterItemStatus.Ready);
+
+    /// <summary>Why <see cref="CanStart"/> is false, in words for the Convert button; empty when it is true.</summary>
+    public string StartHint
+    {
+        get
+        {
+            if (CanStart)
+                return string.Empty;
+            if (_items.Count == 0)
+                return "Add files to convert.";
+            if (_isChecking)
+                return "Checking the files...";
+            if (_selected is null)
+                return "No format fits every file in the list.";
+            if (!Options.IsValid)
+                return "Fix the list of pages first.";
+            return "None of the files can be converted yet.";
+        }
+    }
+
+    /// <summary>What FE-22 hands to the conversion: the files that passed the check, the chosen format and folder, the name policy. Null when <see cref="CanStart"/> is false.</summary>
+    public ConversionRequest? CurrentRequest => CanStart && _selected is { } format
+        ? new ConversionRequest([.. _items.Where(i => i.Status == ConverterItemStatus.Ready).Select(i => i.FullPath)], format, OutputFolder, Options.Collision)
+        : null;
+
+    /// <summary>The conversion choices as set now, to go with <see cref="CurrentRequest"/>.</summary>
+    public ConversionChoices CurrentChoices => Options.BuildChoices();
+
+    public ICommand ChooseFolderCommand { get; }
 
     public ICommand AddFilesCommand { get; }
 
@@ -270,7 +330,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
     private void Changed()
     {
-        OutputFolder = _items.Count == 0 ? string.Empty : FolderOf(_items[0].FullPath);
+        OutputFolder = Options.ChosenFolder ?? (_items.Count == 0 ? string.Empty : FolderOf(_items[0].FullPath));
         Raise(nameof(OutputFolder));
         Raise(nameof(IsEmpty));
         Raise(nameof(HasItems));
@@ -288,10 +348,12 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         var paths = _items.Select(i => i.FullPath).ToArray();
         var folder = OutputFolder;
         var wanted = _userTarget;
-        _checking = CheckAsync(paths, folder, wanted, source);
+        var collision = Options.Collision;
+        IsChecking = true;
+        _checking = CheckAsync(paths, folder, collision, wanted, source);
     }
 
-    private async Task CheckAsync(string[] paths, string folder, FileFormat? wanted, CancellationTokenSource source)
+    private async Task CheckAsync(string[] paths, string folder, CollisionPolicy collision, FileFormat? wanted, CancellationTokenSource source)
     {
         var ct = source.Token;
         try
@@ -305,7 +367,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             if (paths.Length > 0)
             {
                 // The planner reads each file's start, so it runs on the pool; the UI thread only gets the answer.
-                var request = new ConversionRequest(paths, chosen ?? FileFormat.Png, folder);
+                var request = new ConversionRequest(paths, chosen ?? FileFormat.Png, folder, collision);
                 planned = await Task.Run(() => _planner.PlanAsync(request, ct), CancellationToken.None).ConfigureAwait(false);
             }
 
@@ -365,7 +427,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         if (planned is null)
         {
             _plan = null;
-            RefreshSummary();
+            Finish();
             return;
         }
 
@@ -375,7 +437,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             if (!planned.IsCancelled)
                 ErrorMessage = planned.Error!.SafeMessage;
             MarkAll(ConverterItemStatus.NotChecked, "Not checked.");
-            RefreshSummary();
+            Finish();
             return;
         }
 
@@ -401,7 +463,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             };
         }
 
-        RefreshSummary();
+        Finish();
     }
 
     private void ApplyFailure(CancellationTokenSource source, string message)
@@ -412,7 +474,67 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         _plan = null;
         ErrorMessage = message;
         MarkAll(ConverterItemStatus.NotChecked, "Not checked.");
+        Finish();
+    }
+
+    // The answer of the newest check is in: the summary, the choices that fit and whether starting is possible all follow it.
+    private void Finish()
+    {
         RefreshSummary();
+        var routes = new List<ConversionRoute>();
+        if (_selected is { } target)
+        {
+            foreach (var item in _items.Where(i => i.Status == ConverterItemStatus.Ready))
+            {
+                if (FileFormats.TryFromExtension(ExtensionOf(item.FullPath), out var source))
+                {
+                    var route = ConversionPolicy.Resolve(source, target);
+                    if (!routes.Contains(route))
+                        routes.Add(route);
+                }
+            }
+        }
+
+        Options.Update(routes);
+        IsChecking = false;
+        RaiseStart();
+    }
+
+    private void OnOptionsChanged(bool recheck)
+    {
+        if (_disposed)
+            return;
+        if (recheck)
+            Changed();
+        RaiseStart();
+    }
+
+    private void ChooseFolder()
+    {
+        string? chosen = null;
+        IsDialogOpen = true;
+        try
+        {
+            chosen = _folders.PickFolder();
+        }
+        catch (Exception ex)
+        {
+            _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "converter.folder_picker.failed", Component, "ChooseFolder", ExceptionType: ex.GetType()));
+            ErrorMessage = "Lunar couldn't open the folder chooser.";
+        }
+        finally
+        {
+            IsDialogOpen = false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(chosen))
+            Options.SetChosenFolder(chosen);
+    }
+
+    private void RaiseStart()
+    {
+        Raise(nameof(CanStart));
+        Raise(nameof(StartHint));
     }
 
     private void MarkAll(ConverterItemStatus status, string message)
