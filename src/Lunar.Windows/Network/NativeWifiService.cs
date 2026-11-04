@@ -1,24 +1,10 @@
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.System;
-using Lunar.Application.Reactive;
 using Lunar.Application.System.Models;
 using Lunar.Domain.Shared;
+using Lunar.Windows.Shared;
 
 namespace Lunar.Windows.Network;
-
-/// <summary>How the service waits for Windows to confirm a radio change.</summary>
-internal sealed record NativeWifiOptions
-{
-    public static NativeWifiOptions Default { get; } = new();
-
-    /// <summary>How many times the radio is read back after a write before giving up. The wait is bounded: attempts x interval.</summary>
-    public int ConfirmAttempts { get; init; } = 10;
-
-    public TimeSpan ConfirmInterval { get; init; } = TimeSpan.FromMilliseconds(200);
-
-    /// <summary>Replaced by tests so confirmation does not take real time.</summary>
-    public Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
-}
 
 /// <summary>
 /// Wi-Fi adapter, radio and connection state through Native Wi-Fi (BE-12, ADR-0002, ADR-0006).
@@ -48,48 +34,50 @@ public sealed class NativeWifiService : IWifiService, IDisposable
 
     private readonly IWlanBackend _backend;
     private readonly IDiagnosticLog? _log;
-    private readonly NativeWifiOptions _options;
-    private readonly StateBroadcaster<WifiState> _changes = new();
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly object _stateLock = new();
-    private readonly CancellationTokenSource _lifetime = new();
+    private readonly RadioConfirmOptions _options;
+    private readonly RadioServiceCore<WifiState> _core;
 
-    private WifiState? _lastPublished;
     private bool _toggleDenied;
-    private bool _disposed;
-    private int _refreshRequested;
-    private int _refreshRunning;
 
     public NativeWifiService(IDiagnosticLog? log = null)
         : this(new NativeWlanBackend(), log)
     {
     }
 
-    internal NativeWifiService(IWlanBackend backend, IDiagnosticLog? log = null, NativeWifiOptions? options = null)
+    internal NativeWifiService(IWlanBackend backend, IDiagnosticLog? log = null, RadioConfirmOptions? options = null)
     {
         _backend = backend ?? throw new ArgumentNullException(nameof(backend));
         _log = log;
-        _options = options ?? NativeWifiOptions.Default;
+        _options = options ?? RadioConfirmOptions.Default;
         if (_options.ConfirmAttempts < 1)
             throw new ArgumentOutOfRangeException(nameof(options), "At least one confirmation read is required.");
+
+        _core = new RadioServiceCore<WifiState>(
+            refresh: () =>
+            {
+                _ = ReadState();
+                return Task.CompletedTask;
+            },
+            detach: () => _backend.Changed -= OnBackendChanged,
+            release: _backend.Dispose);
         _backend.Changed += OnBackendChanged;
     }
 
-    public IObservable<WifiState> Changes => _changes;
+    public IObservable<WifiState> Changes => _core.Changes;
 
     public async Task<Result<WifiState>> GetAsync(CancellationToken ct)
     {
         if (ct.IsCancellationRequested)
             return Result.Cancelled<WifiState>();
-        if (IsDisposed)
+        if (_core.IsDisposed)
             return Result.Failure<WifiState>(Closed);
 
-        if (!await EnterAsync(ct).ConfigureAwait(false))
+        if (!await _core.EnterAsync(ct).ConfigureAwait(false))
             return ct.IsCancellationRequested ? Result.Cancelled<WifiState>() : Result.Failure<WifiState>(Closed);
 
         try
         {
-            if (IsDisposed)
+            if (_core.IsDisposed)
                 return Result.Failure<WifiState>(Closed);
 
             var read = await Task.Run(ReadState, CancellationToken.None).ConfigureAwait(false);
@@ -97,7 +85,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
         }
         finally
         {
-            _gate.Release();
+            _core.Exit();
         }
     }
 
@@ -105,15 +93,15 @@ public sealed class NativeWifiService : IWifiService, IDisposable
     {
         if (ct.IsCancellationRequested)
             return Result.Cancelled();
-        if (IsDisposed)
+        if (_core.IsDisposed)
             return Result.Failure(Closed);
 
-        if (!await EnterAsync(ct).ConfigureAwait(false))
+        if (!await _core.EnterAsync(ct).ConfigureAwait(false))
             return ct.IsCancellationRequested ? Result.Cancelled() : Result.Failure(Closed);
 
         try
         {
-            if (IsDisposed)
+            if (_core.IsDisposed)
                 return Result.Failure(Closed);
 
             var current = await Task.Run(ReadState, CancellationToken.None).ConfigureAwait(false);
@@ -134,88 +122,18 @@ public sealed class NativeWifiService : IWifiService, IDisposable
         }
         finally
         {
-            _gate.Release();
+            _core.Exit();
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (!BeginDispose())
-            return;
-
-        await _lifetime.CancelAsync().ConfigureAwait(false);
-
-        // Wait for a call that is already talking to Windows, then close under the same gate.
-        await _gate.WaitAsync().ConfigureAwait(false);
-        FinishDispose();
-    }
+    public ValueTask DisposeAsync() => _core.DisposeAsync();
 
     /// <summary>Synchronous disposal for containers that dispose singletons with <c>Dispose()</c> at shutdown.</summary>
-    public void Dispose()
-    {
-        if (!BeginDispose())
-            return;
-
-        _lifetime.Cancel();
-        _gate.Wait();
-        FinishDispose();
-    }
-
-    private bool BeginDispose()
-    {
-        lock (_stateLock)
-        {
-            if (_disposed)
-                return false;
-            _disposed = true;
-        }
-
-        _backend.Changed -= OnBackendChanged;
-        return true;
-    }
-
-    // Called holding the gate.
-    private void FinishDispose()
-    {
-        try
-        {
-            _backend.Dispose();
-        }
-        finally
-        {
-            _gate.Release();
-        }
-
-        _changes.Complete();
-        _lifetime.Dispose();
-    }
-
-    private bool IsDisposed
-    {
-        get
-        {
-            lock (_stateLock)
-                return _disposed;
-        }
-    }
+    public void Dispose() => _core.Dispose();
 
     private static OperationError Closed => new(ErrorCode.DeviceUnavailable, "The Wi-Fi service is closed.");
 
     // ---- operations -------------------------------------------------------------------------------------------------
-
-    // The wait for the gate honours the caller's token and disposal. False means the caller should stop.
-    private async Task<bool> EnterAsync(CancellationToken ct)
-    {
-        try
-        {
-            await _gate.WaitAsync(ct).ConfigureAwait(false);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
-    }
 
     // Reads the adapters and publishes the state. Callers hold the gate.
     private Result<WifiState> ReadState()
@@ -223,7 +141,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
         try
         {
             var state = Apply(WifiStateMapper.Map(_backend.Read()));
-            Publish(state);
+            _core.Publish(state);
             return Result.Success(state);
         }
         catch (WlanException ex)
@@ -232,7 +150,7 @@ public sealed class NativeWifiService : IWifiService, IDisposable
             if (state is not null)
             {
                 LogFailure("wifi.read." + ex.Failure, ex);
-                Publish(state);
+                _core.Publish(state);
                 return Result.Success(state);
             }
 
@@ -283,9 +201,9 @@ public sealed class NativeWifiService : IWifiService, IDisposable
         {
             _toggleDenied = true;
             LogFailure("wifi.toggle.denied", ex);
-            var last = _lastPublishedSafe();
+            var last = _core.Last;
             if (last is { CanToggle: true })
-                Publish(last with { CanToggle = false });
+                _core.Publish(last with { CanToggle = false });
             return Result.Failure(new OperationError(ErrorCode.AccessDenied, "Windows did not allow Wi-Fi to be switched."));
         }
         catch (WlanException ex) when (ex.Failure == WlanFailure.NotSupported)
@@ -301,104 +219,22 @@ public sealed class NativeWifiService : IWifiService, IDisposable
     }
 
     // Windows accepted the write; success is only reported once the radio is seen in the requested state.
-    private async Task<Result> ConfirmAsync(bool enabled, CancellationToken ct)
+    private Task<Result> ConfirmAsync(bool enabled, CancellationToken ct)
     {
         var wanted = enabled ? RadioState.Enabled : RadioState.Disabled;
-        for (var attempt = 0; attempt < _options.ConfirmAttempts; attempt++)
-        {
-            var read = await Task.Run(ReadState, CancellationToken.None).ConfigureAwait(false);
-            if (read.IsSuccess && read.Value.Radio == wanted)
-                return Result.Success();
-            if (ct.IsCancellationRequested)
-                return Result.Cancelled(); // the write may already have taken effect; the next read says
-
-            try
+        return RadioServiceCore<WifiState>.ConfirmAsync(
+            async () =>
             {
-                await _options.Delay(_options.ConfirmInterval, ct).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                return Result.Cancelled();
-            }
-        }
-
-        return Result.Failure(new OperationError(ErrorCode.Timeout, "Windows accepted the change but Wi-Fi did not switch.", retryable: true));
+                var read = await Task.Run(ReadState, CancellationToken.None).ConfigureAwait(false);
+                return read.IsSuccess && read.Value.Radio == wanted;
+            },
+            _options,
+            "Windows accepted the change but Wi-Fi did not switch.",
+            ct);
     }
 
-    private WifiState? _lastPublishedSafe()
-    {
-        lock (_stateLock)
-            return _lastPublished;
-    }
-
-    // ---- notifications ----------------------------------------------------------------------------------------------
-
-    // From a wlanapi thread: only ask for a refresh. Never calls back into wlanapi.
-    private void OnBackendChanged()
-    {
-        if (IsDisposed)
-            return;
-
-        // Coalesce bursts: one refresh runs, and anything that arrives meanwhile asks for one more.
-        Interlocked.Exchange(ref _refreshRequested, 1);
-        if (Interlocked.CompareExchange(ref _refreshRunning, 1, 0) != 0)
-            return;
-
-        _ = Task.Run(RefreshLoopAsync);
-    }
-
-    private async Task RefreshLoopAsync()
-    {
-        try
-        {
-            while (Interlocked.Exchange(ref _refreshRequested, 0) == 1 && !IsDisposed)
-            {
-                try
-                {
-                    await _gate.WaitAsync(_lifetime.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-
-                try
-                {
-                    if (IsDisposed)
-                        return;
-                    _ = ReadState(); // publishes; an unexpected failure keeps the last state
-                }
-                finally
-                {
-                    _gate.Release();
-                }
-            }
-        }
-        catch (ObjectDisposedException)
-        {
-            // Disposal won the race for the gate: nothing left to refresh.
-        }
-        finally
-        {
-            Interlocked.Exchange(ref _refreshRunning, 0);
-            // A request that slipped in after the loop's last check starts another run.
-            if (Volatile.Read(ref _refreshRequested) == 1 && !IsDisposed)
-                OnBackendChanged();
-        }
-    }
-
-    // Delivers a state unless it equals the last one delivered, so observers see changes, not repeats.
-    private void Publish(WifiState state)
-    {
-        lock (_stateLock)
-        {
-            if (_disposed || Equals(_lastPublished, state))
-                return;
-            _lastPublished = state;
-        }
-
-        _changes.Publish(state);
-    }
+    // From a wlanapi thread: only asks for a refresh. Never calls back into wlanapi.
+    private void OnBackendChanged() => _core.RequestRefresh();
 
     private void LogFailure(string eventId, WlanException ex) =>
         _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, eventId, Component, "Call", ErrorCode.DeviceUnavailable, ExceptionType: ex.GetType()));

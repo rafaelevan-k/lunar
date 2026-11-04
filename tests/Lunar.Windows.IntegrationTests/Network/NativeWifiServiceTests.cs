@@ -2,6 +2,7 @@ using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.System.Models;
 using Lunar.Domain.Shared;
 using Lunar.Windows.Network;
+using Lunar.Windows.Shared;
 using Xunit;
 
 namespace Lunar.Windows.IntegrationTests.Network;
@@ -110,7 +111,7 @@ public sealed class NativeWifiServiceTests
         }
     }
 
-    private static readonly NativeWifiOptions NoWait = new() { Delay = (_, _) => Task.CompletedTask };
+    private static readonly RadioConfirmOptions NoWait = new() { Delay = (_, _) => Task.CompletedTask };
 
     private static PhyRadio On => new(RadioSwitch.On, RadioSwitch.On);
 
@@ -120,7 +121,7 @@ public sealed class NativeWifiServiceTests
 
     private static WlanInterfaceReading Adapter(WlanInterfaceState state, params PhyRadio[] phys) => new(state, phys);
 
-    private static NativeWifiService Create(FakeBackend backend, IDiagnosticLog? log = null, NativeWifiOptions? options = null) =>
+    private static NativeWifiService Create(FakeBackend backend, IDiagnosticLog? log = null, RadioConfirmOptions? options = null) =>
         new(backend, log, options ?? NoWait);
 
     private static async Task WaitFor(Func<bool> condition, int timeoutMs = 3000)
@@ -381,7 +382,7 @@ public sealed class NativeWifiServiceTests
     public async Task AcceptedWriteThatNeverTakesEffectTimesOutInsteadOfClaimingSuccess()
     {
         var backend = new FakeBackend { Adapters = [Adapter(WlanInterfaceState.NotReady, SoftOff)], ApplyWrites = false };
-        await using var service = Create(backend, options: new NativeWifiOptions { ConfirmAttempts = 4, Delay = (_, _) => Task.CompletedTask });
+        await using var service = Create(backend, options: new RadioConfirmOptions { ConfirmAttempts = 4, Delay = (_, _) => Task.CompletedTask });
 
         var result = await service.SetEnabledAsync(true, Ct);
 
@@ -489,7 +490,7 @@ public sealed class NativeWifiServiceTests
     {
         using var cts = new CancellationTokenSource();
         var backend = new FakeBackend { Adapters = [Adapter(WlanInterfaceState.NotReady, SoftOff)], ApplyWrites = false };
-        await using var service = Create(backend, options: new NativeWifiOptions
+        await using var service = Create(backend, options: new RadioConfirmOptions
         {
             ConfirmAttempts = 50,
             Delay = async (_, token) =>
@@ -565,7 +566,7 @@ public sealed class NativeWifiServiceTests
     [Fact]
     public void ConfirmationAttemptsMustBePositive()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeWifiService(new FakeBackend(), null, new NativeWifiOptions { ConfirmAttempts = 0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeWifiService(new FakeBackend(), null, new RadioConfirmOptions { ConfirmAttempts = 0 }));
         Assert.Throws<ArgumentNullException>(() => new NativeWifiService((IWlanBackend)null!));
     }
 }

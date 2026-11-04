@@ -197,7 +197,7 @@ public sealed class ServiceRegistrationTests
     public void MissingRegistrationFailsAtBuildNotAtFirstUse()
     {
         Assert.ThrowsAny<Exception>(() => ServiceRegistration.BuildServiceProvider(
-            services => services.AddSingleton<BluetoothConsumer>())); // no Bluetooth adapter is registered until BE-13
+            services => services.AddSingleton<MediaConsumer>())); // no media adapter is registered until BE-15
     }
 
     [Fact]
@@ -214,9 +214,23 @@ public sealed class ServiceRegistrationTests
         Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await wifi.GetAsync(CancellationToken.None)).Error?.Code);
     }
 
-    private sealed class BluetoothConsumer(IBluetoothService bluetooth)
+    [Fact]
+    public async Task BluetoothServiceIsOneSingletonAndTheContainerCanDisposeIt()
     {
-        public IBluetoothService Bluetooth { get; } = bluetooth;
+        var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var bluetooth = provider.GetRequiredService<IBluetoothService>();
+
+        Assert.Same(bluetooth, provider.GetRequiredService<IBluetoothService>());
+        Assert.IsType<Lunar.Windows.Bluetooth.WindowsBluetoothService>(bluetooth);
+        provider.Dispose();
+        Assert.Equal(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, (await bluetooth.GetAsync(CancellationToken.None)).Error?.Code);
+    }
+
+    private sealed class MediaConsumer(Lunar.Application.Abstractions.Media.IMediaService media)
+    {
+        public Lunar.Application.Abstractions.Media.IMediaService Media { get; } = media;
     }
 
     private sealed class VolumeConsumer(IVolumeService volume)

@@ -8,6 +8,7 @@ using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
 using Lunar.Windows.Audio;
+using Lunar.Windows.Bluetooth;
 using Lunar.Windows.Environment;
 using Lunar.Windows.Network;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +51,7 @@ public static class ServiceRegistration
 
         services.AddSingleton<IVolumeService>(sp => new CoreAudioVolumeService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWifiService>(sp => new NativeWifiService(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IBluetoothService>(sp => new WindowsBluetoothService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
 
