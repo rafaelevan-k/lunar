@@ -90,7 +90,7 @@ public sealed partial class OutputCommitter
 
         // 2. make room first
         if (_fileSystem.GetFreeBytes(directory) is { } free && free < needed + SpaceMargin)
-            return Fail(ErrorCode.IoFailure, DiskFullMessage, retryable: true);
+            return Fail(ErrorCode.IoFailure, IoErrors.DiskFullMessage, retryable: true);
 
         var parts = new List<string>(stagedFiles.Count);
         var published = false;
@@ -112,9 +112,9 @@ public sealed partial class OutputCommitter
             {
                 return Result.Cancelled<IReadOnlyList<string>>();
             }
-            catch (Exception ex) when (IsIoProblem(ex))
+            catch (Exception ex) when (IoErrors.IsIoProblem(ex))
             {
-                return Result.Failure<IReadOnlyList<string>>(MapIo(ex));
+                return Result.Failure<IReadOnlyList<string>>(IoErrors.Map(ex));
             }
 
             if (ct.IsCancellationRequested)
@@ -197,7 +197,7 @@ public sealed partial class OutputCommitter
 
             return (Result.Success<IReadOnlyList<string>>(finals), false);
         }
-        catch (Exception ex) when (IsIoProblem(ex))
+        catch (Exception ex) when (IoErrors.IsIoProblem(ex))
         {
             // A rename that fails because the name now exists means another program took it a moment ago: not a failure, the next name.
             var raced = ex is IOException && current >= 0 && !replace[current] && _fileSystem.Exists(finals[current]);
@@ -209,7 +209,7 @@ public sealed partial class OutputCommitter
                 {
                     _fileSystem.MoveWithoutOverwrite(finals[i], parts[i]);
                 }
-                catch (Exception back) when (IsIoProblem(back))
+                catch (Exception back) when (IoErrors.IsIoProblem(back))
                 {
                     _fileSystem.TryDelete(finals[i]);
                     _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "conversion.commit.rollback_removed", "Conversion", "Commit", ErrorCode.IoFailure, ExceptionType: back.GetType()));
@@ -217,7 +217,7 @@ public sealed partial class OutputCommitter
                 }
             }
 
-            return raced ? (null, true) : (Result.Failure<IReadOnlyList<string>>(MapIo(ex)), false);
+            return raced ? (null, true) : (Result.Failure<IReadOnlyList<string>>(IoErrors.Map(ex)), false);
         }
     }
 
@@ -241,22 +241,6 @@ public sealed partial class OutputCommitter
 
         return (job.OutputBaseName, 1);
     }
-
-    private const string DiskFullMessage = "There is not enough space on the disk to save the result. Free some space and try again; your original file is untouched.";
-
-    private static bool IsIoProblem(Exception ex) => ex is IOException or UnauthorizedAccessException or NotSupportedException or System.Security.SecurityException;
-
-    private static OperationError MapIo(Exception ex) => ex switch
-    {
-        IOException io when IsDiskFull(io) => new OperationError(ErrorCode.IoFailure, DiskFullMessage, retryable: true),
-        UnauthorizedAccessException => new OperationError(ErrorCode.AccessDenied, "Lunar can't save to that folder. Check that you may write there, or choose another folder."),
-        PathTooLongException => new OperationError(ErrorCode.IoFailure, "The path for the result is too long. Choose a folder closer to the top of a drive."),
-        DirectoryNotFoundException => new OperationError(ErrorCode.IoFailure, "The folder for the results is no longer available. Choose another folder and try again.", retryable: true),
-        _ => new OperationError(ErrorCode.IoFailure, "The result couldn't be saved. Check the folder and try again; your original file is untouched.", retryable: true)
-    };
-
-    // ERROR_HANDLE_DISK_FULL (39) and ERROR_DISK_FULL (112), as the low word of the HRESULT.
-    private static bool IsDiskFull(IOException io) => (io.HResult & 0xFFFF) is 39 or 112;
 
     private static Result<IReadOnlyList<string>> Fail(ErrorCode code, string message, bool retryable = false) =>
         Result.Failure<IReadOnlyList<string>>(new OperationError(code, message, retryable));

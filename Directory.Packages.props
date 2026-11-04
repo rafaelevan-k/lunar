@@ -12,5 +12,7 @@
     <!-- Product packages for Infrastructure logging, Apache-2.0; approved in ADR-0009, checked in BE-07 evidence. -->
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <!-- Product package for picture conversion (Lunar.Conversion only), MIT (managed and native nuspec); version approved in ADR-0003, checked in BE-22 evidence. Shipping the native payload stays on hold (ADR-0003). -->
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
   </ItemGroup>
 </Project>
