@@ -145,6 +145,15 @@
         <c:IconButton x:Name="PreviousButton" Margin="6,0" Glyph="&#xE892;" Label="Previous" Command="{Binding PreviousCommand}" />
         <c:IconButton x:Name="PlayPauseButton" Margin="6,0" Glyph="{Binding PlayPauseGlyph}" Label="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" />
         <c:IconButton x:Name="NextButton" Margin="6,0" Glyph="&#xE893;" Label="Next" Command="{Binding NextCommand}" />
+
+        <!-- Only with several players open: switch to the next one, see which one this is, and give the choice back to the page. -->
+        <StackPanel x:Name="SessionSwitcher" Orientation="Horizontal" Margin="10,0,0,0"
+                    Visibility="{Binding HasMultipleSessions, Converter={StaticResource BoolToVisible}}">
+          <c:IconButton x:Name="SwitchButton" Margin="6,0" Glyph="&#xE8AB;" Label="{Binding SwitchLabel}" Command="{Binding SwitchSessionCommand}" />
+          <TextBlock x:Name="SessionPositionTextBlock" Text="{Binding SessionPositionText}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" />
+          <c:IconButton x:Name="AutomaticButton" Margin="6,0" Glyph="&#xE895;" Label="Choose the player automatically" Command="{Binding UseAutomaticCommand}"
+                        Visibility="{Binding ShowAutomatic, Converter={StaticResource BoolToVisible}}" />
+        </StackPanel>
       </StackPanel>
     </Grid>
 

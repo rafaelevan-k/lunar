@@ -71,6 +71,8 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     private MediaPageMode _mode = MediaPageMode.Loading;
     private MediaSessionSnapshot? _active;
     private DateTimeOffset _activeAt;
+    private IReadOnlyList<MediaSessionSnapshot> _sessions = [];
+    private bool _isUserChoice;
     private (TimeSpan Position, DateTimeOffset At)? _seekAnchor;
     private bool _isScrubbing;
     private bool _userMoved;
@@ -125,6 +127,8 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         PreviousCommand = new AsyncRelayCommand(ct => SendAsync(MediaCommand.Previous, ct), () => CanSend(MediaCommand.Previous), OnFault, lifetime);
         RetryCommand = new AsyncRelayCommand(RetryAsync, () => _mode == MediaPageMode.Unavailable, OnFault, lifetime);
         DismissErrorCommand = new RelayCommand(() => ErrorMessage = null);
+        SwitchSessionCommand = new RelayCommand(SwitchSession, () => HasMultipleSessions);
+        UseAutomaticCommand = new RelayCommand(UseAutomatic, () => ShowAutomatic);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -355,6 +359,29 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand DismissErrorCommand { get; }
 
+    // ---- several players (FE-19) -------------------------------------------------------------------------------------
+
+    /// <summary>How many media sessions are open.</summary>
+    public int SessionCount => _sessions.Count;
+
+    /// <summary>True when more than one player is open: the page offers a way to switch between them.</summary>
+    public bool HasMultipleSessions => _mode == MediaPageMode.Session && _sessions.Count > 1;
+
+    /// <summary>"1 of 2": which player is shown. Empty with a single player.</summary>
+    public string SessionPositionText => HasMultipleSessions && SessionIndex() is var i && i >= 0 ? $"{i + 1} of {_sessions.Count}" : string.Empty;
+
+    /// <summary>What the switch button does, in words (also its accessible name): names the player it would show next.</summary>
+    public string SwitchLabel => HasMultipleSessions && NextSession() is { } next ? $"Switch to {MediaPageText.Source(next.AppName)}" : "Switch player";
+
+    /// <summary>True when the player on show was picked by the user, so the page can offer to go back to the automatic choice.</summary>
+    public bool ShowAutomatic => HasMultipleSessions && _isUserChoice;
+
+    /// <summary>Shows the next open player and keeps that choice until it closes.</summary>
+    public ICommand SwitchSessionCommand { get; }
+
+    /// <summary>Gives the choice back to the page: the player Windows treats as current is shown again.</summary>
+    public ICommand UseAutomaticCommand { get; }
+
     // ---- lifetime ----------------------------------------------------------------------------------------------------
 
     /// <summary>
@@ -446,6 +473,8 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         var previousId = previous?.Id;
         var session = state.Active;
         _active = session;
+        _sessions = state.Sessions;
+        _isUserChoice = state.IsUserChoice;
         _activeAt = _time.GetUtcNow();
         _seekAnchor = null; // the player's own report is the truth again
 
@@ -467,6 +496,7 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         }
 
         NotifyCommandsChanged();
+        NotifySessionChoice();
     }
 
     private void ShowSession(MediaSessionSnapshot session)
@@ -736,6 +766,48 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
 
     // ---- transport ---------------------------------------------------------------------------------------------------
 
+    // ---- several players ---------------------------------------------------------------------------------------------
+
+    // The same order the tracker's policy uses, so "next" is predictable and never depends on how Windows listed them.
+    private List<MediaSessionSnapshot> OrderedSessions() => [.. _sessions.OrderBy(s => s.Id, StringComparer.Ordinal)];
+
+    private int SessionIndex() => _active is null ? -1 : OrderedSessions().FindIndex(s => s.Id == _active.Id);
+
+    private MediaSessionSnapshot? NextSession()
+    {
+        var ordered = OrderedSessions();
+        if (ordered.Count < 2)
+            return null;
+        var index = SessionIndex();
+        return ordered[(index + 1) % ordered.Count];
+    }
+
+    // The pick goes through the tracker; the page changes only when the tracker publishes the new active session, so artwork,
+    // text, buttons and the timeline all switch together and nothing of the old player is left behind.
+    private void SwitchSession()
+    {
+        if (NextSession() is not { } next)
+            return;
+
+        ErrorMessage = null;
+        var result = _tracker.Select(next.Id);
+        if (result.IsFailure)
+            ErrorMessage = MediaPageText.CommandFailed(result.Error!.Code);
+    }
+
+    private void UseAutomatic() => _tracker.ClearSelection();
+
+    private void NotifySessionChoice()
+    {
+        OnChanged(nameof(SessionCount));
+        OnChanged(nameof(HasMultipleSessions));
+        OnChanged(nameof(SessionPositionText));
+        OnChanged(nameof(SwitchLabel));
+        OnChanged(nameof(ShowAutomatic));
+        ((RelayCommand)SwitchSessionCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)UseAutomaticCommand).NotifyCanExecuteChanged();
+    }
+
     private bool CanSend(MediaCommand command) => _active is { } session && MediaTransport.IsSupported(session, command);
 
     private void NotifyCommandsChanged()
@@ -758,7 +830,12 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
         if (result.IsFailure && !result.IsCancelled)
         {
             var code = result.Error!.Code;
-            _post(() => ErrorMessage = MediaPageText.CommandFailed(code));
+            // An answer about a player that is no longer on show is not news about the one that is.
+            _post(() =>
+            {
+                if (_active?.Id == session.Id)
+                    ErrorMessage = MediaPageText.CommandFailed(code);
+            });
         }
     }
 

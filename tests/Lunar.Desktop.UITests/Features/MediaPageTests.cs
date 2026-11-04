@@ -292,6 +292,36 @@ public sealed class MediaPageTests
         Assert.True(slider.IsEnabled);
     });
 
+    // FE-19: the player switcher shows only with several players, and fits beside the transport buttons.
+    [Fact]
+    public void WithOnePlayerThereIsNoSwitcher() => RunOnSta(() =>
+    {
+        using var rig = Create(sessions: S());
+
+        Assert.Equal(Visibility.Collapsed, Named<StackPanel>(rig, "SessionSwitcher").Visibility);
+    });
+
+    [Fact]
+    public void WithSeveralPlayersTheSwitcherShowsAndFitsTheArea() => RunOnSta(() =>
+    {
+        using var rig = Create(sessions: [S(id: "a", app: "Spotify"), S(id: "b", app: "Browser")]);
+
+        var switcher = Named<StackPanel>(rig, "SessionSwitcher");
+        Assert.Equal(Visibility.Visible, switcher.Visibility);
+        Assert.Equal("1 of 2", Named<TextBlock>(rig, "SessionPositionTextBlock").Text);
+        Assert.Equal("Switch to Browser", AutomationProperties.GetName(Named<IconButton>(rig, "SwitchButton")));
+        Assert.Equal(Visibility.Collapsed, Named<IconButton>(rig, "AutomaticButton").Visibility);
+
+        // After a pick the automatic button appears; with it the transport row still fits the width the page gets.
+        rig.Model.SwitchSessionCommand.Execute(null);
+        rig.Window.UpdateLayout();
+        var last = Named<IconButton>(rig, "AutomaticButton");
+        Assert.Equal(Visibility.Visible, last.Visibility);
+        var right = last.TranslatePoint(new Point(last.ActualWidth, 0), rig.Page).X;
+        Assert.True(right <= PageWidth - 40 + 0.5, $"The switcher ends at {right}; the page allows {PageWidth - 40}.");
+        Assert.True(Named<Grid>(rig, "SessionFace").ActualHeight <= PageHeight - 4);
+    });
+
     [Fact]
     public void ATimelineThatCannotBeSeekedHasNoSlider() => RunOnSta(() =>
     {
