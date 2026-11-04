@@ -53,3 +53,7 @@ Lunar never uploads logs. A way to export logs for support would need its own re
 - Logging of conversion, media and system features does not exist yet because those features do not exist yet; each will define its own fixed event IDs and be checked against this page.
 - Uninstall behavior for the Logs folder (keep or delete, with a prompt) belongs to the installer task (BE-29).
 - Crash dumps and Windows Error Reporting are controlled by Windows, not by Lunar.
+
+## Temporary conversion files
+
+While a file is being converted, Lunar works in a private temporary folder under `%LocalAppData%\Lunar\Temp\` named only by a random identifier, and writes the finished result to the folder you chose in one step at the end (as a temporary copy that is then renamed, so a result is either missing or complete). The temporary folder holds copies of the results in progress and a short list of the temporary file paths Lunar created in your folder, so they can be removed if Lunar is closed in the middle of a conversion. It is deleted when the conversion ends, and anything left by a crash is deleted the next time Lunar starts. None of this is sent anywhere or written to the log. Your original files are only read, never changed.
