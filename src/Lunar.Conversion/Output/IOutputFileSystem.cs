@@ -24,6 +24,9 @@ internal interface IOutputFileSystem
     /// <summary>True when a file or a folder is at the path.</summary>
     bool Exists(string path);
 
+    /// <summary>True when the file or folder at the path is a symbolic link or junction (a name that points somewhere else). Never replaced.</summary>
+    bool IsLink(string path);
+
     /// <summary>True when a folder is at the path.</summary>
     bool DirectoryExists(string path);
 

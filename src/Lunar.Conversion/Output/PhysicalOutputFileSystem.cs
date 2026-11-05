@@ -36,6 +36,18 @@ internal sealed class PhysicalOutputFileSystem : IOutputFileSystem
 
     public bool DirectoryExists(string path) => Directory.Exists(path);
 
+    public bool IsLink(string path)
+    {
+        try
+        {
+            return new FileInfo(path).LinkTarget is not null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return true; // a name that cannot be inspected is not replaced
+        }
+    }
+
     public long? GetFreeBytes(string directory)
     {
         try

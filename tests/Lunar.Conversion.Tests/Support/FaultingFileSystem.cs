@@ -55,6 +55,8 @@ internal sealed class FaultingFileSystem : IOutputFileSystem
 
     public bool DirectoryExists(string path) => _real.DirectoryExists(path);
 
+    public bool IsLink(string path) => _real.IsLink(path);
+
     public long? GetFreeBytes(string directory) => UseRealFreeBytes ? _real.GetFreeBytes(directory) : FreeBytes;
 
     /// <summary>What Windows reports for a full disk (ERROR_DISK_FULL as an HRESULT).</summary>

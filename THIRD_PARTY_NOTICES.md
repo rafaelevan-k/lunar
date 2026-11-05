@@ -48,3 +48,22 @@ BE-23 product dependency (2026-11-05): `DocumentFormat.OpenXml` 3.5.1 (MIT in th
 BE-25 optional external program (2026-11-05): LibreOffice is **not a Lunar dependency in the package sense and is not bundled, downloaded, installed or redistributed**. If the user has installed it themselves, Lunar can start the user's own soffice.exe (found only under Program Files, version 7 or newer) to turn a Word document into a PDF in a private working folder with a fresh profile; no LibreOffice file is copied into Lunar. LibreOffice is licensed by The Document Foundation under the MPL 2.0 (with parts under other licenses); because Lunar only runs the user's installed copy as a separate program, no LibreOffice license obligation passes to Lunar's own files, but this has had no legal review. The routes are switched off in this version (ADR-0005) until their fidelity is checked on a real LibreOffice.
 
 FE-27 brand asset (2026-11-05): `src/Lunar.Desktop/Resources/ClaudeBrandmark.jpg` (800x172 JPEG, the "Claude" wordmark with its starburst) is shown unmodified on the Usage page and is compiled into `Lunar.Desktop` as a WPF resource. It was supplied by the project owner; no download page, license or written permission from Anthropic has been recorded for it. "Claude" and its logo are Anthropic's trademarks (see [Anthropic's trademark guidelines](https://www.anthropic.com/legal/trademark-guidelines)); Lunar claims no rights in them and the file must not be shipped in a release until permission or a confirmed official source is recorded here (release gate, Sprint 7). The Claude colors used on that page are plain color values (cream #FAF9F5, dark #141413, orange #D97757, light gray #E8E6DC).
+
+## BE-28 dependency inventory (2026-11-05)
+
+Every package any project resolves, from the lock files (exact versions and content hashes are in each `packages.lock.json`; restore runs in locked mode). Licenses are the SPDX expressions in each package's own nuspec. Package signatures were re-verified on 2026-11-05 with `dotnet nuget verify` (exit 0 for all nine product packages; Serilog and Serilog.Sinks.File carry only the nuget.org repository signature, the others also an author signature). `dotnet list package --vulnerable --include-transitive` reports none. The machine-checked copy of this list is `SecurityGovernanceTests` (a package, version or scope not in it fails the build).
+
+| Package | Version | License | Scope | Purpose / notes |
+|---|---|---|---|---|
+| DocumentFormat.OpenXml, DocumentFormat.OpenXml.Framework | 3.5.1 | MIT | Product (Conversion) | create Word documents that embed pictures; never reads user documents |
+| Microsoft.Extensions.DependencyInjection, .Abstractions | 10.0.13 | MIT | Product (Desktop) | composition root |
+| Serilog, Serilog.Sinks.File | 4.3.1, 7.0.0 | Apache-2.0 | Product (Infrastructure) | bounded local log files; the Apache-2.0 text and NOTICE must ship in the release bundle |
+| SkiaSharp | 4.153.1 | MIT | Product (Conversion) | picture decode/encode and PDF writing |
+| SkiaSharp.NativeAssets.Win32 | 4.153.1 | MIT (package) | Product (Conversion) | native Windows library; **the aggregate has mixed terms including LGPL/eCos sections, so shipping it stays on hold (ADR-0003)** |
+| SkiaSharp.NativeAssets.macOS | 4.153.1 | MIT (package) | restored with SkiaSharp | never part of a Windows payload; excluded from any release bundle |
+| System.IO.Packaging | 10.0.2 | MIT | Product (transitive of OpenXml) | package handling |
+| Microsoft.NET.Test.Sdk, Microsoft.CodeCoverage, Microsoft.TestPlatform.ObjectModel, .TestHost, Microsoft.Bcl.AsyncInterfaces 6.0.0, Microsoft.Win32.Registry 5.0.0, System.Security.AccessControl 6.0.1 | 18.10.0 (unless stated) | MIT | Test only | test host and its dependencies |
+| xunit.v3.mtp-off, xunit.v3.core.mtp-off, .assert, .common, .extensibility.core, .runner.common, .runner.inproc.console | 4.0.2 | Apache-2.0 | Test only | test framework |
+| xunit.runner.visualstudio, xunit.analyzers | 4.0.1, 2.2.0 | Apache-2.0 | Test only | test discovery and analyzers |
+
+Release obligations still open (BE-29/BE-30): ship license texts and notices for every Product row; the SkiaSharp native payload, the Claude brandmark and the .NET runtime redistribution terms must be cleared before any installer is published. Newer versions exist for SkiaSharp (4.154.0), Serilog (4.4.0), Microsoft.Extensions.DependencyInjection (10.0.14) and the test SDK (18.11.0); none is needed for a known advisory and none was applied (an update is a reviewed change to the table above).

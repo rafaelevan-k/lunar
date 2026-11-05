@@ -169,7 +169,8 @@ public sealed partial class OutputCommitter
                     taken = true;
                 else if (_fileSystem.Exists(finals[i]))
                 {
-                    if (job.ReplacesExisting && counter == start)
+                    // A name that is a link is never replaced (File.Replace would not, or would reach the file behind it): the next free name is used.
+                    if (job.ReplacesExisting && counter == start && !_fileSystem.IsLink(finals[i]))
                         replace[i] = true;
                     else
                         taken = true;

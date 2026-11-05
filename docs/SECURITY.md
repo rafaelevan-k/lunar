@@ -1,8 +1,66 @@
-# Initial security review — Sprint 0
+# Lunar security: threat model and verified mitigations (BE-28)
 
-Status: discovery, not a completed BE-28 audit. Product requirements remain PRD §4.3/7 and AGENTS §9/10.
+Status: BE-28 audit, 2026-11-05, at the state of `main` after Sprint 6. Product requirements remain PRD §4.3, §7 and AGENTS §9–10. Section "Sprint 0 discovery notes" below is the earlier prototype review, kept as history.
 
-## Prototype boundary
+## 1. What is being protected
+
+| Asset | Where it lives | Who may reach it |
+|---|---|---|
+| The user's documents and pictures (inputs) | wherever the user keeps them | Lunar reads only the files the user picked and never changes them |
+| The user's output folder | a folder the user chose | Lunar writes only new, validated results there |
+| The usage token (the one stored secret) | `%LocalAppData%\Lunar\usage-token.dat`, DPAPI for the current Windows user | only the usage adapter, only for one HTTPS request at a time |
+| Settings, logs | `%LocalAppData%\Lunar\settings.json`, `Logs\` | choices only; logs hold event names and error categories only |
+| The user's session and PC | Windows, the user's account | Lunar runs as the user, never elevated |
+
+Trust boundaries: (1) every input file is hostile until validated; (2) the optional LibreOffice program is a separate process of unknown content; (3) the network (one address, opt-in); (4) other local users and programs (file locations, links, other processes); (5) the build and dependency supply chain.
+
+## 2. Threats, mitigations and how each was verified
+
+"Verified" means an automated test that passes in `scripts\test.ps1 -Suite All` unless the status says otherwise; test names are in the projects named. NOT_RUN means no check exists yet and it is not claimed.
+
+| # | Threat | Mitigation | Verification | Status |
+|---|---|---|---|---|
+| 1 | Wrong or disguised file type | Extension and content must agree: PNG header and checksum, JPEG frame header, PDF header and end marker, DOCX central directory and required parts; refusals say what to do | `SourceFileValidatorTests` (random blob, text named .pdf, cut-short and damaged files of each type, wrong-extension messages) | Verified |
+| 2 | Resource exhaustion by size, pixels, pages, count | Caps in `ConversionLimits`: 100 files, 200 MB per file, 50 megapixels, 200 pages, path 1024 chars; checked from the header before any decode, and again by the decoding step | `SourceFileValidatorTests` (size limit, pixel limit exactly at and over, JPEG/PNG bombs by declared size), `ImageConversionProviderTests`, `PdfRasterizationProviderTests` (page limit), `ConversionPlannerTests` | Verified |
+| 3 | Time exhaustion, runaway jobs | Per-job timeout and cancel in the queue; 2-minute limit on LibreOffice with whole-process-tree kill; one job's failure never blocks the next | `ConversionJobQueueTests`, `LibreOfficeRendererProviderTests` (takes too long, cancel) | Verified |
+| 4 | DOCX zip bomb, many entries, huge or hostile entries | Entry count (2000) and central-directory size are read by hand before the framework loads the directory; per-entry (256 MB), total (512 MB) and ratio (200:1 from 1 MiB) limits; unsafe entry names (`..`, `/`, `\`, `:`) refused; `vbaProject` macros refused; legacy/encrypted OLE files refused | `SourceFileValidatorTests` (zip bomb by ratio, too-large part, too-large package, too many parts before the directory is loaded, unsafe names, macros, OLE) | Verified |
+| 5 | A package that lies about its sizes | The runtime's reader enforces the declared size (reads stop or fail at it), so reading a relationship part cannot exceed the limit checked from its declaration; Lunar never unpacks a Word file itself beyond `.rels` parts | `LyingArchiveTests` pins this platform behavior; if a future runtime changed it, the test fails | Verified. Residual: the full unpacking done by LibreOffice (see #11) |
+| 6 | XML attacks (DTD, external entities, remote relationships) | Lunar parses no XML from user files: Open XML SDK is used only to create a document; relationship parts are scanned as text for `TargetMode="External"` and a Word file with an external link is refused before LibreOffice starts; relationship parts over 1 MiB are refused | `DocxEmbeddingProviderTests` (no external relationships in what Lunar creates), `LibreOfficeRendererProviderTests.AWordFileThatLinksOutsideIsRefusedBeforeTheEngineStarts` | Verified |
+| 7 | Path tricks in input or output paths | Only full local paths: no `\\?\`, `\\.\`, network shares, alternate data streams, wildcards, `..`, reserved device names, trailing dots or spaces, control characters; a refused path is never "fixed" | `PathRulesTests`, `ConversionPlannerTests` | Verified |
+| 8 | Links (symlinks, junctions) redirecting output | The output folder must not be a link (checked at planning and again at commit); the temp workspace and its recovery never follow links; **an existing output name that is a link is never replaced or written through (a new name is used)** | `ConversionPlannerTests.AnOutputFolderThatIsAJunctionToAnotherPlaceIsARequestFailure`, `TempWorkspaceTests.RecoveryDoesNotFollowALinkNamedLikeAWorkspace`, `OutputLinkSafetyTests` (added by BE-28; found and fixed that Overwrite on a link failed with a vague error) | Verified. Decision: an input file that is itself a link is read as the file the user picked (cloud placeholders are links too); it is only read |
+| 9 | Overwriting or losing the user's files | Originals are opened read-only; results go to a unique temp folder, are checked again, copied as part files and published by rename; Overwrite only replaces a name the plan named, never the input, never a moved-aside name; everything is rolled back on failure or cancel; a swapped input (size or time changed) is refused | `OutputCommitterTests`, `OutputCommitterNumberingTests`, `TempWorkspaceTests`, `ConversionOrchestratorTests`, `ConversionEndToEndTests` (cancelled real job leaves no file and the input byte-for-byte) | Verified |
+| 10 | Leftover temp data | Private per-job folder named by random id, deleted at the end; abandoned folders and journalled part files are removed at the next start and a journal can never make Lunar delete a non-part file | `TempWorkspaceTests` | Verified |
+| 11 | The optional LibreOffice program | Never installed or downloaded by Lunar; found only under Program Files (`LibreOffice\program\soffice`), never via PATH or the current folder, never through a link, product name and minimum version checked; started with `UseShellExecute=false` and an argument list (no shell, no string parsing), a fresh profile per job, input a copy inside the job folder, output checked as a PDF before use; engine output discarded; killed with its children on timeout or cancel; the routes are **held off** (ADR-0005) | `LibreOfficeLocatorTests` (PATH never searched, link refused), `LibreOfficeRendererProviderTests` (arguments, own profile, original never given to the engine, missing engine, bad output), `SecurityGovernanceTests` (no shell, ArgumentList, tree kill, only 3 places start programs) | Verified for what Lunar controls. Not verified: what LibreOffice does with a hostile file once it runs (no sandbox, see residual risks) |
+| 12 | Native decoders (images, PDF) fed hostile data | Header-level validation and caps first; decoding runs inside the app process (SkiaSharp native codecs, Windows PDF renderer); failures become typed errors, never crash the app | provider tests with corrupt files; **no fuzzing was done** | Partially verified; residual risk (see §3) |
+| 13 | Network use beyond what is disclosed | The only network code is the opt-in usage adapter: HTTPS only, one address (`api.anthropic.com`), no redirects, 15 s and 64 KB limits; no telemetry, no update check, no downloader | `SecurityGovernanceTests` (network types only in that file; only that address and no `http://`; no update or download code), `AnthropicUsageSourceTests` | Verified |
+| 14 | Secret exposure (usage token) | Pasted into a masked field, validated, stored only DPAPI-encrypted, never shown again, never logged, never in settings, sent only to the usage address; removable at any time; zero-overwrite on removal | `UsageTokenRulesTests`, `DpapiUsageTokenStoreTests` (real DPAPI), `SettingsSecretsTests` (settings hold exactly the known choice fields), `UsagePageViewModelTests` (the token appears in no shown text), `SecurityGovernanceTests` (no secret-shaped value in source, scripts or workflows) | Verified |
+| 15 | Information leakage through logs | The log API has no free-text or parameter field; ids are checked tokens; paths, names, contents, SSIDs, titles and tokens are never logged; bounded files | `SerilogDiagnosticLogTests` (BE-07), `docs/PRIVACY.md` | Verified |
+| 16 | Privilege abuse | Runs `asInvoker`, no UI access, no service, no startup entry unless the user opts in (BE-29) | `SecurityGovernanceTests.TheAppRunsAsTheUserAndNeverElevatedOrWithUiAccess` | Verified (startup opt-in: BE-29 NOT_RUN) |
+| 17 | Hostile local files read by Lunar (settings, token file) | Size caps (settings 64 KB, token file 16 KB); invalid content is repaired to defaults and reported, never trusted | `JsonSettingsRepositoryTests`, `DpapiUsageTokenStoreTests` | Verified |
+| 18 | Vulnerable, unlicensed or swapped dependencies | Exact version pins, locked restore with content hashes, advisories audited on every build and treated as errors, one package source, approved-package list with licenses in a test, product and test packages separated; package signatures re-verified for all product packages on 2026-11-05 | `SecurityGovernanceTests` (approved list, exact pins, no test package in the product, locked restore and audit on, SDK pinned), `dotnet list package --vulnerable` (none), `dotnet nuget verify` (9 of 9) | Verified |
+| 19 | Build and CI abuse | Workflow is read-only (`contents: read`), uses no secrets and never `pull_request_target`; CI builds with the same script as developers | `SecurityGovernanceTests` | Verified. Not done: pinning the actions to commit hashes (they use version tags) |
+| 20 | Installer, upgrade, rollback, uninstall, startup opt-in | not built yet | BE-29 | NOT_RUN |
+
+## 3. Residual risks and decisions for the project owner
+
+1. **Native decoders run in the app process (rows 11, 12).** A memory-safety flaw in a codec or in LibreOffice triggered by a crafted file would run with the user's rights. Caps and header checks reduce but do not remove this. The remedy is an out-of-process worker with reduced rights (a job object and low integrity); that is a new top-level surface and needs its own ADR, so it was not started. Until then keep SkiaSharp current and keep the Word routes off.
+2. **No Authenticode check of `soffice.exe`.** The trust anchor is that only an administrator can write under Program Files and that links are refused. Verifying the signature would add a native call (WinVerifyTrust); not done, decision needed if the Word routes are ever enabled.
+3. **GitHub Actions use version tags, not commit hashes**, and there is no automated update proposal for packages (Dependabot would open pull requests on the repository). Both are repository policy choices, not app behavior; neither was changed.
+4. **Native payload and logo.** Shipping the SkiaSharp native files stays on hold (ADR-0003; the native aggregate has LGPL/eCos sections) and the Claude logo has no recorded permission; both are release gates (`THIRD_PARTY_NOTICES.md`).
+5. **Usage endpoint.** It is undocumented, so its reply is treated as untrusted data (parsed defensively, never shown raw) and the page degrades to a stated message.
+6. **No fuzzing and no third-party penetration test.** Verification here is by tests and review only.
+
+## 4. How this stays true
+
+`SecurityGovernanceTests` (in `Lunar.Application.Tests`) fail the build when a change adds network code, another place that starts programs, an update or download routine, a secret-shaped value, an unapproved or newer package, a test-only package in the product, a floating version, an elevated manifest or a looser workflow. Adding a package means editing its table in that test together with the license review in `THIRD_PARTY_NOTICES.md`. Run `scripts\test.ps1 -Suite Gate` before every push.
+
+---
+
+## Sprint 0 discovery notes (historical)
+
+Status: discovery notes from Sprint 0, superseded by the audit above where they differ (the production threat table there replaces the NOT_RUN table that stood here).
+
+### Prototype boundary
 
 - Probe uses installed Windows APIs, makes no network requests, enumerates no filenames/media metadata/SSIDs and changes no device state.
 - Core Audio RCWs are released; WLAN memory and handle freed; asynchronous WinRT operations have an 8-second timeout, with a separate 45-second runner bound.
@@ -11,23 +69,8 @@ Status: discovery, not a completed BE-28 audit. Product requirements remain PRD 
 - Microsoft SDK bootstrap is a development action, stored under ignored `.tools/`; archive SHA-512 is checked against official release metadata before execution. It is not an application auto-downloader.
 - Build/restore may contact NuGet for development dependencies. This is distinct from local-only runtime conversion. No user documents are uploaded.
 
-## Production threat model and required evidence
 
-| Boundary / threat | Required mitigation | Verification status |
-|---|---|---|
-| Untrusted extensions/content | Validate extension and signatures, bounded decode | NOT_RUN; converter absent |
-| DOCX ZIP/XML | Entry/count/expanded-size/ratio limits, prohibit DTD/external resolution, no macros/remote relationships | NOT_RUN |
-| PDF/image exhaustion | File/page/pixel/memory/time caps; cancellation; worker isolation only if reviewed | NOT_RUN |
-| Paths/reparse points/collisions | Destination containment; safe names; explicit overwrite; originals read-only | NOT_RUN |
-| Output transaction | Unique staging, validate output, safe same-volume commit or documented cross-volume fallback; cancel cleanup | NOT_RUN |
-| Optional renderer | User-approved installed executable, canonical path/signature, no shell interpolation, ArgumentList, isolated profile, process-tree termination, no remote resource fetching | NOT_RUN |
-| Privacy | Redacted structured bounded logs, no contents/passwords/SSID/history; passwords memory only | Probe fields inspected; production NOT_RUN |
-| Dependencies | Pinned versions, lock graph, native provenance, CVE/license inventory and notices | Initial review only |
-| Packaging | Per-user runtime, explicit startup opt-in, tested upgrade/rollback/uninstall and settings retention prompt | NOT_RUN |
-
-No claim that launching LibreOffice headless alone creates a security sandbox or prevents all external-resource access. The production renderer boundary needs explicit validation before untrusted documents are processed.
-
-## Converter discovery continuation
+### Converter discovery continuation
 
 Only controlled generated fixtures were processed by a disposable CLI. The harness rejects an existing output workspace, reads source PNG/PDF read-only and verifies hashes; DOCX embeds the exact PNG with no external relationships and passes schema validation. Render targets are capped at 9 million intended pixels for this fixture experiment, with native-operation timeouts and outer process bounds. These are not proof of a production input validator, atomic output transaction, hard native memory sandbox or effective in-flight cancellation.
 
