@@ -3,7 +3,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -12,11 +11,12 @@ using Lunar.Application.Usage;
 using Lunar.Application.Usage.Models;
 using Lunar.Desktop.Features.Usage;
 using Lunar.Desktop.UITests.Themes;
+using Lunar.Domain.Shared;
 using Xunit;
 
 namespace Lunar.Desktop.UITests.Features;
 
-// FE-27: the real Usage page, the real theme and control styles and the real brandmark, on an STA thread, bound to the real view model over
+// FE-27, FE-29: the real Usage page, the real theme and control styles and the real brandmark, on an STA thread, bound to the real view model over
 // fakes of its ports. How it looks to a person (the logo on screen, the colors on a real island, Narrator, scaling, High Contrast) is a
 // manual check (NOT_RUN here).
 public sealed class UsagePageTests
@@ -87,8 +87,6 @@ public sealed class UsagePageTests
     {
         public UsagePageViewModelTests.Source Source { get; } = new();
 
-        public UsagePageViewModelTests.Tokens Tokens { get; } = new();
-
         public UsagePageViewModelTests.Settings Settings { get; } = new();
 
         public UsageMonitor Monitor { get; }
@@ -99,15 +97,14 @@ public sealed class UsagePageTests
 
         public Window Window { get; }
 
-        public Rig(bool enabled, bool token)
+        public Rig(bool enabled)
         {
             var dispatcher = Dispatcher.CurrentDispatcher;
             SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(dispatcher));
             Settings.Current = Lunar.Application.Settings.Models.LunarSettings.Defaults with { Usage = new Lunar.Application.Settings.Models.UsageSettings { Enabled = enabled } };
-            Tokens.Has = token;
             Monitor = new UsageMonitor(Source, new UsageMonitorOptions { Delay = (_, ct) => Task.Delay(Timeout.Infinite, ct), RefreshGap = TimeSpan.Zero });
             Model = new UsagePageViewModel(
-                Monitor, Tokens, Settings,
+                Monitor, Settings,
                 work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); },
                 log: null, new UsagePageViewModelTests.FixedTime(), CultureInfo.InvariantCulture);
             Page = new UsagePage { DataContext = Model };
@@ -139,10 +136,13 @@ public sealed class UsagePageTests
     private static IEnumerable<string> AllTexts(DependencyObject root) =>
         Descendants<TextBlock>(root).Select(t => t.Text);
 
+    private static Result<UsageSnapshot> Refused(string message) =>
+        Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied, message));
+
     [Fact]
     public void TheLimitsShowWithPercentBarsResetTimesAndTheUnmodifiedBrandmark() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: true, token: true);
+        using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
         rig.Window.UpdateLayout();
 
@@ -164,14 +164,14 @@ public sealed class UsagePageTests
         Assert.True(Math.Abs((logo.ActualWidth / logo.ActualHeight) - (800d / 172d)) < 0.1, "The logo keeps its proportions.");
 
         Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "OffCard").Visibility);
-        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "TokenCard").Visibility);
+        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "LoginCard").Visibility);
         Assert.Equal(Visibility.Visible, Named<Button>(rig.Page, "RefreshButton").Visibility);
     });
 
     [Fact]
     public void EachLimitHasASpokenNameWithItsPercentAndReset() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: true, token: true);
+        using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
 
         var names = Descendants<ProgressBar>(rig.Page).Select(AutomationProperties.GetName).ToList();
@@ -183,7 +183,7 @@ public sealed class UsagePageTests
     [Fact]
     public void TheContentFitsThePageWidthAndTheSwitchSitsInTheIslandsOwnColors() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: true, token: true);
+        using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
         rig.Window.UpdateLayout();
 
@@ -194,64 +194,90 @@ public sealed class UsagePageTests
         Assert.True(Lunar.Desktop.Controls.SwitchState.GetIsOn(toggle));
     });
 
+    // The island gives a page 250 DIP of height: the main faces must fit without scrolling (the scroll bar is only a fallback for big text).
+    private static void AssertNoScrolling(Rig rig, string face)
+    {
+        rig.Window.UpdateLayout();
+        var scroll = Named<ScrollViewer>(rig.Page, "PageScroll");
+        Assert.True(scroll.ExtentHeight <= scroll.ViewportHeight + 0.5, $"{face}: the page needs {scroll.ExtentHeight:F0} DIP but has {scroll.ViewportHeight:F0}.");
+    }
+
+    // Turns the page off and on again so the monitor asks the (changed) source once more.
+    private static void Restart(Rig rig, Func<bool> done)
+    {
+        ((System.Windows.Input.ICommand)rig.Model.ToggleEnabledCommand).Execute(null);
+        Pump(() => !rig.Model.IsEnabled);
+        ((System.Windows.Input.ICommand)rig.Model.ToggleEnabledCommand).Execute(null);
+        Pump(done);
+    }
+
+    [Fact]
+    public void EveryMainFaceFitsTheIslandsPageHeightWithoutScrolling() => RunOnSta(() =>
+    {
+        using (var off = new Rig(enabled: false))
+            AssertNoScrolling(off, "Off");
+
+        using (var active = new Rig(enabled: true))
+        {
+            Pump(() => active.Model.ShowLimits);
+            AssertNoScrolling(active, "Active with both limits");
+        }
+
+        // The longest sentence of the credential reader, in the login card.
+        using var problem = new Rig(enabled: true);
+        problem.Source.Next = () => Refused("The Claude Code sign-in on this PC does not allow reading usage. Sign in again with \"claude\" (not \"claude setup-token\"), then press Refresh.");
+        Restart(problem, () => problem.Model.ShowLoginProblem);
+        AssertNoScrolling(problem, "Sign-in problem with the longest message");
+    });
+
+    [Fact]
+    public void ThereIsNoFieldToTypeInAndNoTokenButtonAnywhere() => RunOnSta(() =>
+    {
+        using var rig = new Rig(enabled: true);
+        Pump(() => rig.Model.ShowLimits);
+
+        Assert.Empty(Descendants<PasswordBox>(rig.Page));
+        Assert.Empty(Descendants<TextBox>(rig.Page));
+        var buttonNames = Descendants<Button>(rig.Page).Select(AutomationProperties.GetName).ToList();
+        Assert.DoesNotContain(buttonNames, n => n.Contains("token", StringComparison.OrdinalIgnoreCase));
+    });
+
+    [Fact]
+    public void ASignInProblemIsShownInItsOwnCardWithAProblemSymbolAndRefreshIsWithinReach() => RunOnSta(() =>
+    {
+        using var rig = new Rig(enabled: true);
+        rig.Source.Next = () => Refused(UsagePageViewModelTests.NotSignedIn);
+        Restart(rig, () => rig.Model.ShowLoginProblem);
+        rig.Window.UpdateLayout();
+
+        Assert.Equal(Visibility.Visible, Named<Border>(rig.Page, "LoginCard").Visibility);
+        Assert.Equal(UsagePageViewModelTests.NotSignedIn, Named<TextBlock>(rig.Page, "LoginProblemText").Text);
+        Assert.Equal(Visibility.Collapsed, Named<StackPanel>(rig.Page, "StatusCard").Visibility); // not said twice
+        Assert.Equal(Visibility.Visible, Named<Button>(rig.Page, "RefreshButton").Visibility);
+        Assert.Contains(Descendants<TextBlock>(rig.Page), t => t.Text == "" && t.Visibility == Visibility.Visible);
+        Assert.Equal(Visibility.Collapsed, Named<StackPanel>(rig.Page, "Limits").Visibility);
+    });
+
     [Fact]
     public void OffShowsTheDisclosureAndTheSwitchAndNothingElse() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: false, token: true);
+        using var rig = new Rig(enabled: false);
 
         Assert.Equal(Visibility.Visible, Named<Border>(rig.Page, "OffCard").Visibility);
-        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "TokenCard").Visibility);
+        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "LoginCard").Visibility);
         Assert.Equal(Visibility.Collapsed, Named<StackPanel>(rig.Page, "Limits").Visibility);
         Assert.Equal(Visibility.Collapsed, Named<Button>(rig.Page, "RefreshButton").Visibility);
         Assert.False(Lunar.Desktop.Controls.SwitchState.GetIsOn(Named<Button>(rig.Page, "EnableSwitch")));
-        Assert.Contains(AllTexts(rig.Page), t => t.Contains("contact Anthropic", StringComparison.Ordinal));
+        Assert.Contains(AllTexts(rig.Page), t => t.Contains("Claude Code sign-in", StringComparison.Ordinal));
         Assert.Equal(0, rig.Source.Calls);
     });
 
     [Fact]
-    public void ThePasteBoxIsMaskedNamedAndLimitedAndSavingClearsItAndKeepsTheTokenOutOfTheScreen() => RunOnSta(() =>
+    public void AProblemWithTheNetworkKeepsTheLastReadingAndMarksTheSlimLine() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: true, token: false);
-        var box = Named<PasswordBox>(rig.Page, "TokenBox");
-        Assert.Equal(Visibility.Visible, Named<Border>(rig.Page, "TokenCard").Visibility);
-        Assert.Equal("Claude token", AutomationProperties.GetName(box));
-        Assert.Equal(2048, box.MaxLength);
-
-        box.Password = UsagePageViewModelTests.Secret;
-        Named<Button>(rig.Page, "SaveTokenButton").RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-        Pump(() => rig.Model.HasToken);
+        using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
-        rig.Window.UpdateLayout();
-
-        Assert.Equal(UsagePageViewModelTests.Secret, rig.Tokens.LastSaved);
-        Assert.Equal(string.Empty, box.Password); // cleared at once
-        Assert.DoesNotContain(AllTexts(rig.Page), t => t.Contains(UsagePageViewModelTests.Secret, StringComparison.Ordinal));
-        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "TokenCard").Visibility);
-    });
-
-    [Fact]
-    public void ARejectedPasteIsClearedTooAndTheReasonIsShown() => RunOnSta(() =>
-    {
-        using var rig = new Rig(enabled: true, token: false);
-        rig.Tokens.OnSave = _ => Lunar.Domain.Shared.Result.Failure(new Lunar.Domain.Shared.OperationError(Lunar.Domain.Shared.ErrorCode.InvalidInput, "That does not look like a Claude token."));
-        var box = Named<PasswordBox>(rig.Page, "TokenBox");
-
-        box.Password = "garbage";
-        Named<Button>(rig.Page, "SaveTokenButton").RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-        Pump(() => rig.Model.Notice is not null);
-        rig.Window.UpdateLayout();
-
-        Assert.Equal(string.Empty, box.Password);
-        Assert.Contains("That does not look like a Claude token.", AllTexts(rig.Page));
-        Assert.Equal(Visibility.Visible, Named<Border>(rig.Page, "TokenCard").Visibility);
-    });
-
-    [Fact]
-    public void AProblemIsMarkedWithASymbolAndWordsAndTheLastReadingStays() => RunOnSta(() =>
-    {
-        using var rig = new Rig(enabled: true, token: true);
-        Pump(() => rig.Model.ShowLimits);
-        rig.Source.Next = () => Lunar.Domain.Shared.Result.Failure<UsageSnapshot>(new Lunar.Domain.Shared.OperationError(Lunar.Domain.Shared.ErrorCode.DeviceUnavailable, "Claude cannot be reached.", retryable: true));
+        rig.Source.Next = () => Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.DeviceUnavailable, "Claude cannot be reached.", retryable: true));
 
         ((System.Windows.Input.ICommand)rig.Model.RefreshCommand).Execute(null);
         Pump(() => rig.Model.StatusIsProblem);
@@ -260,13 +286,13 @@ public sealed class UsagePageTests
         Assert.Equal(Visibility.Visible, Named<StackPanel>(rig.Page, "StatusCard").Visibility);
         Assert.StartsWith("Claude cannot be reached. Showing the updated ", Named<TextBlock>(rig.Page, "StatusLine").Text);
         Assert.Contains("67% used", AllTexts(rig.Page));
-        Assert.Contains(Descendants<TextBlock>(rig.Page), t => t.Text == "" && t.Visibility == Visibility.Visible);
+        Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "LoginCard").Visibility);
     });
 
     [Fact]
     public void ThePageUsesTheClaudePaletteOnlyForItsOwnCards() => RunOnSta(() =>
     {
-        using var rig = new Rig(enabled: true, token: true);
+        using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
 
         var header = Named<Border>(rig.Page, "Header");

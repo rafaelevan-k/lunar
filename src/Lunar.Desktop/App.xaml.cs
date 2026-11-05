@@ -160,7 +160,6 @@ public partial class App : System.Windows.Application
         pages[2] = new ConverterPage { DataContext = _converter };
         _usage = new UsagePageViewModel(
             _services.GetRequiredService<UsageMonitor>(),
-            _services.GetRequiredService<IUsageTokenStore>(),
             _services.GetRequiredService<ISettingsRepository>(),
             toUi,
             _log);
@@ -201,7 +200,26 @@ public partial class App : System.Windows.Application
             _system.InitializeAsync(_lifetime.Token),
             _media.InitializeAsync(_lifetime.Token),
             _usage.InitializeAsync(_lifetime.Token),
+            RemoveLegacyUsageTokenAsync(),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
+    }
+
+    // ADR-0015: a token pasted earlier (from "claude setup-token") can never read usage, so it is deleted once instead of staying on disk.
+    private async Task RemoveLegacyUsageTokenAsync()
+    {
+        try
+        {
+            var store = _services?.GetRequiredService<IUsageTokenStore>();
+            if (store is null)
+                return;
+            var has = await store.HasTokenAsync(_lifetime.Token);
+            if (has.IsSuccess && has.Value && (await store.RemoveAsync(_lifetime.Token)).IsSuccess)
+                _log?.Write(new DiagnosticEvent(DiagnosticLevel.Information, "usage.legacy_token.removed", "App", "Start"));
+        }
+        catch (OperationCanceledException)
+        {
+            // shutting down
+        }
     }
 
     private void OnIslandPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

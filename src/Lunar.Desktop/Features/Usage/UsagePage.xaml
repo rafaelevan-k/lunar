@@ -8,9 +8,9 @@
              automation:AutomationProperties.Name="Usage">
   <!--
     FE-27: the Usage page. It only binds to UsagePageViewModel. The cards use the Claude palette (Usage.* tokens, loaded by the
-    code-behind: brand colors normally, Windows colors in High Contrast); the switch row at the bottom keeps the island's own
-    black-and-white tokens. No text sits directly on the island background except in that row, so contrast does not depend on
-    the theme. Everything is DynamicResource so the palette can be attached after the page is built.
+    code-behind: brand colors normally, Windows colors in High Contrast); the slim row and the switch at the bottom keep the island's own
+    black-and-white tokens. The page is built for the island's 250 DIP page height: compact cards, one slim row for status and token
+    buttons, and what went wrong said right under the token field. A scroll bar is only the fallback for large text sizes.
   -->
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
@@ -18,8 +18,8 @@
     <Style x:Key="UsageCard" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource Usage.Brush.Card}" />
       <Setter Property="CornerRadius" Value="14" />
-      <Setter Property="Padding" Value="10,7" />
-      <Setter Property="Margin" Value="0,0,0,5" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,4" />
       <Setter Property="BorderBrush" Value="{DynamicResource Usage.Brush.Ink}" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
@@ -43,8 +43,8 @@
       <Setter Property="IsTabStop" Value="True" />
       <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
       <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="MinHeight" Value="28" />
-      <Setter Property="Padding" Value="12,2" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="12,1" />
       <Setter Property="Margin" Value="6,0,0,0" />
       <Setter Property="Foreground" Value="{DynamicResource Usage.Brush.OnFill}" />
       <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
@@ -52,7 +52,7 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="Face" CornerRadius="14" Padding="{TemplateBinding Padding}" Background="{DynamicResource Usage.Brush.Fill}"
+            <Border x:Name="Face" CornerRadius="13" Padding="{TemplateBinding Padding}" Background="{DynamicResource Usage.Brush.Fill}"
                     BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="1">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
@@ -74,7 +74,7 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="Face" CornerRadius="14" Padding="{TemplateBinding Padding}" Background="Transparent"
+            <Border x:Name="Face" CornerRadius="13" Padding="{TemplateBinding Padding}" Background="Transparent"
                     BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="1">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
@@ -93,7 +93,7 @@
 
     <!-- The usage bar: a track with a thin ink outline (so its edge is clear on cream) and an orange fill. The percentage is also written. -->
     <Style x:Key="UsageBar" TargetType="ProgressBar">
-      <Setter Property="Height" Value="9" />
+      <Setter Property="Height" Value="8" />
       <Setter Property="Minimum" Value="0" />
       <Setter Property="Maximum" Value="100" />
       <Setter Property="Focusable" Value="False" />
@@ -101,9 +101,9 @@
         <Setter.Value>
           <ControlTemplate TargetType="ProgressBar">
             <Grid>
-              <Border x:Name="PART_Track" CornerRadius="4.5" Background="{DynamicResource Usage.Brush.Track}"
+              <Border x:Name="PART_Track" CornerRadius="4" Background="{DynamicResource Usage.Brush.Track}"
                       BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="1" />
-              <Border x:Name="PART_Indicator" CornerRadius="4.5" HorizontalAlignment="Left" Background="{DynamicResource Usage.Brush.Fill}" />
+              <Border x:Name="PART_Indicator" CornerRadius="4" HorizontalAlignment="Left" Background="{DynamicResource Usage.Brush.Fill}" />
             </Grid>
           </ControlTemplate>
         </Setter.Value>
@@ -118,9 +118,9 @@
             <TextBlock DockPanel.Dock="Right" Text="{Binding PercentText}" Style="{StaticResource UsageText}" FontWeight="SemiBold" />
             <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" Style="{StaticResource UsageText}" FontWeight="SemiBold" />
           </DockPanel>
-          <ProgressBar Style="{StaticResource UsageBar}" Value="{Binding Percent, Mode=OneWay}" Margin="0,5,0,0"
+          <ProgressBar Style="{StaticResource UsageBar}" Value="{Binding Percent, Mode=OneWay}" Margin="0,4,0,0"
                        automation:AutomationProperties.Name="{Binding AutomationName}" />
-          <TextBlock Text="{Binding ResetText}" Style="{StaticResource UsageMuted}" Margin="0,4,0,0" />
+          <TextBlock Text="{Binding ResetText}" Style="{StaticResource UsageMuted}" Margin="0,3,0,0" />
         </StackPanel>
       </Border>
     </DataTemplate>
@@ -128,15 +128,16 @@
 
   <Grid Margin="38,0,38,0">
     <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-      <StackPanel Margin="0,0,6,4">
+      <StackPanel Margin="0,0,0,2">
 
-        <!-- The brandmark, unmodified, on its own white tile; the refresh button sits at the right when there is something to refresh. -->
-        <Border x:Name="Header" Style="{StaticResource UsageCard}" Background="{DynamicResource Usage.Brush.Logo}">
+        <!-- The brandmark, unmodified, on its own white tile; Refresh sits at the right when there is something to refresh. -->
+        <Border x:Name="Header" Style="{StaticResource UsageCard}" Background="{DynamicResource Usage.Brush.Logo}" Padding="10,5">
           <DockPanel LastChildFill="False">
-            <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="Refresh" Command="{Binding RefreshCommand}"
+            <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="Refresh" Command="{Binding RefreshCommand}" Margin="6,0,0,0"
+                    MinHeight="24" Padding="10,0" VerticalAlignment="Center"
                     Style="{StaticResource UsageQuietButton}" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}"
                     automation:AutomationProperties.Name="Read the limits again" />
-            <Image x:Name="Brandmark" DockPanel.Dock="Left" Height="20" Stretch="Uniform" HorizontalAlignment="Left"
+            <Image x:Name="Brandmark" DockPanel.Dock="Left" Height="18" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center"
                    Source="/Lunar.Desktop;component/Resources/ClaudeBrandmark.jpg" RenderOptions.BitmapScalingMode="HighQuality"
                    automation:AutomationProperties.Name="Claude" />
           </DockPanel>
@@ -144,24 +145,17 @@
 
         <!-- Off: what turning it on does. -->
         <Border x:Name="OffCard" Style="{StaticResource UsageCard}" Visibility="{Binding IsOff, Converter={StaticResource BoolToVisible}}">
-          <TextBlock Text="{Binding Disclosure}" Style="{StaticResource UsageText}" />
+          <TextBlock Text="{Binding Disclosure}" Style="{StaticResource UsageText}" FontSize="{DynamicResource Lunar.Font.Size.Caption}" />
         </Border>
 
-        <!-- The token field: when a token is needed, when the user wants to change it, and when the service refused it. -->
-        <Border x:Name="TokenCard" Style="{StaticResource UsageCard}" Visibility="{Binding ShowTokenEntry, Converter={StaticResource BoolToVisible}}">
-          <StackPanel>
-            <TextBlock Text="{Binding TokenHelp}" Style="{StaticResource UsageText}" />
-            <PasswordBox x:Name="TokenBox" Margin="0,6,0,0" MaxLength="2048" MinHeight="28" Padding="6,3"
-                         Background="{DynamicResource Usage.Brush.Logo}" Foreground="{DynamicResource Usage.Brush.Ink}"
-                         BorderBrush="{DynamicResource Usage.Brush.Ink}" CaretBrush="{DynamicResource Usage.Brush.Ink}"
-                         FontFamily="{DynamicResource Lunar.Font.Family}" FontSize="{DynamicResource Lunar.Font.Size.Body}"
-                         automation:AutomationProperties.Name="Claude token" KeyDown="OnTokenKeyDown" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
-              <Button x:Name="CancelTokenButton" Content="Cancel" Command="{Binding CancelTokenEntryCommand}" Style="{StaticResource UsageQuietButton}" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}"
-                      automation:AutomationProperties.Name="Close the token field" />
-              <Button x:Name="SaveTokenButton" Content="Save token" Click="OnSaveClick" Style="{StaticResource UsageButton}"
-                      automation:AutomationProperties.Name="Save the pasted token" />
-            </StackPanel>
+        <!-- The sign-in problem, in its own card: Claude Code is not signed in, the sign-in expired, or Claude refused it. The words come from the
+             monitor and say what to do; Refresh (in the header) tries again, and the island tries again by itself when it opens. -->
+        <Border x:Name="LoginCard" Style="{StaticResource UsageCard}" Visibility="{Binding ShowLoginProblem, Converter={StaticResource BoolToVisible}}">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE783;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource Usage.Brush.Error}"
+                       VerticalAlignment="Top" Margin="0,2,8,0" />
+            <TextBlock x:Name="LoginProblemText" Text="{Binding LoginProblemText}" Style="{StaticResource UsageText}" MaxWidth="262"
+                       FontSize="{DynamicResource Lunar.Font.Size.Caption}" automation:AutomationProperties.LiveSetting="Assertive" />
           </StackPanel>
         </Border>
 
@@ -171,9 +165,9 @@
           <ContentControl x:Name="WeeklyLimit" Content="{Binding Weekly}" Focusable="False" IsTabStop="False" />
         </StackPanel>
 
-        <!-- One line in the island's own colors: when the reading was taken, or what is wrong. A problem has a symbol as well as words. -->
-        <StackPanel x:Name="StatusCard" Orientation="Horizontal" Margin="2,0,0,4"
-                    Visibility="{Binding StatusText, Converter={x:Static c:NullToVisibilityConverter.Instance}}">
+        <!-- One slim line in the island's own colors: when the reading was taken, or what is wrong while the last reading is still shown. -->
+        <StackPanel x:Name="StatusCard" Orientation="Horizontal" Margin="2,0,0,2"
+                    Visibility="{Binding ShowStatusLine, Converter={StaticResource BoolToVisible}}">
           <TextBlock Text="&#xE783;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource Lunar.Brush.Error}"
                      VerticalAlignment="Top" Margin="0,2,6,0"
                      Visibility="{Binding StatusIsProblem, Converter={StaticResource BoolToVisible}}" />
@@ -181,7 +175,7 @@
                      automation:AutomationProperties.LiveSetting="Polite" />
         </StackPanel>
 
-        <!-- The opt-in switch in the island's own colors, with what the last action did. -->
+        <!-- The opt-in switch in the island's own colors, with what the last action did under it. -->
         <Grid Margin="2,2,0,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -192,15 +186,7 @@
                   c:SwitchState.IsOn="{Binding IsEnabled, Mode=OneWay}" Command="{Binding ToggleEnabledCommand}"
                   automation:AutomationProperties.Name="Show Claude usage" />
         </Grid>
-        <DockPanel LastChildFill="False" Margin="2,4,0,0">
-          <Button x:Name="RemoveTokenButton" DockPanel.Dock="Right" Content="Remove token" Command="{Binding RemoveTokenCommand}"
-                  Visibility="{Binding HasToken, Converter={StaticResource BoolToVisible}}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                  automation:AutomationProperties.Name="Delete the saved token from this PC" />
-          <Button x:Name="ChangeTokenButton" DockPanel.Dock="Right" Content="Change token" Command="{Binding ChangeTokenCommand}" Margin="0,0,6,0"
-                  Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                  automation:AutomationProperties.Name="Paste a different token" />
-        </DockPanel>
-        <TextBlock x:Name="NoticeLine" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="2,4,0,0"
+        <TextBlock x:Name="NoticeLine" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="2,2,0,0"
                    Visibility="{Binding Notice, Converter={x:Static c:NullToVisibilityConverter.Instance}}"
                    automation:AutomationProperties.LiveSetting="Polite" />
       </StackPanel>
