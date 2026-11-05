@@ -44,7 +44,9 @@ Preferences are stored in `%LocalAppData%\Lunar\settings.json` (with `settings.j
 
 ## Diagnostics (opt-in)
 
-Diagnostics add `Debug` events and the larger size limit; they add no new kinds of data. They are off by default. Until a Settings page exists (FE-23, using the settings store from BE-06), the only switch is the environment variable `LUNAR_DIAGNOSTICS=1`, read when Lunar starts (only the exact value `1` enables it). This is a tester/developer switch, not a user feature, and will be replaced by a setting.
+Diagnostics add `Debug` events and the larger size limit; they add no new kinds of data. They are off by default. You turn them on in **Settings, Privacy, Detailed diagnostics** (the tray icon's Settings item). The choice is saved with your other preferences and applies from the **next time Lunar starts**, because the log is set up before anything else; the Settings window says so while the saved choice is not yet in use. The environment variable `LUNAR_DIAGNOSTICS=1` (only the exact value `1`) still turns diagnostics on for a run, whatever is saved. At start-up Lunar looks once, read-only, at the saved diagnostics choice in `settings.json` (a file of at most 64 KB; any problem means off); it never repairs or rewrites the file for this.
+
+The Settings window itself stores only the choices listed above, in the same file, and writes nothing to the logs except a code when a save fails. **Reset all settings** returns every choice to its default, which also turns the Usage page off.
 
 Lunar never uploads logs. A way to export logs for support would need its own review and an explicit, reviewable user action.
 

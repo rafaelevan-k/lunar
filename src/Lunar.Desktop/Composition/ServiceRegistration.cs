@@ -7,6 +7,7 @@ using Lunar.Application.Abstractions.System;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
+using Lunar.Application.Settings;
 using Lunar.Application.Shell.UseCases;
 using Lunar.Application.Usage;
 using Lunar.Conversion.Output;
@@ -58,9 +59,13 @@ public static class ServiceRegistration
     {
         var services = new ServiceCollection();
 
+        // Diagnostics are chosen when the logger is built: by the environment variable or by the saved setting (ADR-0016). It is read here once
+        // and shared, so the Settings window can say whether the saved choice is already in use.
+        var diagnostics = LoggingConfiguration.IsDiagnosticsRequested() || DiagnosticsPreference.IsEnabled();
+        services.AddSingleton(new DiagnosticsRun(diagnostics));
         // Logging files are created lazily by the first resolve, not when the container is built.
         services.AddSingleton<SerilogDiagnosticLog>(_ => new SerilogDiagnosticLog(
-            LoggingConfiguration.DefaultDirectory, LoggingConfiguration.IsDiagnosticsRequested()));
+            LoggingConfiguration.DefaultDirectory, diagnostics));
         services.AddSingleton<IDiagnosticLog>(sp => sp.GetRequiredService<SerilogDiagnosticLog>());
         services.AddSingleton<IInstanceCoordinator>(sp =>
             new SingleInstanceCoordinator(InstanceName, sp.GetRequiredService<IDiagnosticLog>()));
@@ -74,6 +79,9 @@ public static class ServiceRegistration
         services.AddTransient<IslandViewModel>(sp => new IslandViewModel(sp.GetRequiredService<TransitionIsland>()));
 
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
+        // The one writer of the settings and the announcer of changes (ADR-0016); the theme source tells when Windows changes light or dark.
+        services.AddSingleton<SettingsService>(sp => new SettingsService(sp.GetRequiredService<ISettingsRepository>()));
+        services.AddSingleton<ISystemThemeSource>(sp => new WindowsThemeSource(sp.GetRequiredService<IDiagnosticLog>()));
 
         services.AddSingleton<IVolumeService>(sp => new CoreAudioVolumeService(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IWifiService>(sp => new NativeWifiService(sp.GetRequiredService<IDiagnosticLog>()));
@@ -124,3 +132,6 @@ public static class ServiceRegistration
         });
     }
 }
+
+/// <summary>Whether verbose diagnostics are on in this run (decided when the logger was built).</summary>
+internal sealed record DiagnosticsRun(bool Enabled);

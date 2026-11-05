@@ -242,6 +242,21 @@ public sealed class SwiperViewTests
         Assert.False(((TranslateTransform)((StackPanel)instant.View.FindName("Strip")).RenderTransform).HasAnimatedProperties);
     });
 
+    [Fact]
+    public void TheMotionSettingCanChangeWhileTheSwiperRuns() => RunOnSta(() =>
+    {
+        using var rig = Create(reduceMotion: true);
+        var strip = (StackPanel)rig.View.FindName("Strip");
+
+        rig.View.SetReduceMotion(false);
+        rig.Navigation.Next();
+        Assert.True(((TranslateTransform)strip.RenderTransform).HasAnimatedProperties);
+
+        rig.View.SetReduceMotion(true);
+        rig.Navigation.Next();
+        Assert.False(((TranslateTransform)strip.RenderTransform).HasAnimatedProperties);
+    });
+
     // ---- keyboard, buttons, dots -----------------------------------------------------------------------------------
 
     [Fact]

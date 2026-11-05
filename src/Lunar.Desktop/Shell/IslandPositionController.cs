@@ -29,7 +29,7 @@ public sealed class IslandPositionController : IDisposable
     private readonly IslandViewModel _viewModel;
     private readonly IWindowEnvironment _environment;
     private readonly IDiagnosticLog _log;
-    private readonly IslandSettings _preference;
+    private IslandSettings _preference;
     private bool _started;
     private bool _disposed;
 
@@ -76,6 +76,17 @@ public sealed class IslandPositionController : IDisposable
 
         Apply();
         return listener;
+    }
+
+    /// <summary>The user changed the display or offset setting (ADR-0016): the island moves at once. UI thread only.</summary>
+    internal void UpdatePreference(IslandSettings preference)
+    {
+        ArgumentNullException.ThrowIfNull(preference);
+        if (_disposed || preference == _preference)
+            return;
+        _preference = preference;
+        if (_started)
+            Apply();
     }
 
     /// <summary>Re-reads the displays and moves the window. Safe to call repeatedly; must run on the UI thread.</summary>

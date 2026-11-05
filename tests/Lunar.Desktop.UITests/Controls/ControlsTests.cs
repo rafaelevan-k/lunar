@@ -532,6 +532,33 @@ public sealed class ControlsTests
         window.Close();
     });
 
+    [Fact]
+    public void TheShellFollowsAChangeOfTheMotionSettingWhileItRuns() => RunOnSta(() =>
+    {
+        var viewModel = new IslandViewModel();
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Usage"]);
+        var swiper = new Lunar.Desktop.Navigation.SwiperView();
+        var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
+        var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: false);
+        var window = Show(shell);
+        swiper.Resources.MergedDictionaries.Clear();
+        swiper.Initialize(navigation, IslandShellView.CreatePlaceholderPages(navigation.Titles), false);
+        Assert.False(Motion.GetReduceMotion(shell.Error));
+
+        shell.SetReduceMotion(true);
+
+        Assert.True(Motion.GetReduceMotion(shell.Error)); // children read it from the shell, so they follow at once
+        Assert.True(Motion.GetReduceMotion(shell));
+        navigation.Next();
+        Assert.False(((System.Windows.Media.TranslateTransform)((StackPanel)swiper.FindName("Strip")).RenderTransform).HasAnimatedProperties);
+
+        shell.SetReduceMotion(false);
+
+        Assert.False(Motion.GetReduceMotion(shell.Error));
+        shell.Dispose();
+        window.Close();
+    });
+
     // ---- tooltip ---------------------------------------------------------------------------------------------------
 
     [Fact]

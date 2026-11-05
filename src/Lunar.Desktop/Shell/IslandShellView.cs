@@ -24,7 +24,7 @@ public sealed class IslandShellView : Grid, IDisposable
     private readonly IslandViewModel _viewModel;
     private readonly EyesView _eyes;
     private readonly ConfettiBurst _confetti = new();
-    private readonly bool _reduceMotion;
+    private bool _reduceMotion;
     private bool _disposed;
 
     public IslandShellView(EyesView eyes, SwiperView swiper, IslandViewModel viewModel, bool reduceMotion)
@@ -65,6 +65,14 @@ public sealed class IslandShellView : Grid, IDisposable
     }
 
     public SwiperView Swiper { get; }
+
+    /// <summary>The motion setting changed (ADR-0016): the shell, its pages and every control below follow it at once. UI thread only.</summary>
+    public void SetReduceMotion(bool reduceMotion)
+    {
+        _reduceMotion = reduceMotion;
+        Motion.SetReduceMotion(this, reduceMotion);
+        Swiper.SetReduceMotion(reduceMotion);
+    }
 
     /// <summary>
     /// Something good happened (a conversion finished): the eyes smile, and while the island is open a little confetti bursts. Reduced motion

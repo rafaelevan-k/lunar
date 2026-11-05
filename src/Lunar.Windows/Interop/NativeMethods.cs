@@ -15,6 +15,7 @@ internal static class NativeMethods
     internal const int MDT_EFFECTIVE_DPI = 0;
     internal const uint WS_POPUP = 0x80000000;
     internal const uint WS_EX_TOOLWINDOW = 0x00000080;
+    internal const uint REG_NOTIFY_CHANGE_LAST_SET = 0x00000004;
 
     /// <summary>DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2.</summary>
     internal static readonly IntPtr PerMonitorAwareV2 = new(-4);
@@ -72,6 +73,11 @@ internal static class NativeMethods
         public int PtX;
         public int PtY;
     }
+
+    [DllImport("advapi32.dll")]
+    internal static extern int RegNotifyChangeKeyValue(
+        Microsoft.Win32.SafeHandles.SafeRegistryHandle key, [MarshalAs(UnmanagedType.Bool)] bool watchSubtree, uint filter,
+        Microsoft.Win32.SafeHandles.SafeWaitHandle eventHandle, [MarshalAs(UnmanagedType.Bool)] bool asynchronous);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

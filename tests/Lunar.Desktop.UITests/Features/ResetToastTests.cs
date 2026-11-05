@@ -530,6 +530,20 @@ public sealed class ResetToastTests
     });
 
     [Fact]
+    public void ChangingTheMotionSettingAppliesToTheNextPopUp() => RunOnSta(() =>
+    {
+        var dpi = WindowDpi();
+        var display = new DisplayInfo("m", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1040), dpi, dpi);
+        using var presenter = new ResetToastPresenter(new FakeEnvironment(display), new IslandSettings(), reduceMotion: false);
+
+        presenter.Update(new IslandSettings { TopOffsetDip = 20 }, reduceMotion: true);
+        presenter.Show(ResetToastContent.For([Reset(UsageWindowKind.FiveHour)]));
+        Pump();
+
+        Assert.Equal(1.0, presenter.Window!.Opacity); // reduced motion now: no fade-in
+    });
+
+    [Fact]
     public void AReplacementReusesTheWindowAndUpdatesTheWords() => RunOnSta(() =>
     {
         var dpi = WindowDpi();

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Input;
 using Lunar.Application.Abstractions.Diagnostics;
-using Lunar.Application.Abstractions.Settings;
+using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Usage;
 using Lunar.Application.Usage.Models;
@@ -29,7 +29,7 @@ public sealed record UsageLimitView(string Title, double Percent, bool HasFigure
 
 /// <summary>
 /// What the Usage page shows and can do (FE-27, FE-29, ADR-0014 and ADR-0015). It reads the Application layer only: <see cref="UsageMonitor"/>
-/// for the limits and <see cref="ISettingsRepository"/> for the opt-in switch; never a Windows or network API.
+/// for the limits and <see cref="SettingsService"/> for the opt-in switch; never a Windows or network API.
 ///
 /// Opt-in: nothing is requested until the user turns the page on. Turning it on saves <c>Usage.Enabled</c> and starts the monitor; turning it
 /// off saves the choice and stops it. The login is the user's own Claude Code sign-in, which the credential source reads (read-only) for each
@@ -43,7 +43,7 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
     private const string Component = "UsagePage";
 
     private readonly UsageMonitor _monitor;
-    private readonly ISettingsRepository _settings;
+    private readonly SettingsService _settings;
     private readonly Action<Action> _post;
     private readonly IDiagnosticLog? _log;
     private readonly TimeProvider _time;
@@ -58,14 +58,14 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
     private UsageState _state = UsageState.Off;
     private string? _notice;
 
-    public UsagePageViewModel(UsageMonitor monitor, ISettingsRepository settings, Action<Action> post, IDiagnosticLog? log = null)
+    public UsagePageViewModel(UsageMonitor monitor, SettingsService settings, Action<Action> post, IDiagnosticLog? log = null)
         : this(monitor, settings, post, log, TimeProvider.System, CultureInfo.CurrentCulture)
     {
     }
 
     internal UsagePageViewModel(
         UsageMonitor monitor,
-        ISettingsRepository settings,
+        SettingsService settings,
         Action<Action> post,
         IDiagnosticLog? log,
         TimeProvider time,
@@ -86,6 +86,7 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
         var lifetime = _lifetime.Token;
         ToggleEnabledCommand = new AsyncRelayCommand(ToggleEnabledAsync, () => _initialized, OnFault, lifetime);
         RefreshCommand = new AsyncRelayCommand(RefreshAsync, () => Mode == UsagePageMode.Active, OnFault, lifetime);
+        _settings.Changed += OnSettingsChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -199,6 +200,7 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
         if (_disposed)
             return;
         _disposed = true;
+        _settings.Changed -= OnSettingsChanged;
         _lifetime.Cancel();
         _subscription?.Dispose();
         _subscription = null;
@@ -232,12 +234,24 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task<Result> SaveEnabledAsync(bool enabled, CancellationToken ct)
     {
-        var loaded = await _settings.LoadAsync(ct);
-        if (loaded.IsFailure)
-            return Result.Failure(loaded.Error!);
-        var next = loaded.Value.Settings with { Usage = new UsageSettings { Enabled = enabled } };
-        return await _settings.SaveAsync(next, ct);
+        // Applied to the latest settings by the one writer, so this switch never undoes a change made in the Settings window.
+        return await _settings.UpdateAsync(s => s with { Usage = new UsageSettings { Enabled = enabled } }, ct);
     }
+
+    // A change made elsewhere (the Settings window's reset turns the page off) is followed here; the switch's own change arrives too and
+    // finds nothing left to do.
+    private void OnSettingsChanged(object? sender, SettingsChangedEventArgs e) => _post(() =>
+    {
+        if (_disposed || !_initialized || e.Current.Usage.Enabled == _enabled)
+            return;
+        _enabled = e.Current.Usage.Enabled;
+        if (_enabled)
+            StartMonitor();
+        else
+            _monitor.Stop();
+        _state = _monitor.Current;
+        Changed();
+    });
 
     private async Task RefreshAsync(CancellationToken ct)
     {

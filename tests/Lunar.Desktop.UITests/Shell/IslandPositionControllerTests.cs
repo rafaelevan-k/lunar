@@ -136,6 +136,61 @@ public sealed class IslandPositionControllerTests
     });
 
     [Fact]
+    public void ChangingTheSavedDisplayOrOffsetMovesTheIslandAtOnce() => RunOnSta(() =>
+    {
+        var (window, environment, log) = Create();
+        var primary = DisplayLikeHost(window, "\\\\.\\DISPLAY1", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1040));
+        var right = DisplayLikeHost(window, "\\\\.\\DISPLAY2", false, new PixelRect(1920, 0, 1600, 900), new PixelRect(1920, 0, 1600, 860));
+        environment.Displays = [primary, right];
+        using var controller = new IslandPositionController(window, new IslandViewModel(), environment, log, new IslandSettings());
+        controller.Start();
+        window.Show();
+        try
+        {
+            controller.UpdatePreference(new IslandSettings { TopOffsetDip = 40 });
+            var moved = PixelsOf(window);
+            controller.UpdatePreference(new IslandSettings { PreferredMonitorId = "\\\\.\\DISPLAY2", TopOffsetDip = 40 });
+            var elsewhere = PixelsOf(window);
+
+            var onPrimary = IslandPlacement.PlaceTopCenter(primary, 160, 44, 40);
+            var onRight = IslandPlacement.PlaceTopCenter(right, 160, 44, 40);
+            Assert.Equal(onPrimary.Y, moved.Top);
+            Assert.Equal(onPrimary.X, moved.Left);
+            Assert.Equal(onRight.X, elsewhere.Left);
+            Assert.Equal(onRight.Y, elsewhere.Top);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
+    public void AnUnchangedPreferenceDoesNotMoveAnythingAndALateOneBeforeStartOnlyRemembers() => RunOnSta(() =>
+    {
+        var (window, environment, log) = Create();
+        var display = DisplayLikeHost(window, "\\\\.\\DISPLAY1", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1040));
+        environment.Displays = [display];
+        using var controller = new IslandPositionController(window, new IslandViewModel(), environment, log, new IslandSettings());
+
+        controller.UpdatePreference(new IslandSettings { TopOffsetDip = 30 }); // not started: nothing is placed yet
+        controller.Start();
+        window.Show();
+        try
+        {
+            var placed = PixelsOf(window);
+            controller.UpdatePreference(new IslandSettings { TopOffsetDip = 30 });
+
+            Assert.Equal(IslandPlacement.PlaceTopCenter(display, 160, 44, 30).Y, placed.Top);
+            Assert.Equal(placed.Top, PixelsOf(window).Top);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
     public void RemovingThePreferredMonitorMovesTheWindowToThePrimaryDisplay() => RunOnSta(() =>
     {
         var (window, environment, log) = Create();

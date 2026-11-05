@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Usage;
+using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Usage;
 using Lunar.Application.Usage.Models;
@@ -71,18 +72,21 @@ public sealed class UsagePageViewModelTests : IDisposable
 
     private readonly Source _source = new();
     private readonly Settings _settings = new();
+    private readonly SettingsService _service;
     private readonly UsageMonitor _monitor;
     private readonly UsagePageViewModel _model;
 
     public UsagePageViewModelTests()
     {
         _monitor = new UsageMonitor(_source, new UsageMonitorOptions { Delay = (_, ct) => Task.Delay(Timeout.Infinite, ct), RefreshGap = TimeSpan.Zero });
-        _model = new UsagePageViewModel(_monitor, _settings, work => work(), log: null, new FixedTime(), CultureInfo.InvariantCulture);
+        _service = new SettingsService(_settings);
+        _model = new UsagePageViewModel(_monitor, _service, work => work(), log: null, new FixedTime(), CultureInfo.InvariantCulture);
     }
 
     public void Dispose()
     {
         _model.Dispose();
+        _service.Dispose();
         _monitor.Dispose();
     }
 
@@ -172,13 +176,40 @@ public sealed class UsagePageViewModelTests : IDisposable
     public async Task TurningItOnKeepsTheOtherSettings()
     {
         await Start(enabled: false);
-        _settings.Current = _settings.Current with { LaunchAtStartup = true, Appearance = new AppearanceSettings { ReduceMotion = true } };
+        // Another writer (the Settings window) changed other things first; turning Usage on goes on top of them.
+        Assert.True((await _service.UpdateAsync(s => s with { LaunchAtStartup = true, Appearance = new AppearanceSettings { ReduceMotion = true } }, Ct)).IsSuccess);
 
         ((ICommand)_model.ToggleEnabledCommand).Execute(null);
         await WaitFor(() => _model.IsEnabled);
 
         Assert.True(_settings.Current.LaunchAtStartup);
         Assert.True(_settings.Current.Appearance.ReduceMotion);
+    }
+
+    [Fact]
+    public async Task AResetMadeInTheSettingsWindowTurnsThePageOffAndStopsTheMonitor()
+    {
+        await Start(enabled: true);
+        await WaitFor(() => _model.ShowLimits);
+
+        Assert.True((await _service.ResetAsync(Ct)).IsSuccess);
+
+        Assert.True(_model.IsOff);
+        Assert.False(_model.IsEnabled);
+        Assert.False(_monitor.IsRunning);
+    }
+
+    [Fact]
+    public async Task APageThatIsAlreadyOffIgnoresAnUnrelatedChange()
+    {
+        await Start(enabled: false);
+        var raised = 0;
+        _model.PropertyChanged += (_, _) => raised++;
+
+        Assert.True((await _service.UpdateAsync(s => s with { LaunchAtStartup = true }, Ct)).IsSuccess);
+
+        Assert.Equal(0, raised);
+        Assert.True(_model.IsOff);
     }
 
     [Fact]

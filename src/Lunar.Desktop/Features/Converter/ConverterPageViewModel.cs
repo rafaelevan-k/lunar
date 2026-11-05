@@ -68,6 +68,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private bool _confirmingOverwrite;
     private ConverterStep _step = ConverterStep.Files;
     private string? _notice;
+    private string? _defaultFolder;
     private string? _errorMessage;
 
     public ConverterPageViewModel(IConversionPlanner planner, IRendererAvailability renderer, IFilePicker picker, IFolderPicker folders, ConverterQueueViewModel queue, Action<Action> post, IDiagnosticLog? log = null)
@@ -121,7 +122,19 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>The format that will be used, or null when no listed file can become any format.</summary>
     public FileFormat? SelectedFormat => _selected;
 
-    /// <summary>The folder the results go to for now: the folder of the first listed file. Choosing another is part of the options (FE-21).</summary>
+    /// <summary>
+    /// The folder the user saved in Settings for converted files (ADR-0016), or null for "next to the originals". A folder chosen on this page
+    /// still wins for this run of the page. UI thread only.
+    /// </summary>
+    public void SetDefaultOutputFolder(string? folder)
+    {
+        if (_disposed || string.Equals(_defaultFolder, folder, StringComparison.Ordinal))
+            return;
+        _defaultFolder = folder;
+        Changed();
+    }
+
+    /// <summary>The folder the results go to for now: a folder chosen here, else the one saved in Settings, else the folder of the first listed file (FE-21).</summary>
     public string OutputFolder { get; private set; } = string.Empty;
 
     public string SummaryText { get; private set; } = string.Empty;
@@ -512,7 +525,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private void Changed()
     {
         IsConfirmingOverwrite = false; // what was asked about is no longer what is on the page
-        OutputFolder = Options.ChosenFolder ?? (_items.Count == 0 ? string.Empty : FolderOf(_items[0].FullPath));
+        OutputFolder = Options.ChosenFolder ?? _defaultFolder ?? (_items.Count == 0 ? string.Empty : FolderOf(_items[0].FullPath));
         Raise(nameof(OutputFolder));
         Raise(nameof(IsEmpty));
         Raise(nameof(HasItems));

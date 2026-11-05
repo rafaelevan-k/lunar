@@ -104,7 +104,7 @@ public sealed class UsagePageTests
             Settings.Current = Lunar.Application.Settings.Models.LunarSettings.Defaults with { Usage = new Lunar.Application.Settings.Models.UsageSettings { Enabled = enabled } };
             Monitor = new UsageMonitor(Source, new UsageMonitorOptions { Delay = (_, ct) => Task.Delay(Timeout.Infinite, ct), RefreshGap = TimeSpan.Zero });
             Model = new UsagePageViewModel(
-                Monitor, Settings,
+                Monitor, new Lunar.Application.Settings.SettingsService(Settings),
                 work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); },
                 log: null, new UsagePageViewModelTests.FixedTime(), CultureInfo.InvariantCulture);
             Page = new UsagePage { DataContext = Model };

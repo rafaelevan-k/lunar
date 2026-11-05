@@ -21,8 +21,8 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
     private static readonly TimeSpan FadeIn = TimeSpan.FromMilliseconds(150);
 
     private readonly IWindowEnvironment _environment;
-    private readonly IslandSettings _preference;
-    private readonly bool _reduceMotion;
+    private IslandSettings _preference;
+    private bool _reduceMotion;
     private readonly IDiagnosticLog? _log;
     private ResetToastWindow? _window;
     private bool _disposed;
@@ -35,6 +35,14 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
         _preference = preference;
         _reduceMotion = reduceMotion;
         _log = log;
+    }
+
+    /// <summary>The user changed the display or the motion setting (ADR-0016); the next pop-up uses them. UI thread only.</summary>
+    internal void Update(IslandSettings preference, bool reduceMotion)
+    {
+        ArgumentNullException.ThrowIfNull(preference);
+        _preference = preference;
+        _reduceMotion = reduceMotion;
     }
 
     public event Action? CloseRequested;

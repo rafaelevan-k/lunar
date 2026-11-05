@@ -882,6 +882,58 @@ public sealed class ConverterPageViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheFolderSavedInSettingsIsUsedUntilOneIsChosenHere()
+    {
+        var saved = Directory.CreateDirectory(Path.Combine(_root, "saved")).FullName;
+        var chosen = Directory.CreateDirectory(Path.Combine(_root, "chosen")).FullName;
+        var model = await PageWith(FileFormat.Jpg, Png("a.png"));
+        Assert.Equal(_root, model.OutputFolder); // no saved folder: next to the original
+
+        model.SetDefaultOutputFolder(saved);
+        await model.WhenCheckedAsync();
+        Assert.Equal(saved, model.OutputFolder);
+        Assert.Equal(saved, model.CurrentRequest!.OutputDirectory);
+
+        _folders.Answer = chosen;
+        model.ChooseFolderCommand.Execute(null);
+        await model.WhenCheckedAsync();
+        Assert.Equal(chosen, model.OutputFolder); // a folder chosen on the page wins
+
+        model.SetDefaultOutputFolder(null);
+        await model.WhenCheckedAsync();
+        Assert.Equal(chosen, model.OutputFolder); // clearing the saved one does not undo the page's own choice
+    }
+
+    [Fact]
+    public async Task ClearingTheSavedFolderGoesBackToNextToTheOriginals()
+    {
+        var saved = Directory.CreateDirectory(Path.Combine(_root, "saved")).FullName;
+        var model = await PageWith(FileFormat.Jpg, Png("a.png"));
+        model.SetDefaultOutputFolder(saved);
+        await model.WhenCheckedAsync();
+
+        model.SetDefaultOutputFolder(null);
+        await model.WhenCheckedAsync();
+
+        Assert.Equal(_root, model.OutputFolder);
+    }
+
+    [Fact]
+    public async Task TheSameSavedFolderTwiceDoesNotCheckTheListAgain()
+    {
+        var saved = Directory.CreateDirectory(Path.Combine(_root, "saved")).FullName;
+        var model = await PageWith(FileFormat.Jpg, Png("a.png"));
+        model.SetDefaultOutputFolder(saved);
+        await model.WhenCheckedAsync();
+        var raised = 0;
+        model.PropertyChanged += (_, _) => raised++;
+
+        model.SetDefaultOutputFolder(saved);
+
+        Assert.Equal(0, raised);
+    }
+
+    [Fact]
     public async Task ACancelledOrFailedFolderDialogChangesNothing()
     {
         var model = await PageWith(FileFormat.Jpg, Png("a.png"));

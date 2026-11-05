@@ -65,6 +65,9 @@ public partial class SwiperView : UserControl
     /// <summary>The strip's resting horizontal position, for tests.</summary>
     internal double StripX => StripOffset.X;
 
+    /// <summary>The motion setting changed (ADR-0016): the next page change slides or jumps accordingly.</summary>
+    public void SetReduceMotion(bool reduceMotion) => _reduceMotion = reduceMotion;
+
     /// <summary>Sets the pages and the model they follow. Call once, before the view is shown.</summary>
     public void Initialize(PageNavigationViewModel navigation, IReadOnlyList<FrameworkElement> pages, bool reduceMotion)
     {

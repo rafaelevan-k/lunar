@@ -112,6 +112,27 @@ public sealed class IslandTransitionControllerTests
     });
 
     [Fact]
+    public void TheMotionSettingCanChangeBetweenTwoTransitions() => RunOnSta(() =>
+    {
+        using var rig = Start(reduceMotion: false);
+        rig.Transition.SetReduceMotion(true);
+
+        rig.ViewModel.Toggle();
+
+        Assert.Equal(380d, rig.Pill.Width); // placed at once: reduced motion now applies
+        Assert.False(rig.Pill.HasAnimatedProperties);
+        Pump(() => rig.ViewModel.State == IslandVisualState.Expanded, 1000);
+        Assert.Equal(IslandVisualState.Expanded, rig.ViewModel.State);
+
+        rig.Transition.SetReduceMotion(false);
+        rig.ViewModel.Toggle();
+
+        Assert.True(rig.Pill.HasAnimatedProperties); // and now it glides again
+        Pump(() => rig.ViewModel.State == IslandVisualState.Idle, 3000);
+        Assert.Equal(IslandVisualState.Idle, rig.ViewModel.State);
+    });
+
+    [Fact]
     public void AnimatedExpansionAndCollapseRunToTheirEndStates() => RunOnSta(() =>
     {
         using var rig = Start(reduceMotion: false);

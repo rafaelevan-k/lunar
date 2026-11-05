@@ -89,6 +89,32 @@ public sealed class TrayControllerTests
     });
 
     [Fact]
+    public void SettingsIsEnabledAndOpensTheWindowOnceWhenItHasSomewhereToGo() => RunOnSta(() =>
+    {
+        var opened = 0;
+        using var tray = new TrayController(() => { }, () => { }, visible: false, openSettings: () => opened++);
+
+        Assert.True(tray.SettingsItem.Enabled);
+        Assert.False(tray.StartupItem.Enabled); // Start with Windows still waits for the installer (BE-29)
+
+        tray.SettingsItem.PerformClick();
+
+        Assert.Equal(1, opened);
+    });
+
+    [Fact]
+    public void SettingsStopsCallingAfterDispose() => RunOnSta(() =>
+    {
+        var opened = 0;
+        var tray = new TrayController(() => { }, () => { }, visible: false, openSettings: () => opened++);
+
+        tray.Dispose();
+        tray.SettingsItem.PerformClick();
+
+        Assert.Equal(0, opened);
+    });
+
+    [Fact]
     public void DisposeIsIdempotentAndStopsCallbacks() => RunOnSta(() =>
     {
         var exited = 0;

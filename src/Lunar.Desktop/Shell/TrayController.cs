@@ -5,8 +5,8 @@ namespace Lunar.Desktop.Shell;
 
 /// <summary>
 /// Notification-area icon and its context menu. Owns exactly one icon, removes it when disposed, and only
-/// raises the callbacks it is given: it holds no application logic. "Settings" and "Start with Windows" are
-/// shown disabled because their features do not exist yet (FE-23 and BE-29); they are not faked.
+/// raises the callbacks it is given: it holds no application logic. "Settings" opens the Settings window (FE-23) and "Start with Windows" is
+/// shown disabled because that feature does not exist yet (BE-29); it is not faked.
 /// </summary>
 internal sealed class TrayController : IDisposable
 {
@@ -14,15 +14,18 @@ internal sealed class TrayController : IDisposable
 
     private readonly Action _open;
     private readonly Action _exit;
+    private readonly Action? _openSettings;
     private readonly Icon _iconImage;
     private readonly Forms.ContextMenuStrip _menu;
     private readonly Forms.NotifyIcon _icon;
 
     /// <param name="visible">False only in tests, so no icon appears in the user's notification area.</param>
-    internal TrayController(Action open, Action exit, bool visible = true)
+    /// <param name="openSettings">Opens the Settings window; when null the item stays disabled and says so.</param>
+    internal TrayController(Action open, Action exit, bool visible = true, Action? openSettings = null)
     {
         _open = open;
         _exit = exit;
+        _openSettings = openSettings;
 
         using var stream = typeof(TrayController).Assembly.GetManifestResourceStream(IconResource)
             ?? throw new InvalidOperationException("The tray icon resource is missing.");
@@ -31,8 +34,8 @@ internal sealed class TrayController : IDisposable
         OpenItem = new Forms.ToolStripMenuItem("&Open");
         SettingsItem = new Forms.ToolStripMenuItem("&Settings")
         {
-            Enabled = false,
-            ToolTipText = "Settings are not available yet."
+            Enabled = openSettings is not null,
+            ToolTipText = openSettings is null ? "Settings are not available yet." : "Open the Settings window."
         };
         StartupItem = new Forms.ToolStripMenuItem("Start with &Windows")
         {
@@ -43,6 +46,7 @@ internal sealed class TrayController : IDisposable
         ExitItem = new Forms.ToolStripMenuItem("E&xit");
 
         OpenItem.Click += OnOpen;
+        SettingsItem.Click += OnSettings;
         ExitItem.Click += OnExit;
 
         _menu = new Forms.ContextMenuStrip { ShowItemToolTips = true };
@@ -75,6 +79,7 @@ internal sealed class TrayController : IDisposable
         _icon.Visible = false;
         _icon.MouseClick -= OnIconClick;
         OpenItem.Click -= OnOpen;
+        SettingsItem.Click -= OnSettings;
         ExitItem.Click -= OnExit;
         _icon.Dispose();
         _menu.Dispose();
@@ -88,6 +93,8 @@ internal sealed class TrayController : IDisposable
     }
 
     private void OnOpen(object? sender, EventArgs e) => _open();
+
+    private void OnSettings(object? sender, EventArgs e) => _openSettings?.Invoke();
 
     private void OnExit(object? sender, EventArgs e) => _exit();
 }

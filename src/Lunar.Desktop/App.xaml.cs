@@ -8,6 +8,7 @@ using Lunar.Application.Abstractions.System;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
+using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Usage;
 using Lunar.Conversion.Pipeline;
@@ -15,10 +16,12 @@ using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Features.MediaControls;
+using Lunar.Desktop.Features.Settings;
 using Lunar.Desktop.Features.SystemControls;
 using Lunar.Desktop.Features.Usage;
 using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
+using Lunar.Desktop.Themes;
 using Lunar.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -55,6 +58,11 @@ public partial class App : System.Windows.Application
     private UsagePageViewModel? _usage;
     private UsageLifetime? _usageLifetime;
     private UsageResetNotifier? _resetToasts;
+    private ResetToastPresenter? _toastPresenter;
+    private SettingsService? _settingsService;
+    private ThemeApplier? _theme;
+    private SettingsApplier? _settingsApplier;
+    private SettingsWindowLauncher? _settingsWindow;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -78,9 +86,6 @@ public partial class App : System.Windows.Application
 
     private async Task StartAsync()
     {
-        if (SystemParameters.HighContrast)
-            Resources.MergedDictionaries[0] = new ResourceDictionary { Source = new Uri("Themes/Colors.HighContrast.xaml", UriKind.Relative) };
-
         _services = ServiceRegistration.BuildServiceProvider();
         _log = _services.GetRequiredService<IDiagnosticLog>();
         _instance = _services.GetRequiredService<IInstanceCoordinator>();
@@ -105,19 +110,30 @@ public partial class App : System.Windows.Application
         }
 
         // Settings never block startup: an unreadable file means defaults (the repository already logged why).
-        var loaded = await _services.GetRequiredService<ISettingsRepository>().LoadAsync(_lifetime.Token);
+        _settingsService = _services.GetRequiredService<SettingsService>();
+        await _settingsService.LoadAsync(_lifetime.Token);
         if (_services is null)
             return; // shut down while the file was being read
-        var settings = loaded.IsSuccess ? loaded.Value.Settings : LunarSettings.Defaults;
+        var settings = _settingsService.Current;
+        Action<Action> toUi = work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); };
+
+        // The palette (dark, light, Windows' choice, High Contrast) is in place before any view exists, so nothing flashes the wrong colours.
+        _theme = new ThemeApplier(
+            Resources,
+            _services.GetRequiredService<ISystemThemeSource>(),
+            () => SystemParameters.HighContrast,
+            name => new ResourceDictionary { Source = new Uri("Themes/" + name, UriKind.Relative) },
+            toUi);
+        _theme.Apply(settings.Appearance.Theme);
 
         var viewModel = _services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
-        // Motion is off when the Lunar setting says so, when idle eye animation is disabled, or when Windows has
-        // "Show animations" turned off. Read once at startup.
-        var motionOff = settings.Appearance.ReduceMotion || !settings.Appearance.EyeAnimationEnabled || !SystemParameters.ClientAreaAnimation;
+        // Interface motion (slides, fades, confetti) is off when the Lunar setting says so or Windows has "Show animations" off; the eyes
+        // also stop when idle eye animation is disabled. The same rule is applied again whenever the setting changes (SettingsApplier).
+        var motionOff = MotionPolicy.InterfaceMotionOff(settings.Appearance, SystemParameters.ClientAreaAnimation);
         _eyes = new EyeAnimationController(new DispatcherOneShotTimer(), SystemRandomSource.Instance, TimeProvider.System)
         {
-            ReduceMotion = motionOff
+            ReduceMotion = MotionPolicy.EyeMotionOff(settings.Appearance, SystemParameters.ClientAreaAnimation)
         };
         eyesView.Attach(_eyes);
         _eyes.Start();
@@ -139,7 +155,6 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<SeekMedia>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log);
-        Action<Action> toUi = work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); };
         _converterQueue = new ConverterQueueViewModel(
             _services.GetRequiredService<StartConversion>(),
             _services.GetRequiredService<IConversionQueue>(),
@@ -160,7 +175,7 @@ public partial class App : System.Windows.Application
         pages[2] = new ConverterPage { DataContext = _converter };
         _usage = new UsagePageViewModel(
             _services.GetRequiredService<UsageMonitor>(),
-            _services.GetRequiredService<ISettingsRepository>(),
+            _settingsService,
             toUi,
             _log);
         pages[3] = new UsagePage { DataContext = _usage };
@@ -183,14 +198,41 @@ public partial class App : System.Windows.Application
         // A limit that resets gets a small pop-up at the bottom right; Escape in the island closes it (it never takes focus itself).
         _resetToasts = new UsageResetNotifier(
             _services.GetRequiredService<UsageMonitor>(),
-            new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log),
+            _toastPresenter = new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log),
             new DispatcherOneShotTimer(),
             new DispatcherOneShotTimer(),
             toUi);
         _window.PreviewKeyDown += OnIslandPreviewKeyDown;
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
-        _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
+        // Settings: its own window from the tray, and every saved change takes effect at once (ADR-0016). The same Apply runs now for the saved values.
+        _settingsWindow = new SettingsWindowLauncher(
+            _settingsService,
+            _services.GetRequiredService<IWindowEnvironment>(),
+            _services.GetRequiredService<IFolderPicker>(),
+            toUi,
+            _services.GetRequiredService<DiagnosticsRun>().Enabled,
+            _log);
+        _settingsApplier = new SettingsApplier(
+            _settingsService,
+            toUi,
+            () => SystemParameters.ClientAreaAnimation,
+            _theme,
+            island => _position?.UpdatePreference(island),
+            (island, off) => _toastPresenter?.Update(island, off),
+            off =>
+            {
+                _shell?.SetReduceMotion(off);
+                _transition?.SetReduceMotion(off);
+            },
+            off =>
+            {
+                if (_eyes is not null)
+                    _eyes.ReduceMotion = off;
+            },
+            folder => _converter?.SetDefaultOutputFolder(folder));
+        _settingsApplier.Apply(settings);
+        _tray = new TrayController(_window.OpenForKeyboard, Shutdown, openSettings: _settingsWindow.Show);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
@@ -240,6 +282,10 @@ public partial class App : System.Windows.Application
         _lifetime.Cancel();
         if (_instance is not null)
             _instance.ActivationRequested -= OnActivationRequested;
+        _settingsApplier?.Dispose();
+        _settingsApplier = null;
+        _settingsWindow?.Dispose();
+        _settingsWindow = null;
         _tray?.Dispose();
         _tray = null;
         _transition?.Dispose();
@@ -276,6 +322,10 @@ public partial class App : System.Windows.Application
         _instance = null;
         _log?.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.exit", "App", "Exit",
             Duration: _uptime.Elapsed));
+        _theme?.Dispose();
+        _theme = null;
+        _toastPresenter = null;
+        _settingsService = null;
         _services?.Dispose();
         _services = null;
         _log = null;

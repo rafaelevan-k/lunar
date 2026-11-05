@@ -23,7 +23,7 @@ public sealed class IslandTransitionController : IDisposable
 
     private readonly IslandWindow _window;
     private readonly IslandViewModel _viewModel;
-    private readonly bool _reduceMotion;
+    private bool _reduceMotion;
     private bool _disposed;
 
     public IslandTransitionController(IslandWindow window, IslandViewModel viewModel, bool reduceMotion)
@@ -35,6 +35,9 @@ public sealed class IslandTransitionController : IDisposable
         _reduceMotion = reduceMotion;
         _viewModel.PropertyChanged += OnViewModelChanged;
     }
+
+    /// <summary>The motion setting changed (ADR-0016); the next transition follows it. UI thread only.</summary>
+    internal void SetReduceMotion(bool reduceMotion) => _reduceMotion = reduceMotion;
 
     public void Dispose()
     {
