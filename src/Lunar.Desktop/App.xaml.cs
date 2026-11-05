@@ -54,6 +54,7 @@ public partial class App : System.Windows.Application
     private ConverterBusyLink? _converterBusy;
     private UsagePageViewModel? _usage;
     private UsageLifetime? _usageLifetime;
+    private UsageResetNotifier? _resetToasts;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -180,6 +181,14 @@ public partial class App : System.Windows.Application
         _clockLifetime = new ClockLifetime(viewModel, _system);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
         _usageLifetime = new UsageLifetime(viewModel, _usage);
+        // A limit that resets gets a small pop-up at the bottom right; Escape in the island closes it (it never takes focus itself).
+        _resetToasts = new UsageResetNotifier(
+            _services.GetRequiredService<UsageMonitor>(),
+            new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log),
+            new DispatcherOneShotTimer(),
+            new DispatcherOneShotTimer(),
+            toUi);
+        _window.PreviewKeyDown += OnIslandPreviewKeyDown;
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
@@ -193,6 +202,12 @@ public partial class App : System.Windows.Application
             _media.InitializeAsync(_lifetime.Token),
             _usage.InitializeAsync(_lifetime.Token),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
+    }
+
+    private void OnIslandPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Escape && _resetToasts?.Dismiss() == true)
+            e.Handled = true;
     }
 
     // Raised on a thread-pool thread by the coordinator; the window must be touched on the Dispatcher.
@@ -215,6 +230,8 @@ public partial class App : System.Windows.Application
         _clockLifetime = null;
         _mediaLifetime?.Dispose();
         _mediaLifetime = null;
+        _resetToasts?.Dispose();
+        _resetToasts = null;
         _usageLifetime?.Dispose();
         _usageLifetime = null;
         _usage?.Dispose();

@@ -1,0 +1,58 @@
+<Window x:Class="Lunar.Desktop.Features.Usage.ResetToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        Title="Claude limit reset"
+        Width="320" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        WindowStartupLocation="Manual" UseLayoutRounding="True"
+        automation:AutomationProperties.Name="{Binding AutomationName}">
+  <!--
+    FE-28: the "limit reset" pop-up. A small cream card with the orange accent (the Usage palette, tokens only; Windows colors in
+    High Contrast). It never takes focus (WS_EX_NOACTIVATE is applied by the code-behind), so it cannot interrupt typing. A click
+    anywhere on the card closes it; hovering keeps it open. Everything is DynamicResource so the palette can be attached afterwards.
+  -->
+  <Border x:Name="Card" Background="{DynamicResource Usage.Brush.Card}" BorderBrush="{DynamicResource Usage.Brush.Fill}" BorderThickness="2"
+          CornerRadius="16" Padding="12,10" Cursor="Hand">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <!-- A check mark in an orange disc: the symbol that says "reset" without relying on color. -->
+      <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="{DynamicResource Usage.Brush.Fill}" VerticalAlignment="Top">
+        <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource Usage.Brush.OnFill}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+      </Border>
+
+      <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
+        <TextBlock x:Name="TitleText" Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"
+                   FontFamily="{DynamicResource Lunar.Font.Family}" FontSize="{DynamicResource Lunar.Font.Size.Body}"
+                   Foreground="{DynamicResource Usage.Brush.Ink}" />
+        <TextBlock x:Name="MessageText" Text="{Binding Message}" TextWrapping="Wrap" Margin="0,2,0,0"
+                   FontFamily="{DynamicResource Lunar.Font.Family}" FontSize="{DynamicResource Lunar.Font.Size.Body}"
+                   Foreground="{DynamicResource Usage.Brush.Ink}" />
+      </StackPanel>
+
+      <Button x:Name="CloseButton" Grid.Column="2" VerticalAlignment="Top" Width="24" Height="24" Padding="0" Cursor="Hand"
+              Click="OnCloseClick" automation:AutomationProperties.Name="Close" Foreground="{DynamicResource Usage.Brush.Muted}">
+        <Button.Template>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Face" CornerRadius="12" Background="Transparent" BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="0">
+              <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" HorizontalAlignment="Center"
+                         VerticalAlignment="Center" Foreground="{DynamicResource Usage.Brush.Ink}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderThickness" Value="1" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Button.Template>
+      </Button>
+    </Grid>
+  </Border>
+</Window>
