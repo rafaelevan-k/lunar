@@ -109,12 +109,14 @@ public sealed class ConversionEndToEndTests : IDisposable
     }
 
     [Fact]
-    public async Task TheUsageSourceAndTokenStoreAreInTheContainerAndAskNothingUntilUsed()
+    public async Task TheUsageSourceAndTheClaudeCodeLoginReaderAreInTheContainerAndAskNothingUntilUsed()
     {
         using var services = ServiceRegistration.BuildServiceProvider(s => s.AddSingleton<IDiagnosticLog>(new NullLog()));
 
         var store = services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageTokenStore>();
-        Assert.Same(store, services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageCredentialSource>());
+        // ADR-0015: the credential is the user's own Claude Code sign-in; the old token store stays only so the token pasted earlier can be deleted.
+        Assert.IsType<Lunar.Infrastructure.Usage.ClaudeCodeCredentialSource>(services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageCredentialSource>());
+        Assert.NotNull(store);
         Assert.NotNull(services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageSource>());
         Assert.Equal(Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath, Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath);
 

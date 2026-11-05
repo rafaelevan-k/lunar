@@ -240,6 +240,67 @@ public sealed class AnthropicUsageSourceTests
         Assert.DoesNotContain("details", result.Error.SafeMessage, StringComparison.Ordinal); // the reply text is never shown
     }
 
+    [Theory]
+    [InlineData(401, "error 401", "pasted the whole token")]
+    [InlineData(403, "error 403", "may not have that permission")]
+    public async Task ARefusedTokenSaysWhichRefusalItWasAndWhatToTry(int status, string code, string advice)
+    {
+        var handler = new Handler((_, _) => Task.FromResult(Json("""{"error":"details"}""", (HttpStatusCode)status)));
+
+        var result = await Source(handler).FetchAsync(Ct);
+
+        Assert.Equal(ErrorCode.AccessDenied, result.Error!.Code);
+        Assert.Contains(code, result.Error.SafeMessage, StringComparison.Ordinal); // the number only, never the reply text
+        Assert.Contains(advice, result.Error.SafeMessage, StringComparison.Ordinal);
+        var other = await Source(new Handler((_, _) => Task.FromResult(Json("{}", status == 401 ? HttpStatusCode.Forbidden : HttpStatusCode.Unauthorized)))).FetchAsync(Ct);
+        Assert.NotEqual(other.Error!.SafeMessage, result.Error.SafeMessage); // the two refusals are told apart
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    public async Task AReplyThatSaysTheScopeIsMissingGetsAPlainAnswerAndNeverShowsTheReplyText(int status)
+    {
+        var handler = new Handler((_, _) => Task.FromResult(Json("""{"type":"error","error":{"type":"permission_error","message":"OAuth token does not meet scope requirement user:profile"}}""", (HttpStatusCode)status)));
+
+        var result = await Source(handler).FetchAsync(Ct);
+
+        Assert.Equal(ErrorCode.AccessDenied, result.Error!.Code);
+        Assert.False(result.Error.Retryable);
+        Assert.Contains("not allowed to read usage limits", result.Error.SafeMessage, StringComparison.Ordinal);
+        Assert.Contains($"error {status}", result.Error.SafeMessage, StringComparison.Ordinal);
+        Assert.Contains("a new one will not change this", result.Error.SafeMessage, StringComparison.Ordinal);
+        Assert.DoesNotContain("user:profile", result.Error.SafeMessage, StringComparison.Ordinal); // Claude's own words are not shown
+        Assert.DoesNotContain("permission_error", result.Error.SafeMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ARefusalWithoutAScopeHintKeepsTheGeneralAnswerAndABodyThatCannotBeReadIsNotAProblem()
+    {
+        var plain = new Handler((_, _) => Task.FromResult(Json("""{"error":"nope"}""", HttpStatusCode.Unauthorized)));
+        var broken = new Handler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new ThrowingContent() }));
+
+        var a = await Source(plain).FetchAsync(Ct);
+        var b = await Source(broken).FetchAsync(Ct);
+
+        Assert.Contains("did not accept this token", a.Error!.SafeMessage, StringComparison.Ordinal);
+        Assert.Equal(ErrorCode.AccessDenied, b.Error!.Code);
+        Assert.Contains("knows this token", b.Error.SafeMessage, StringComparison.Ordinal);
+    }
+
+    private sealed class ThrowingContent : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context) => throw new IOException("cut");
+
+        protected override Task<Stream> CreateContentReadStreamAsync() => throw new IOException("cut");
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = -1;
+            return false;
+        }
+    }
+
     [Fact]
     public async Task NoNetworkIsRetryableAndSaysNothingAboutWhy()
     {

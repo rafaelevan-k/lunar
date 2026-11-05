@@ -93,7 +93,7 @@ public sealed class AnthropicUsageSource : IUsageSource, IDisposable
 
             using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                return Failed(response.StatusCode);
+                return await FailedAsync(response, linked.Token).ConfigureAwait(false);
             if (response.Content.Headers.ContentLength is > MaxReplyBytes)
                 return NotUnderstood("too_large");
 
@@ -136,14 +136,52 @@ public sealed class AnthropicUsageSource : IUsageSource, IDisposable
         return buffer.ToArray();
     }
 
+    private async Task<Result<UsageSnapshot>> FailedAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        var status = response.StatusCode;
+        if ((int)status is 401 or 403 && await ReplyMentionsMissingScopeAsync(response, ct).ConfigureAwait(false))
+        {
+            // Claude itself says the token lacks the permission (scope) for this address: no new token of the same kind can fix that.
+            Log(DiagnosticLevel.Warning, "usage.request.scope_missing", ErrorCode.AccessDenied);
+            return Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied,
+                $"Claude says this token is not allowed to read usage limits (error {(int)status}). A token from \"claude setup-token\" can only run Claude, so a new one will not change this."));
+        }
+
+        return Failed(status);
+    }
+
+    // Looks at the first few KB of the refusal for the word "scope" or "user:profile". The text is never kept, shown or logged; only the yes or no is used.
+    private static async Task<bool> ReplyMentionsMissingScopeAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        try
+        {
+            await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            var buffer = new byte[4096];
+            var total = 0;
+            int read;
+            while (total < buffer.Length && (read = await stream.ReadAsync(buffer.AsMemory(total), ct).ConfigureAwait(false)) > 0)
+                total += read;
+            var text = System.Text.Encoding.UTF8.GetString(buffer, 0, total);
+            return text.Contains("scope", StringComparison.OrdinalIgnoreCase) || text.Contains("user:profile", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is IOException or HttpRequestException or InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
     private Result<UsageSnapshot> Failed(HttpStatusCode status)
     {
         switch ((int)status)
         {
             case 401:
+                Log(DiagnosticLevel.Warning, "usage.request.refused", ErrorCode.AccessDenied);
+                return Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied,
+                    "Claude did not accept this token (error 401). Check that you pasted the whole token, or paste a new one."));
             case 403:
                 Log(DiagnosticLevel.Warning, "usage.request.refused", ErrorCode.AccessDenied);
-                return Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied, "Claude did not accept your login. Sign in to Claude again, then Lunar will retry."));
+                return Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied,
+                    "Claude knows this token but does not let it read usage limits (error 403). A token from \"claude setup-token\" may not have that permission."));
             case 429:
                 Log(DiagnosticLevel.Warning, "usage.request.rate_limited", ErrorCode.DeviceUnavailable);
                 return Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.DeviceUnavailable, "Claude asked Lunar to slow down. It will try again later.", retryable: true));

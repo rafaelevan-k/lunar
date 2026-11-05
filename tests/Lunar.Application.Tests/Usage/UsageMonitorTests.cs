@@ -352,6 +352,53 @@ public sealed class UsageMonitorTests : IDisposable
         Assert.Equal(UsageStatus.SignedOut, _monitor.Current.Status);
     }
 
+    [Fact]
+    public async Task APausedMonitorTriesAgainWhenTheIslandOpensAndTheLastTryIsOldEnough()
+    {
+        // ADR-0015: the user signs in to Claude Code meanwhile; opening the island is enough to recover.
+        var paused = await StartWith(Fail(ErrorCode.AccessDenied, retryable: false));
+        Assert.Equal(Timeout.InfiniteTimeSpan, paused.Time);
+        Assert.Equal(1, _source.Calls);
+
+        _time.Advance(TimeSpan.FromSeconds(45));
+        _source.Then(Ok(Snap(_time.GetUtcNow(), 0.2, _time.GetUtcNow().AddHours(4))));
+        _monitor.SetIslandOpen(true);
+        await Until(() => _monitor.Current.Status == UsageStatus.Ready);
+
+        Assert.Equal(2, _source.Calls);
+    }
+
+    [Fact]
+    public async Task APausedMonitorDoesNotTryAgainWhenTheIslandOpensTooSoonAfterTheLastTry()
+    {
+        var paused = await StartWith(Fail(ErrorCode.AccessDenied, retryable: false));
+        Assert.Equal(Timeout.InfiniteTimeSpan, paused.Time);
+
+        _time.Advance(TimeSpan.FromSeconds(10)); // under the 30 second gap
+        _monitor.SetIslandOpen(true);
+        _monitor.SetIslandOpen(false);
+        _monitor.SetIslandOpen(true);
+        await Task.Delay(40, Ct);
+
+        Assert.Equal(1, _source.Calls);
+        Assert.Equal(UsageStatus.SignedOut, _monitor.Current.Status);
+    }
+
+    [Fact]
+    public async Task AMonitorThatIsStillRefusedStaysPausedAfterTheTryOnOpening()
+    {
+        var paused = await StartWith(Fail(ErrorCode.AccessDenied, retryable: false));
+        Assert.Equal(Timeout.InfiniteTimeSpan, paused.Time);
+
+        _time.Advance(TimeSpan.FromMinutes(1));
+        _monitor.SetIslandOpen(true);
+        await Until(() => _source.Calls == 2);
+        var again = await NextWait();
+
+        Assert.Equal(Timeout.InfiniteTimeSpan, again.Time); // refused again: paused again, no polling by itself
+        Assert.Equal(UsageStatus.SignedOut, _monitor.Current.Status);
+    }
+
     // ---- refresh ---------------------------------------------------------------------------------------------------------
 
     [Fact]

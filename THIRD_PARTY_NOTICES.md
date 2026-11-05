@@ -67,3 +67,5 @@ Every package any project resolves, from the lock files (exact versions and cont
 | xunit.runner.visualstudio, xunit.analyzers | 4.0.1, 2.2.0 | Apache-2.0 | Test only | test discovery and analyzers |
 
 Release obligations still open (BE-29/BE-30): ship license texts and notices for every Product row; the SkiaSharp native payload, the Claude brandmark and the .NET runtime redistribution terms must be cleared before any installer is published. Newer versions exist for SkiaSharp (4.154.0), Serilog (4.4.0), Microsoft.Extensions.DependencyInjection (10.0.14) and the test SDK (18.11.0); none is needed for a known advisory and none was applied (an update is a reviewed change to the table above).
+
+BE-34 (2026-11-05): no new package. The usage feature reads the user's own Claude Code sign-in file with the BCL only (ADR-0015); no Anthropic code or client identifier is copied or used.

@@ -111,7 +111,12 @@ public sealed class UsageMonitor : IDisposable
         }
     }
 
-    /// <summary>Tells the monitor whether the island is open, which sets the pace. Opening it looks at once when the last look is old enough.</summary>
+    /// <summary>
+    /// Tells the monitor whether the island is open, which sets the pace. Opening it looks at once when the last look is old enough.
+    /// A monitor paused by a refusal (no sign-in, an expired or refused login) also tries again when the island opens, at most once per
+    /// <see cref="UsageMonitorOptions.RefreshGap"/>: the user may have signed in to Claude Code meanwhile (ADR-0015), and a failed try costs no
+    /// request when the login is still missing or expired.
+    /// </summary>
     public void SetIslandOpen(bool isOpen)
     {
         lock (_gate)
@@ -119,6 +124,12 @@ public sealed class UsageMonitor : IDisposable
             if (_islandOpen == isOpen)
                 return;
             _islandOpen = isOpen;
+            if (isOpen && _paused && _run is not null && (_lastAttempt is not { } last || _time.GetUtcNow() - last >= _options.RefreshGap))
+            {
+                _paused = false;
+                _lastAttempt = null; // look now
+            }
+
             Wake();
         }
     }

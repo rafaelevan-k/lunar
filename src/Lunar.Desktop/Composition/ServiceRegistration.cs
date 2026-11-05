@@ -106,7 +106,7 @@ public static class ServiceRegistration
         // account limits with it. Nothing here runs or touches the network until a screen asks; it is created on first use.
         services.AddSingleton<DpapiUsageTokenStore>(sp => new DpapiUsageTokenStore(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IUsageTokenStore>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
-        services.AddSingleton<IUsageCredentialSource>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
+        services.AddSingleton<IUsageCredentialSource>(sp => new ClaudeCodeCredentialSource(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IUsageSource>(sp => new AnthropicUsageSource(sp.GetRequiredService<IUsageCredentialSource>(), sp.GetRequiredService<IDiagnosticLog>()));
         // The monitor that polls the source and announces resets (BE-32). Created on first use and idle until a screen calls Start.
         services.AddSingleton<UsageMonitor>(sp => new UsageMonitor(sp.GetRequiredService<IUsageSource>()));
