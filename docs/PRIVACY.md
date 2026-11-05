@@ -4,7 +4,7 @@ Status: reflects BE-07 (ADR-0009, accepted 2026-11-03). This is a development-ti
 
 ## Summary
 
-- Lunar has **no telemetry**, no update check and no upload of any kind. Nothing leaves your computer.
+- Lunar has **no telemetry**, no update check and no upload of your files. Nothing leaves your computer, with one opt-in exception: the Usage page (off by default, see below) contacts Anthropic, and only after you turn it on.
 - Lunar writes a small local log of **what happened**, never **what you were doing**.
 - Diagnostics (extra detail) are **off** unless you turn them on.
 
@@ -57,3 +57,13 @@ Lunar never uploads logs. A way to export logs for support would need its own re
 ## Temporary conversion files
 
 While a file is being converted, Lunar works in a private temporary folder under `%LocalAppData%\Lunar\Temp\` named only by a random identifier, and writes the finished result to the folder you chose in one step at the end (as a temporary copy that is then renamed, so a result is either missing or complete). The temporary folder holds copies of the results in progress and a short list of the temporary file paths Lunar created in your folder, so they can be removed if Lunar is closed in the middle of a conversion. It is deleted when the conversion ends, and anything left by a crash is deleted the next time Lunar starts. None of this is sent anywhere or written to the log. Your original files are only read, never changed.
+
+## Usage page (opt-in, FE-27, ADR-0014)
+
+The fourth page shows your Claude 5-hour and weekly limits. It is **off until you turn it on** with the switch on that page, which says what it does first.
+
+- **What is sent, and where:** once on, Lunar asks Anthropic's usage address (`api.anthropic.com`) over HTTPS for your limits, using a token you paste. A request goes out about every 5 minutes while the island is open and about every 15 minutes while it is closed, with a longer wait after errors. Nothing else is sent: no file, no device or Lunar information beyond what an HTTPS request carries. The address is not documented by Anthropic and may change or stop working; the page then says it cannot read the limits.
+- **The token:** you paste it into a masked field (the token that `claude setup-token` prints). It is stored only on this PC, in `%LocalAppData%\Lunar\usage-token.dat`, encrypted with Windows DPAPI for your Windows user (other users and other PCs cannot read it). It is never shown again, never written to the log, never part of settings, and sent only to Anthropic. **Remove token** deletes it for good; turning the switch off stops all requests and keeps the token until you remove it. This is a deliberate exception to "passwords only in memory", chosen by the user.
+- **What is kept:** the reading is held in memory only to draw the page and to notice a reset; nothing about your usage is written to disk. A reset that happens while Lunar is closed is therefore not announced.
+- **Settings:** the switch is saved as `usage.enabled` in `settings.json` (a yes/no only).
+- **Logs:** only fixed event names and an error category (for example `usage.token.save.failed`), never the token, the address's reply or your figures.

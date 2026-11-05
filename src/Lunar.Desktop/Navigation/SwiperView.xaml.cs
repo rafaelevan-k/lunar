@@ -10,7 +10,7 @@ using System.Windows.Media.Animation;
 namespace Lunar.Desktop.Navigation;
 
 /// <summary>
-/// The three-page swiper (FE-11): pages side by side that follow a mouse or touch drag, with arrow buttons, page dots,
+/// The four-page swiper (FE-11): pages side by side that follow a mouse or touch drag, with arrow buttons, page dots,
 /// arrow keys and a touchpad's horizontal swipe. The decisions (how far to move, which page to land on) are in
 /// <see cref="SwipeRules"/> and <see cref="SwiperController"/>; this class turns pointer and key events into them and
 /// draws the result.

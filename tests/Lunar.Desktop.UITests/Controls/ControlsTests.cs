@@ -511,7 +511,7 @@ public sealed class ControlsTests
     public void TheIslandShellShowsItsViewModelErrorInlineAndDismissClearsIt() => RunOnSta(() =>
     {
         var viewModel = new IslandViewModel();
-        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter"]);
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Usage"]);
         var swiper = new Lunar.Desktop.Navigation.SwiperView();
         var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
         var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: true);

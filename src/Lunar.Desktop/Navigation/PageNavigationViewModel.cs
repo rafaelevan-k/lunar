@@ -11,12 +11,12 @@ namespace Lunar.Desktop.Navigation;
 /// </summary>
 public sealed class PageNavigationViewModel : INotifyPropertyChanged
 {
-    public const int PageCount = 3;
+    public const int PageCount = 4;
 
     private readonly string[] _titles;
     private int _selectedIndex;
 
-    /// <param name="titles">Exactly three page titles, used for accessible names.</param>
+    /// <param name="titles">Exactly four page titles, used for accessible names.</param>
     public PageNavigationViewModel(IReadOnlyList<string> titles)
     {
         ArgumentNullException.ThrowIfNull(titles);

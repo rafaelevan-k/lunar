@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- High contrast: the Usage page uses the user's Windows colors and not the brand colors, as the rest of the island does. -->
+  <x:Static x:Key="Usage.Color.Card" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Usage.Color.Logo" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Usage.Color.Ink" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Usage.Color.Muted" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Usage.Color.Track" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Usage.Color.Fill" Member="SystemColors.HighlightColor" />
+  <x:Static x:Key="Usage.Color.OnFill" Member="SystemColors.HighlightTextColor" />
+  <x:Static x:Key="Usage.Color.Error" Member="SystemColors.WindowTextColor" />
+
+  <SolidColorBrush x:Key="Usage.Brush.Card" Color="{StaticResource Usage.Color.Card}" />
+  <SolidColorBrush x:Key="Usage.Brush.Logo" Color="{StaticResource Usage.Color.Logo}" />
+  <SolidColorBrush x:Key="Usage.Brush.Ink" Color="{StaticResource Usage.Color.Ink}" />
+  <SolidColorBrush x:Key="Usage.Brush.Muted" Color="{StaticResource Usage.Color.Muted}" />
+  <SolidColorBrush x:Key="Usage.Brush.Track" Color="{StaticResource Usage.Color.Track}" />
+  <SolidColorBrush x:Key="Usage.Brush.Fill" Color="{StaticResource Usage.Color.Fill}" />
+  <SolidColorBrush x:Key="Usage.Brush.OnFill" Color="{StaticResource Usage.Color.OnFill}" />
+  <SolidColorBrush x:Key="Usage.Brush.Error" Color="{StaticResource Usage.Color.Error}" />
+</ResourceDictionary>

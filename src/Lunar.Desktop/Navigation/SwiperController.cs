@@ -9,7 +9,7 @@ public readonly record struct SwipeResult(int TargetIndex, bool Changed);
 /// Tracks one drag gesture at a time (FE-11) and turns it into a content offset while it runs and a page choice when it
 /// ends, using <see cref="SwipeRules"/>. It has no WPF types and no clock: the caller passes pointer positions and
 /// millisecond timestamps, so every case is tested deterministically. The page itself is held by
-/// <see cref="PageNavigationViewModel"/>, whose range check keeps the index within 0 to 2.
+/// <see cref="PageNavigationViewModel"/>, whose range check keeps the index within 0 to PageCount - 1.
 /// </summary>
 public sealed class SwiperController
 {

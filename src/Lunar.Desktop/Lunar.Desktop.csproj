@@ -16,6 +16,8 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <EmbeddedResource Include="Resources\Lunar.ico" LogicalName="Lunar.Desktop.Resources.Lunar.ico" />
+    <!-- The Claude brandmark, unmodified, for the Usage page (FE-27); see THIRD_PARTY_NOTICES.md. -->
+    <Resource Include="Resources\ClaudeBrandmark.jpg" />
     <InternalsVisibleTo Include="Lunar.Desktop.UITests" />
   </ItemGroup>
   <ItemGroup>

@@ -5,15 +5,18 @@ using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Settings.Models;
+using Lunar.Application.Usage;
 using Lunar.Conversion.Pipeline;
 using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Features.MediaControls;
 using Lunar.Desktop.Features.SystemControls;
+using Lunar.Desktop.Features.Usage;
 using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
@@ -49,6 +52,8 @@ public partial class App : System.Windows.Application
     private ConverterGuardLink? _converterGuards;
     private ConverterQueueViewModel? _converterQueue;
     private ConverterBusyLink? _converterBusy;
+    private UsagePageViewModel? _usage;
+    private UsageLifetime? _usageLifetime;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -117,8 +122,8 @@ public partial class App : System.Windows.Application
         _eyes.Start();
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
-        var navigation = new PageNavigationViewModel(["System", "Media", "File converter"]);
-        // All three pages are real now (the Converter page so far chooses files and a format).
+        var navigation = new PageNavigationViewModel(["System", "Media", "File converter", "Usage"]);
+        // All four pages are real now (the Converter page so far chooses files and a format).
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -152,6 +157,13 @@ public partial class App : System.Windows.Application
         pages[0] = new SystemPage { DataContext = _system };
         pages[1] = new MediaPage { DataContext = _media };
         pages[2] = new ConverterPage { DataContext = _converter };
+        _usage = new UsagePageViewModel(
+            _services.GetRequiredService<UsageMonitor>(),
+            _services.GetRequiredService<IUsageTokenStore>(),
+            _services.GetRequiredService<ISettingsRepository>(),
+            toUi,
+            _log);
+        pages[3] = new UsagePage { DataContext = _usage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
@@ -167,6 +179,7 @@ public partial class App : System.Windows.Application
         // The clock starts and stops with the island.
         _clockLifetime = new ClockLifetime(viewModel, _system);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
+        _usageLifetime = new UsageLifetime(viewModel, _usage);
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
         _tray = new TrayController(_window.OpenForKeyboard, Shutdown);
@@ -178,6 +191,7 @@ public partial class App : System.Windows.Application
         await Task.WhenAll(
             _system.InitializeAsync(_lifetime.Token),
             _media.InitializeAsync(_lifetime.Token),
+            _usage.InitializeAsync(_lifetime.Token),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
     }
 
@@ -201,6 +215,10 @@ public partial class App : System.Windows.Application
         _clockLifetime = null;
         _mediaLifetime?.Dispose();
         _mediaLifetime = null;
+        _usageLifetime?.Dispose();
+        _usageLifetime = null;
+        _usage?.Dispose();
+        _usage = null;
         _media?.Dispose();
         _media = null;
         _converterBusy?.Dispose();

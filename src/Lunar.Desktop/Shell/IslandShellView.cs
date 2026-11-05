@@ -89,7 +89,7 @@ public sealed class IslandShellView : Grid, IDisposable
         _viewModel.PropertyChanged -= OnViewModelChanged;
     }
 
-    /// <summary>Three pages that only show their title: stand-ins until the System, Media and Converter pages exist.</summary>
+    /// <summary>One page per title that only shows the title: stand-ins that the real pages replace.</summary>
     public static IReadOnlyList<FrameworkElement> CreatePlaceholderPages(IReadOnlyList<string> titles)
     {
         ArgumentNullException.ThrowIfNull(titles);
