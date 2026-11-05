@@ -292,6 +292,29 @@ public sealed class SwiperViewTests
     });
 
     [Fact]
+    public void ArrowChevronsAreBoldDrawnShapesCentredInTheirCircle() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        rig.Window.UpdateLayout();
+        foreach (var (buttonName, chevronName) in new[] { ("PreviousButton", "PreviousChevron"), ("NextButton", "NextChevron") })
+        {
+            var button = (Button)rig.View.FindName(buttonName);
+            var chevron = (System.Windows.Shapes.Path)rig.View.FindName(chevronName);
+
+            Assert.True(chevron.StrokeThickness >= 2.2, $"{chevronName} stroke {chevron.StrokeThickness}");
+            Assert.Equal(PenLineCap.Round, chevron.StrokeStartLineCap);
+            Assert.NotNull(chevron.Stroke);
+            Assert.Null(button.Content as string);
+
+            // The chevron's box sits in the middle of the round face, both ways (within half a device pixel).
+            var centre = chevron.TranslatePoint(new Point(chevron.ActualWidth / 2, chevron.ActualHeight / 2), button);
+            Assert.InRange(centre.X, (button.ActualWidth / 2) - 0.5, (button.ActualWidth / 2) + 0.5);
+            Assert.InRange(centre.Y, (button.ActualHeight / 2) - 0.5, (button.ActualHeight / 2) + 0.5);
+            Assert.True(chevron.ActualHeight <= button.ActualHeight * 0.6);
+        }
+    });
+
+    [Fact]
     public void ArrowButtonsFollowTheNavigationAndNeverTakeFocus() => RunOnSta(() =>
     {
         using var rig = Create();

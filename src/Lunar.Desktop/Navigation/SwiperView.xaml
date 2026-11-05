@@ -39,6 +39,20 @@
       </Setter>
     </Style>
 
+    <Style x:Key="SwiperChevron" TargetType="Path">
+      <Setter Property="Width" Value="7" />
+      <Setter Property="Height" Value="13" />
+      <Setter Property="Stretch" Value="None" />
+      <Setter Property="StrokeThickness" Value="2.4" />
+      <Setter Property="StrokeStartLineCap" Value="Round" />
+      <Setter Property="StrokeEndLineCap" Value="Round" />
+      <Setter Property="StrokeLineJoin" Value="Round" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Stroke" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+    </Style>
+
     <!-- A page dot that is also an accessible tab: a radio button in one group, so the arrow keys move between pages. -->
     <Style x:Key="SwiperDot" TargetType="RadioButton">
       <Setter Property="GroupName" Value="Lunar.Pages" />
@@ -82,10 +96,15 @@
           </StackPanel.RenderTransform>
         </StackPanel>
       </Canvas>
-      <Button x:Name="PreviousButton" Style="{StaticResource SwiperArrow}" HorizontalAlignment="Left" Content="‹"
-              automation:AutomationProperties.Name="Previous page" Click="OnPreviousClick" />
-      <Button x:Name="NextButton" Style="{StaticResource SwiperArrow}" HorizontalAlignment="Right" Content="›"
-              automation:AutomationProperties.Name="Next page" Click="OnNextClick" />
+      <Button x:Name="PreviousButton" Style="{StaticResource SwiperArrow}" HorizontalAlignment="Left"
+              automation:AutomationProperties.Name="Previous page" Click="OnPreviousClick">
+        <!-- A drawn chevron (not a text glyph, whose side bearings push it off centre): its box is centred in the circle. -->
+        <Path x:Name="PreviousChevron" Style="{StaticResource SwiperChevron}" Data="M 6,1 L 1,6.5 L 6,12" />
+      </Button>
+      <Button x:Name="NextButton" Style="{StaticResource SwiperArrow}" HorizontalAlignment="Right"
+              automation:AutomationProperties.Name="Next page" Click="OnNextClick">
+        <Path x:Name="NextChevron" Style="{StaticResource SwiperChevron}" Data="M 1,1 L 6,6.5 L 1,12" />
+      </Button>
     </Grid>
 
     <StackPanel x:Name="Dots" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,8" />
