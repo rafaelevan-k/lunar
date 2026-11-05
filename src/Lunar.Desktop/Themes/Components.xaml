@@ -17,6 +17,10 @@
   <SolidColorBrush x:Key="Lunar.Brush.Error" Color="{DynamicResource Lunar.Color.Error}" />
   <SolidColorBrush x:Key="Lunar.Brush.Success" Color="{DynamicResource Lunar.Color.Success}" />
 
+  <!-- The width of every outline on a button, chip or switch. 1.6 DIP becomes a whole 2 device pixels on the common display scales (100%, 125%, 150%),
+       where a 1 DIP line of 1.25 or 1.5 pixels was drawn unevenly, thin on the straight parts and heavier on the curves. -->
+  <Thickness x:Key="Lunar.Thickness.Outline">1.6</Thickness>
+
 
   <!-- Visible keyboard focus indicator for every focusable control (PRD §3.5). -->
   <Style x:Key="Lunar.Style.FocusVisual" TargetType="Control">

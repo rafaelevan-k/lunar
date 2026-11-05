@@ -53,7 +53,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="13" Padding="{TemplateBinding Padding}" Background="{DynamicResource Usage.Brush.Fill}"
-                    BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>
@@ -75,7 +75,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="13" Padding="{TemplateBinding Padding}" Background="Transparent"
-                    BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>

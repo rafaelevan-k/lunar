@@ -23,7 +23,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="14" Background="{DynamicResource Lunar.Brush.Surface}"
-                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>

@@ -116,7 +116,7 @@
               <Rectangle x:Name="FocusRing" Margin="-3" RadiusX="14" RadiusY="14" StrokeThickness="2"
                          Stroke="{DynamicResource Lunar.Brush.Focus}" Visibility="Collapsed" />
               <Border x:Name="Track" CornerRadius="11" Background="{DynamicResource Lunar.Brush.Surface}"
-                      BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}" BorderThickness="1" />
+                      BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}" />
               <Ellipse x:Name="Knob" Width="14" Height="14" Margin="4,0" HorizontalAlignment="Left"
                        Fill="{DynamicResource Lunar.Brush.TextSecondary}" />
             </Grid>
@@ -166,7 +166,7 @@
             <Rectangle x:Name="FocusRing" Margin="-3" RadiusX="14" RadiusY="14" StrokeThickness="2"
                        Stroke="{DynamicResource Lunar.Brush.Focus}" Visibility="Collapsed" />
             <Border x:Name="Track" CornerRadius="11" Background="{DynamicResource Lunar.Brush.Surface}"
-                    BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}" BorderThickness="1" />
+                    BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}" />
             <Ellipse x:Name="Knob" Width="14" Height="14" Margin="4,0" HorizontalAlignment="Left"
                      Fill="{DynamicResource Lunar.Brush.TextSecondary}" />
           </Grid>
@@ -200,7 +200,7 @@
     <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="MinHeight" Value="28" />
-    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="Padding" Value="12,3" />
     <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.Accent}" />
     <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
     <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Body}" />
@@ -208,7 +208,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="Face" CornerRadius="14" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
-                  BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1">
+                  BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
           </Border>
           <ControlTemplate.Triggers>
@@ -240,7 +240,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="c:IconButton">
           <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}"
-                  BorderThickness="1"
+                  BorderThickness="{DynamicResource Lunar.Thickness.Outline}"
                   CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource Lunar.Converter.Stadium}}">
             <TextBlock x:Name="Icon" Text="{TemplateBinding Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center"
                        Foreground="{TemplateBinding Foreground}" FontSize="14"
@@ -320,12 +320,31 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="c:IconButton">
-          <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Accent}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1" CornerRadius="23">
-            <TextBlock x:Name="Icon" Text="{TemplateBinding Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Foreground="{TemplateBinding Foreground}" FontSize="18"
-                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol, Segoe UI" />
+          <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Accent}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1"
+                  CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource Lunar.Converter.Stadium}}">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock x:Name="Icon" Text="{TemplateBinding Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Foreground="{TemplateBinding Foreground}" FontSize="18"
+                         FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol, Segoe UI" />
+              <!-- Play and pause are drawn as solid shapes, not taken from the icon font, whose versions are thin outlines. Both are 18 DIP tall
+                   with rounded ends, and the triangle sits a little to the right so it looks centred in the circle. -->
+              <Path x:Name="PlayShape" Visibility="Collapsed" Width="17" Height="20" Margin="3,0,0,0" Stretch="Fill" StrokeLineJoin="Round" StrokeThickness="3"
+                    Fill="{TemplateBinding Foreground}" Stroke="{TemplateBinding Foreground}" Data="M 1.5,1.5 L 14,9 L 1.5,16.5 Z" />
+              <StackPanel x:Name="PauseShape" Visibility="Collapsed" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Width="5" Height="18" CornerRadius="2" Background="{TemplateBinding Foreground}" />
+                <Border Width="5" Height="18" CornerRadius="2" Margin="5,0,0,0" Background="{TemplateBinding Foreground}" />
+              </StackPanel>
+            </Grid>
           </Border>
           <ControlTemplate.Triggers>
+            <Trigger Property="Glyph" Value="&#xE768;">
+              <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="PlayShape" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="Glyph" Value="&#xE769;">
+              <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="PauseShape" Property="Visibility" Value="Visible" />
+            </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Face" Property="Effect">
                 <Setter.Value>
@@ -336,7 +355,7 @@
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="Face" Property="Background" Value="{DynamicResource Lunar.Brush.Surface}" />
               <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.TextDisabled}" />
-              <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource Lunar.Brush.TextDisabled}" />
+              <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextDisabled}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -439,7 +458,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="c:StatusChip">
           <Border x:Name="Frame" Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.TextDisabled}"
-                  BorderThickness="1" Padding="6,2" MinHeight="22"
+                  BorderThickness="{DynamicResource Lunar.Thickness.Outline}" Padding="6,1" MinHeight="22"
                   CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource Self}, Converter={StaticResource Lunar.Converter.Stadium}}">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
               <TextBlock x:Name="Symbol" Text="{TemplateBinding Glyph}" FontWeight="Bold" Margin="0,0,4,0"

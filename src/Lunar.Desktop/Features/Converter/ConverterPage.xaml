@@ -28,7 +28,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="15" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
-                    BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
               <ContentPresenter x:Name="Label" HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>
