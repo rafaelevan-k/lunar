@@ -45,6 +45,15 @@ public sealed record PrivacySettings
     public bool DiagnosticsEnabled { get; init; }
 }
 
+public sealed record UsageSettings
+{
+    /// <summary>
+    /// The user turned the Usage page on (ADR-0014). Off by default: until it is on, Lunar makes no network request and reads no token.
+    /// Turning it on is the user's consent that Lunar contacts Anthropic with their own token.
+    /// </summary>
+    public bool Enabled { get; init; }
+}
+
 /// <summary>
 /// User preferences (ADR-0011). Immutable; every default is a safe value, so a missing file or field is never an
 /// error. Values are checked and repaired by <see cref="SettingsRules.Normalize"/>.
@@ -67,4 +76,6 @@ public sealed record LunarSettings
     public ConversionSettings Conversion { get; init; } = new();
 
     public PrivacySettings Privacy { get; init; } = new();
+
+    public UsageSettings Usage { get; init; } = new();
 }

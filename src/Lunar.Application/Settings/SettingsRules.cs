@@ -42,7 +42,8 @@ public static class SettingsRules
             },
             Media = media with { PreferredSessionId = Token(media.PreferredSessionId, MaxIdLength) },
             Conversion = conversion with { OutputDirectory = Token(conversion.OutputDirectory, MaxPathLength) },
-            Privacy = privacy
+            Privacy = privacy,
+            Usage = settings.Usage ?? new UsageSettings()
         };
 
         changed = normalized != settings;

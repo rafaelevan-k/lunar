@@ -23,6 +23,7 @@ internal static class SettingsSerializer
         var media = Section(root, "media", ref reset);
         var conversion = Section(root, "conversion", ref reset);
         var privacy = Section(root, "privacy", ref reset);
+        var usage = Section(root, "usage", ref reset);
 
         var settings = new LunarSettings
         {
@@ -45,7 +46,8 @@ internal static class SettingsSerializer
             Privacy = new PrivacySettings
             {
                 DiagnosticsEnabled = Bool(privacy, "diagnosticsEnabled", defaults.Privacy.DiagnosticsEnabled, ref reset)
-            }
+            },
+            Usage = new UsageSettings { Enabled = Bool(usage, "enabled", defaults.Usage.Enabled, ref reset) }
         };
 
         valuesReset = reset;
@@ -74,7 +76,8 @@ internal static class SettingsSerializer
             },
             ["media"] = new JsonObject { ["preferredSessionId"] = settings.Media.PreferredSessionId },
             ["conversion"] = new JsonObject { ["outputDirectory"] = settings.Conversion.OutputDirectory },
-            ["privacy"] = new JsonObject { ["diagnosticsEnabled"] = settings.Privacy.DiagnosticsEnabled }
+            ["privacy"] = new JsonObject { ["diagnosticsEnabled"] = settings.Privacy.DiagnosticsEnabled },
+            ["usage"] = new JsonObject { ["enabled"] = settings.Usage.Enabled }
         };
 
         return new UTF8Encoding(false).GetBytes(root.ToJsonString(WriteOptions));

@@ -8,6 +8,7 @@ using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Shell.UseCases;
+using Lunar.Application.Usage;
 using Lunar.Conversion.Output;
 using Lunar.Conversion.Pipeline;
 using Lunar.Conversion.Planning;
@@ -107,6 +108,8 @@ public static class ServiceRegistration
         services.AddSingleton<IUsageTokenStore>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
         services.AddSingleton<IUsageCredentialSource>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
         services.AddSingleton<IUsageSource>(sp => new AnthropicUsageSource(sp.GetRequiredService<IUsageCredentialSource>(), sp.GetRequiredService<IDiagnosticLog>()));
+        // The monitor that polls the source and announces resets (BE-32). Created on first use and idle until a screen calls Start.
+        services.AddSingleton<UsageMonitor>(sp => new UsageMonitor(sp.GetRequiredService<IUsageSource>()));
         services.AddSingleton<IOutputRevealer>(sp => new WindowsOutputRevealer(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IFilePicker, WindowsFilePicker>();
         services.AddSingleton<IFolderPicker, WindowsFolderPicker>();

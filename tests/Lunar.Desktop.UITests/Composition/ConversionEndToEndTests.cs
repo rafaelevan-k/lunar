@@ -117,6 +117,12 @@ public sealed class ConversionEndToEndTests : IDisposable
         Assert.Same(store, services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageCredentialSource>());
         Assert.NotNull(services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageSource>());
         Assert.Equal(Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath, Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath);
+
+        // BE-32: the monitor is one shared object, idle until a screen starts it, and makes no request before that.
+        var monitor = services.GetRequiredService<Lunar.Application.Usage.UsageMonitor>();
+        Assert.Same(monitor, services.GetRequiredService<Lunar.Application.Usage.UsageMonitor>());
+        Assert.False(monitor.IsRunning);
+        Assert.Equal(Lunar.Application.Usage.Models.UsageStatus.Off, monitor.Current.Status);
         await Task.CompletedTask;
     }
 

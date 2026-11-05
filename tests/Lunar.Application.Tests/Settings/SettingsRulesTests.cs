@@ -22,6 +22,7 @@ public sealed class SettingsRulesTests
         Assert.Null(defaults.Media.PreferredSessionId);
         Assert.Null(defaults.Conversion.OutputDirectory);
         Assert.False(defaults.Privacy.DiagnosticsEnabled);
+        Assert.False(defaults.Usage.Enabled); // no network request until the user turns the Usage page on (ADR-0014)
 
         var normalized = SettingsRules.Normalize(defaults, out var changed);
 

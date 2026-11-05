@@ -65,7 +65,8 @@ public sealed class JsonSettingsRepositoryTests : IDisposable
         },
         Media = new MediaSettings { PreferredSessionId = "app.music" },
         Conversion = new ConversionSettings { OutputDirectory = OutputFolder() },
-        Privacy = new PrivacySettings { DiagnosticsEnabled = true }
+        Privacy = new PrivacySettings { DiagnosticsEnabled = true },
+        Usage = new UsageSettings { Enabled = true }
     };
 
     private static string ValidJson(int offset = 12) => $$"""
@@ -109,6 +110,22 @@ public sealed class JsonSettingsRepositoryTests : IDisposable
         Assert.False(bytes.AsSpan().StartsWith("\uFEFF"u8));
         Assert.Equal(1, (int)root["schemaVersion"]!);
         Assert.Equal("Dark", (string)root["appearance"]!["theme"]!);
+    }
+
+    [Fact]
+    public async Task TheUsagePageIsOffInAFileThatPredatesItAndAWrongTypeIsRepairedToOff()
+    {
+        // An older file has no "usage" section: additive, so the default (off) applies and nothing is reported as repaired.
+        WriteRaw(MainPath, ValidJson());
+        var older = await Create().LoadAsync(Token);
+        Assert.False(older.Value.Settings.Usage.Enabled);
+        Assert.Equal(SettingsRecovery.None, older.Value.Recovery);
+
+        // A value of the wrong type never turns the network feature on.
+        WriteRaw(MainPath, """{ "schemaVersion": 1, "usage": { "enabled": "yes" } }""");
+        var wrong = await Create().LoadAsync(Token);
+        Assert.False(wrong.Value.Settings.Usage.Enabled);
+        Assert.Equal(SettingsRecovery.ValuesReset, wrong.Value.Recovery);
     }
 
     [Fact]
