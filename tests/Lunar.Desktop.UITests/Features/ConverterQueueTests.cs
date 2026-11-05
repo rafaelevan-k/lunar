@@ -96,12 +96,26 @@ public sealed class ConverterQueueTests : IDisposable
         return path;
     }
 
+    // The condition reads a collection the queue updates from another thread, so a read that lands in the middle of a change is retried
+    // (it throws InvalidOperationException) instead of failing the test. This race made CancellingARunningJobLeavesNothingAndItCanBeTriedAgain fail once.
+    private static bool Holds(Func<bool> condition)
+    {
+        try
+        {
+            return condition();
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
     private static async Task WaitUntil(Func<bool> condition, int seconds = 60)
     {
         var end = DateTime.UtcNow.AddSeconds(seconds);
-        while (!condition() && DateTime.UtcNow < end)
+        while (!Holds(condition) && DateTime.UtcNow < end)
             await Task.Delay(10, Ct);
-        Assert.True(condition(), "The condition was not met in time.");
+        Assert.True(Holds(condition), "The condition was not met in time.");
     }
 
     private async Task Choose(FileFormat format, params string[] files)
