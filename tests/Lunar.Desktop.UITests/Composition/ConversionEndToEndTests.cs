@@ -109,6 +109,18 @@ public sealed class ConversionEndToEndTests : IDisposable
     }
 
     [Fact]
+    public async Task TheUsageSourceAndTokenStoreAreInTheContainerAndAskNothingUntilUsed()
+    {
+        using var services = ServiceRegistration.BuildServiceProvider(s => s.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var store = services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageTokenStore>();
+        Assert.Same(store, services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageCredentialSource>());
+        Assert.NotNull(services.GetRequiredService<Lunar.Application.Abstractions.Usage.IUsageSource>());
+        Assert.Equal(Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath, Lunar.Windows.Security.DpapiUsageTokenStore.DefaultPath);
+        await Task.CompletedTask;
+    }
+
+    [Fact]
     public async Task TheDefaultRegistrationKeepsWordRoutesOffEvenIfLibreOfficeWereInstalled()
     {
         using var services = ServiceRegistration.BuildServiceProvider(s => s.AddSingleton<IDiagnosticLog>(new NullLog()));

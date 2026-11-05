@@ -4,6 +4,7 @@ using Lunar.Application.Abstractions.Media;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Shell.UseCases;
@@ -16,12 +17,14 @@ using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
+using Lunar.Infrastructure.Usage;
 using Lunar.Windows.Audio;
 using Lunar.Windows.Bluetooth;
 using Lunar.Windows.Environment;
 using Lunar.Windows.Media;
 using Lunar.Windows.Network;
 using Lunar.Windows.Pdf;
+using Lunar.Windows.Security;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop.Composition;
@@ -98,6 +101,12 @@ public static class ServiceRegistration
             sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IConversionQueue>(sp => new ConversionJobQueue(sp.GetRequiredService<ConversionOrchestrator>()));
         services.AddTransient<StartConversion>(sp => new StartConversion(sp.GetRequiredService<IConversionPlanner>(), sp.GetRequiredService<IConversionQueue>()));
+        // Usage monitoring (ADR-0014, BE-31, BE-33): the token the user pasted (encrypted for this Windows user) and the source that reads the
+        // account limits with it. Nothing here runs or touches the network until a screen asks; it is created on first use.
+        services.AddSingleton<DpapiUsageTokenStore>(sp => new DpapiUsageTokenStore(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IUsageTokenStore>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
+        services.AddSingleton<IUsageCredentialSource>(sp => sp.GetRequiredService<DpapiUsageTokenStore>());
+        services.AddSingleton<IUsageSource>(sp => new AnthropicUsageSource(sp.GetRequiredService<IUsageCredentialSource>(), sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IOutputRevealer>(sp => new WindowsOutputRevealer(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IFilePicker, WindowsFilePicker>();
         services.AddSingleton<IFolderPicker, WindowsFolderPicker>();
