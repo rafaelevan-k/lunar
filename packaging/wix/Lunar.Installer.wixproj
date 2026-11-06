@@ -11,6 +11,9 @@
     <!-- Folder produced by 'dotnet publish -r win-x64 --self-contained'; set by package-installer.ps1. -->
     <PayloadDir Condition="'$(PayloadDir)' == ''">..\..\artifacts\installer\payload</PayloadDir>
     <ProductVersion Condition="'$(ProductVersion)' == ''">0.0.0</ProductVersion>
+    <!-- Per-user install under %LocalAppData%: the harvested files are their own key paths, which these profile ICEs reject.
+         Windows Installer still installs, repairs and removes them; the smoke tests in BE-29 confirm that. -->
+    <SuppressIces>ICE38;ICE64;ICE91</SuppressIces>
     <DefineConstants>$(DefineConstants);PayloadDir=$(PayloadDir);ProductVersion=$(ProductVersion)</DefineConstants>
   </PropertyGroup>
 </Project>

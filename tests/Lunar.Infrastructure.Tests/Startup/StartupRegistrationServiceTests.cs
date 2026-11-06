@@ -38,6 +38,16 @@ public sealed class StartupRegistrationServiceTests : IDisposable
             if (Throw is not null) throw Throw;
             Values.Remove(name);
         }
+
+        public HashSet<string> TurnedOff { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public bool IsTurnedOffByUser(string name) => Throw is null ? TurnedOff.Contains(name) : throw Throw;
+
+        public void ClearUserChoice(string name)
+        {
+            if (Throw is not null) throw Throw;
+            TurnedOff.Remove(name);
+        }
     }
 
     [Fact]
@@ -87,6 +97,36 @@ public sealed class StartupRegistrationServiceTests : IDisposable
         Assert.True(service.Disable().IsSuccess);
 
         Assert.Equal(["Other"], store.Values.Keys);
+    }
+
+    [Fact]
+    public void EntryTurnedOffInWindowsIsNotEnabledAndEnableTurnsItBackOn()
+    {
+        var store = new FakeStore();
+        var service = new StartupRegistrationService(_exe, store);
+        service.Enable();
+        store.TurnedOff.Add(StartupRegistrationService.ValueName); // the user switched it off in Task Manager
+
+        Assert.False(service.IsEnabled().Value);
+
+        Assert.True(service.Enable().IsSuccess);
+        Assert.True(service.IsEnabled().Value);
+        Assert.Empty(store.TurnedOff);
+    }
+
+    [Fact]
+    public void DisableAlsoForgetsTheWindowsChoiceSoNothingIsLeftBehind()
+    {
+        var store = new FakeStore();
+        var service = new StartupRegistrationService(_exe, store);
+        service.Enable();
+        store.TurnedOff.Add(StartupRegistrationService.ValueName);
+        store.TurnedOff.Add("Other");
+
+        Assert.True(service.Disable().IsSuccess);
+
+        Assert.Empty(store.Values);
+        Assert.Equal(["Other"], store.TurnedOff);
     }
 
     [Theory]
@@ -140,10 +180,12 @@ public sealed class StartupRegistrationServiceTests : IDisposable
     public void RealRegistryRoundTripUsesHkcuAndCleansUp()
     {
         Assert.True(OperatingSystem.IsWindows());
-        var subKey = @"Software\Lunar.Tests\" + Guid.NewGuid().ToString("N") + @"\Run";
+        var root = @"Software\Lunar.Tests\" + Guid.NewGuid().ToString("N");
+        var subKey = root + @"\Run";
+        var approvalSubKey = root + @"\StartupApproved\Run";
         try
         {
-            var service = new StartupRegistrationService(_exe, new RegistryRunKeyStore(subKey));
+            var service = new StartupRegistrationService(_exe, new RegistryRunKeyStore(subKey, approvalSubKey));
 
             Assert.False(service.IsEnabled().Value);
             Assert.True(service.Enable().IsSuccess);
@@ -154,6 +196,20 @@ public sealed class StartupRegistrationServiceTests : IDisposable
                 Assert.Equal(RegistryValueKind.String, key!.GetValueKind(StartupRegistrationService.ValueName));
                 Assert.Equal("\"" + _exe + "\"", key.GetValue(StartupRegistrationService.ValueName));
             }
+
+            // Switched off the way Task Manager does it (first byte odd), then on again (even), then the switch is forgotten by Enable.
+            using (var approval = Registry.CurrentUser.CreateSubKey(approvalSubKey))
+                approval.SetValue(StartupRegistrationService.ValueName, new byte[] { 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, RegistryValueKind.Binary);
+            Assert.False(service.IsEnabled().Value);
+            using (var approval = Registry.CurrentUser.CreateSubKey(approvalSubKey))
+                approval.SetValue(StartupRegistrationService.ValueName, new byte[] { 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, RegistryValueKind.Binary);
+            Assert.True(service.IsEnabled().Value);
+            using (var approval = Registry.CurrentUser.CreateSubKey(approvalSubKey))
+                approval.SetValue(StartupRegistrationService.ValueName, new byte[] { 0x03 }, RegistryValueKind.Binary);
+            Assert.True(service.Enable().IsSuccess);
+            Assert.True(service.IsEnabled().Value);
+            using (var approval = Registry.CurrentUser.OpenSubKey(approvalSubKey))
+                Assert.Null(approval!.GetValue(StartupRegistrationService.ValueName));
 
             Assert.True(service.Disable().IsSuccess);
             Assert.False(service.IsEnabled().Value);

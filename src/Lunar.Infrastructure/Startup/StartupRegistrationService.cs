@@ -9,6 +9,8 @@ namespace Lunar.Infrastructure.Startup;
 /// Writes one quoted value, "Lunar", to the current user's Run key. The path is validated before it is written
 /// (absolute, local, an existing .exe, no quote or control characters), so the registered command is exactly one
 /// executable with no arguments. The path itself is never logged (it contains the user name).
+/// Windows also keeps a separate on/off switch per entry (Task Manager, Settings &gt; Apps &gt; Startup); an entry the user switched off
+/// there is reported as not enabled, because Windows will not start it, and turning Lunar's own switch on clears that choice.
 /// </summary>
 public sealed class StartupRegistrationService : IStartupRegistration
 {
@@ -40,7 +42,8 @@ public sealed class StartupRegistrationService : IStartupRegistration
         try
         {
             var current = _store.Read(ValueName);
-            return Result.Success(string.Equals(current, command.Value, StringComparison.OrdinalIgnoreCase));
+            var registered = string.Equals(current, command.Value, StringComparison.OrdinalIgnoreCase);
+            return Result.Success(registered && !_store.IsTurnedOffByUser(ValueName));
         }
         catch (Exception ex) when (IsExpected(ex))
         {
@@ -57,6 +60,7 @@ public sealed class StartupRegistrationService : IStartupRegistration
         try
         {
             _store.Write(ValueName, command.Value!);
+            _store.ClearUserChoice(ValueName);
             Log(DiagnosticLevel.Information, "startup.enabled", "Enable");
             return Result.Success();
         }
@@ -71,6 +75,7 @@ public sealed class StartupRegistrationService : IStartupRegistration
         try
         {
             _store.Delete(ValueName);
+            _store.ClearUserChoice(ValueName);
             Log(DiagnosticLevel.Information, "startup.disabled", "Disable");
             return Result.Success();
         }
