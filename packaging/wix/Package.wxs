@@ -15,8 +15,8 @@
       (default No). Its exit code is ignored, so it can never block the uninstall.
     * Per-user files under the user profile use file key paths, which ICE38/ICE64/ICE91 flag; those checks are
       suppressed in Lunar.Installer.wixproj (unverified until the first build).
-    * Upgrades: MajorUpgrade removes the older version in the same transaction; Windows Installer rolls the
-      whole transaction back if any step fails. %LocalAppData%\Lunar (settings, logs) is never touched by the
+    * Upgrades: MajorUpgrade (afterInstallInitialize) removes the older version inside the same transaction;
+      Windows Installer rolls the whole transaction back, old version included, if any step fails. %LocalAppData%\Lunar (settings, logs) is never touched by the
       installer itself, so settings survive upgrade and rollback; only the user's Yes in the cleanup deletes them.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
@@ -27,7 +27,9 @@
            Scope="perUser"
            Language="1033">
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Lunar is already installed." />
+    <!-- afterInstallInitialize: the old version is removed INSIDE this install's transaction, so a failed upgrade restores it.
+         The default (afterInstallValidate) removed it before the transaction: a failed upgrade left no Lunar at all (BE-29 smoke test). -->
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of Lunar is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <StandardDirectory Id="LocalAppDataFolder">
