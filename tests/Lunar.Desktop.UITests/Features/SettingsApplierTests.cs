@@ -79,6 +79,22 @@ public sealed class SettingsApplierTests : IDisposable
             item();
     }
 
+    // FE-25: an applier that is disposed no longer hears the service, however often one is made and let go.
+    [Fact]
+    public void ADisposedApplierLeavesNoSubscriptionOnTheService()
+    {
+        var baseline = Lifecycle.EventAudit.HandlerCount(_service, nameof(SettingsService.Changed));
+
+        for (var i = 0; i < 5; i++)
+        {
+            var extra = new SettingsApplier(_service, _ => { }, () => true, _theme, _ => { }, (_, _) => { }, _ => { }, _ => { }, _ => { }, watchWindows: false);
+            Assert.Equal(baseline + 1, Lifecycle.EventAudit.HandlerCount(_service, nameof(SettingsService.Changed)));
+            extra.Dispose();
+            extra.Dispose();
+            Assert.Equal(baseline, Lifecycle.EventAudit.HandlerCount(_service, nameof(SettingsService.Changed)));
+        }
+    }
+
     [Fact]
     public void ApplyTellsEveryPartWhatTheSettingsSay()
     {

@@ -257,6 +257,24 @@ public sealed class IslandTransitionControllerTests
         Assert.Same(rig.ViewModel.CollapseCommand, binding.Command);
     });
 
+    // FE-25: the position and transition controllers each listen to the island view model for as long as they live, and not a moment longer.
+    [Fact]
+    public void DisposingThePositionAndTransitionControllersLetsGoOfTheViewModel() => RunOnSta(() =>
+    {
+        var rig = Start(reduceMotion: true);
+        var listening = Lifecycle.EventAudit.HandlerCount(rig.ViewModel, nameof(IslandViewModel.PropertyChanged));
+
+        rig.Transition.Dispose();
+        Assert.Equal(listening - 1, Lifecycle.EventAudit.HandlerCount(rig.ViewModel, nameof(IslandViewModel.PropertyChanged)));
+        rig.Position.Dispose();
+        Assert.Equal(listening - 2, Lifecycle.EventAudit.HandlerCount(rig.ViewModel, nameof(IslandViewModel.PropertyChanged)));
+
+        rig.Transition.Dispose(); // disposing twice changes nothing
+        rig.Position.Dispose();
+        Assert.Equal(listening - 2, Lifecycle.EventAudit.HandlerCount(rig.ViewModel, nameof(IslandViewModel.PropertyChanged)));
+        rig.Window.Close();
+    });
+
     [Fact]
     public void ConstructorRejectsNulls() => RunOnSta(() =>
     {

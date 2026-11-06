@@ -559,6 +559,66 @@ public sealed class ControlsTests
         window.Close();
     });
 
+    // FE-25: a collapsed island is a pill. Its pages must not be drawn, announced or animated, and must come back the moment it opens.
+    [Fact]
+    public void ThePagesAreHiddenWhileTheIslandIsOnlyThePillAndAnimationsBelowThemStop() => RunOnSta(() =>
+    {
+        var viewModel = new IslandViewModel();
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Usage"]);
+        var swiper = new Lunar.Desktop.Navigation.SwiperView();
+        var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
+        var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: false);
+        var window = Show(shell);
+        swiper.Resources.MergedDictionaries.Clear();
+        var block = new SkeletonBlock { Height = 16 };
+        var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
+        pages[0] = new Border { Child = block };
+        swiper.Initialize(navigation, pages, false);
+        Flush(window);
+
+        // Idle: hidden, nothing pulses, but the content is still measured so the window can size the open island from it.
+        Assert.Equal(Visibility.Hidden, swiper.Visibility);
+        Assert.False(swiper.IsVisible);
+        Assert.False(block.IsPulsing);
+        shell.Measure(new Size(380, 320));
+        Assert.True(swiper.DesiredSize.Height > 0 && swiper.DesiredSize.Width > 0, "a hidden page is still measured");
+
+        // Opening shows the pages at once, before the fade-in, so what was loading pulses again.
+        Assert.True(viewModel.Toggle());
+        Assert.Equal(Visibility.Visible, swiper.Visibility);
+        Assert.True(block.IsPulsing);
+        Assert.True(viewModel.CompleteExpansion());
+        Assert.True(swiper.IsHitTestVisible);
+
+        // Closing keeps them for the fade-out and hides them when the pill is all that is left.
+        Assert.True(viewModel.Collapse());
+        Assert.Equal(Visibility.Visible, swiper.Visibility);
+        Assert.False(swiper.IsHitTestVisible);
+        Assert.True(viewModel.CompleteCollapse());
+        Assert.Equal(Visibility.Hidden, swiper.Visibility);
+        Assert.False(block.IsPulsing);
+        Assert.False(block.HasAnimatedProperties);
+
+        shell.Dispose();
+        window.Close();
+    });
+
+    [Fact]
+    public void DisposingTheShellLetsGoOfTheViewModelAndCannotBeRepeatedHarmfully() => RunOnSta(() =>
+    {
+        var viewModel = new IslandViewModel();
+        var shell = new IslandShellView(new Lunar.Desktop.Features.Eyes.EyesView(), new Lunar.Desktop.Navigation.SwiperView(), viewModel, reduceMotion: true);
+        var listening = Lifecycle.EventAudit.HandlerCount(viewModel, nameof(IslandViewModel.PropertyChanged));
+
+        shell.Dispose();
+        shell.Dispose(); // twice is harmless
+
+        // The shell's own handler is gone (what remains is WPF's shared weak-event handler for the error strip's binding).
+        Assert.Equal(listening - 1, Lifecycle.EventAudit.HandlerCount(viewModel, nameof(IslandViewModel.PropertyChanged)));
+        viewModel.Toggle(); // a disposed shell no longer reacts
+        Assert.Equal(Visibility.Hidden, shell.Swiper.Visibility);
+    });
+
     // ---- tooltip ---------------------------------------------------------------------------------------------------
 
     [Fact]

@@ -512,6 +512,76 @@ public sealed class SettingsWindowTests
         Assert.Equal(0, raised);
     });
 
+    // FE-25: no subscription survives a closed window, however many times it is opened.
+    [Fact]
+    public void OpeningAndClosingTheWindowManyTimesLeavesNoSubscriptionBehind() => RunOnSta(() =>
+    {
+        using var service = new SettingsService(new Repository());
+        using var launcher = new SettingsWindowLauncher(service, new Environment(), new Folders(), work => work(), diagnosticsInUse: false, log: null, interactive: false);
+        var baseline = Lifecycle.EventAudit.HandlerCount(service, nameof(SettingsService.Changed));
+
+        for (var i = 0; i < 10; i++)
+        {
+            launcher.Show();
+            Assert.Equal(baseline + 1, Lifecycle.EventAudit.HandlerCount(service, nameof(SettingsService.Changed)));
+            launcher.Window!.Close();
+            Assert.Equal(baseline, Lifecycle.EventAudit.HandlerCount(service, nameof(SettingsService.Changed)));
+        }
+    });
+
+    [Fact]
+    public void AClosedSettingsWindowCanBeCollected() => RunOnSta(() =>
+    {
+        using var service = new SettingsService(new Repository());
+        using var launcher = new SettingsWindowLauncher(service, new Environment(), new Folders(), work => work(), diagnosticsInUse: false, log: null, interactive: false);
+
+        var window = OpenAndClose(launcher);
+        for (var attempt = 0; attempt < 20 && window.IsAlive; attempt++)
+        {
+            Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.ApplicationIdle, new Action(() => { }));
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(20);
+        }
+
+        Assert.False(window.IsAlive, "the window is still referenced after it closed");
+    });
+
+    // The view model alone (no window): once disposed, nothing in Lunar keeps it. (After a window closes, WPF's own binding tables may
+    // hold its DataContext for a while; that is the framework, not Lunar, so the window test above checks the window and this checks the model.)
+    [Fact]
+    public void ADisposedSettingsViewModelCanBeCollected() => RunOnSta(() =>
+    {
+        using var service = new SettingsService(new Repository());
+        var model = Release(service);
+        for (var attempt = 0; attempt < 10 && model.IsAlive; attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        Assert.False(model.IsAlive, "the disposed view model is still referenced");
+    });
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference Release(SettingsService service)
+    {
+        var model = new SettingsViewModel(service, new Environment(), new Folders(), work => work(), false);
+        var weak = new WeakReference(model);
+        model.Dispose();
+        return weak;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference OpenAndClose(SettingsWindowLauncher launcher)
+    {
+        launcher.Show();
+        var window = launcher.Window!;
+        var reference = new WeakReference(window);
+        window.Close();
+        return reference;
+    }
+
     [Fact]
     public void DisposingTheLauncherClosesTheOpenWindow() => RunOnSta(() =>
     {

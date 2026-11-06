@@ -125,6 +125,11 @@ public sealed class IslandShellView : Grid, IDisposable
 
     private void Apply(bool expanded, bool animate)
     {
+        // FE-25: while the island is only the pill the pages are Hidden, not just transparent. Hidden still measures (the window sizes the
+        // expanded island from the pages), but nothing below is drawn, hit-tested or announced, and every IsVisible-aware animation
+        // (loading placeholders, an indeterminate progress bar of a conversion running in the background) stops until the island opens.
+        // Visible again as soon as the expansion starts, before the fade-in.
+        Swiper.Visibility = _viewModel.IsExpandedLayout ? Visibility.Visible : Visibility.Hidden;
         Swiper.IsHitTestVisible = expanded;
         var target = expanded ? 1.0 : 0.0;
         Swiper.BeginAnimation(OpacityProperty, null);

@@ -55,6 +55,8 @@ public sealed class SystemPageViewModelTests
 
         public IObservable<VolumeState> Changes => _changes;
 
+        public int ObserverCount => _changes.ObserverCount;
+
         public Task<Result<VolumeState>> GetAsync(CancellationToken ct) =>
             Task.FromResult(ReadFailure is not null ? Result.Failure<VolumeState>(ReadFailure) : Result.Success(State));
 
@@ -123,6 +125,19 @@ public sealed class SystemPageViewModelTests
         }
 
         public void Dispose() => Model.Dispose();
+    }
+
+    // FE-25: the page listens to the audio feed while it lives and lets go when it is disposed.
+    [Fact]
+    public async Task DisposingTheModelEndsItsSubscriptionToTheVolumeFeed()
+    {
+        var rig = await new Rig().StartAsync();
+        Assert.Equal(1, rig.Volume.ObserverCount);
+
+        rig.Dispose();
+        rig.Dispose(); // twice is harmless
+
+        Assert.Equal(0, rig.Volume.ObserverCount);
     }
 
     private static async Task WaitFor(Func<bool> condition, int timeoutMs = 3000, Func<string>? describe = null, Rig? rig = null)
