@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lunar per-user MSI (ADR-0004, BE-29). AUTHORED BUT NOT YET BUILT OR RUN: the WiX terms (ADR-0004) are the
+  owner's to accept, so no WiX tool has been restored. Treat every element below as unverified until
+  scripts\package-installer.ps1 has produced an MSI and docs\evidence\sprint-7\BE-29.md records the smoke tests.
+
+  Behavior:
+    * Scope perUser: installs to %LocalAppData%\Programs\Lunar, HKCU only, no elevation prompt.
+    * The whole self-contained publish folder is harvested (Files), so satellite folders such as
+      id\Lunar.Desktop.resources.dll ship automatically. scripts\Test-InstallerPayload.ps1 checks that first.
+    * Start with Windows is NOT registered here; it stays an in-app opt-in (IStartupRegistration). Uninstall
+      removes that HKCU Run value if the user had enabled it.
+    * Upgrades: MajorUpgrade removes the older version in the same transaction; Windows Installer rolls the
+      whole transaction back if any step fails. %LocalAppData%\Lunar (settings, logs) is never touched by the
+      installer, so settings survive upgrade, rollback and uninstall.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Lunar"
+           Manufacturer="Lunar"
+           Version="$(ProductVersion)"
+           UpgradeCode="6f0b4f0e-3c1d-4e5a-9a77-2d1c8b6e4a10"
+           Scope="perUser"
+           Language="1033">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Lunar is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="Lunar" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Every file of the publish folder, subfolders included. -->
+    <ComponentGroup Id="Components" Directory="INSTALLFOLDER">
+      <Files Include="$(PayloadDir)\**" Exclude="$(PayloadDir)\**\*.pdb" />
+    </ComponentGroup>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="b3a2f6c4-8d1e-4f27-8c55-0a9e7d3b2f61">
+        <Shortcut Id="LunarShortcut" Name="Lunar" Target="[INSTALLFOLDER]Lunar.Desktop.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveRegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Lunar" />
+        <RegistryValue Root="HKCU" Key="Software\Lunar\Installer" Name="ShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveRegistryKey Root="HKCU" Key="Software\Lunar\Installer" Action="removeOnUninstall" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="Lunar" Level="1">
+      <ComponentGroupRef Id="Components" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+</Wix>

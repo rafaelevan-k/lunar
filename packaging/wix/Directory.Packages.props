@@ -1,0 +1,3 @@
+<Project>
+  <!-- Deliberately empty: the installer uses the WiX SDK named in its Sdk attribute, not a package reference. -->
+</Project>

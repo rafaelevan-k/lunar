@@ -1,0 +1,16 @@
+<!--
+  Per-user MSI (ADR-0004). NOT part of Lunar.sln and NOT built by scripts\build.ps1: building it restores the
+  WiX Toolset SDK, which needs the owner to have reviewed the OSMF/EULA terms first. Build it only through
+  scripts\package-installer.ps1, which asks for that acknowledgement.
+-->
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputName>Lunar</OutputName>
+    <OutputType>Package</OutputType>
+    <Platform>x64</Platform>
+    <!-- Folder produced by 'dotnet publish -r win-x64 --self-contained'; set by package-installer.ps1. -->
+    <PayloadDir Condition="'$(PayloadDir)' == ''">..\..\artifacts\installer\payload</PayloadDir>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.0.0</ProductVersion>
+    <DefineConstants>$(DefineConstants);PayloadDir=$(PayloadDir);ProductVersion=$(ProductVersion)</DefineConstants>
+  </PropertyGroup>
+</Project>

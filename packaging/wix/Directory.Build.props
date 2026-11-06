@@ -1,0 +1,4 @@
+<Project>
+  <!-- Deliberately empty: the installer project is outside Lunar.sln and must not inherit the application's
+       analyzer, lock-file and central-package settings (ADR-0004, BE-29). -->
+</Project>
