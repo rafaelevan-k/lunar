@@ -89,7 +89,7 @@ if (-not (Test-Path $msi)) { throw 'WiX finished without producing Lunar.msi.' }
 $installer = New-Object -ComObject WindowsInstaller.Installer
 $database = $null; $view = $null; $record = $null; $built = $null   # strict mode: the finally block reads these
 try {
-    $database = $installer.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $installer, @($msi, 0))
+    $database = $installer.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $installer, @([string]$msi, 0))   # a plain string: COM rejects PowerShell's wrapped Join-Path result
     $view = $database.GetType().InvokeMember('OpenView', 'InvokeMethod', $null, $database, @("SELECT Value FROM Property WHERE Property='ProductVersion'"))
     $view.GetType().InvokeMember('Execute', 'InvokeMethod', $null, $view, $null)
     $record = $view.GetType().InvokeMember('Fetch', 'InvokeMethod', $null, $view, $null)
