@@ -54,6 +54,7 @@ request checks entirely; CI then reports after the fact.
 - `setup-dotnet` must find SDK 10.0.402 for `windows-2022`; if a runner image lacks it the setup step fails loudly (the
   repository pins the SDK with `rollForward: disable`).
 - Idle CPU/RAM, conversion memory and security-regression checks (ARCHITECTURE section 12, items 6 and 7) are not part
-  of this workflow yet; they belong to the tasks that create the behavior they measure.
+  of this workflow yet; they belong to the tasks that create the behavior they measure. Idle CPU/RAM can be sampled by
+  hand from a running Lunar with `scripts/Measure-Idle.ps1` (FE-25); it is evidence, not a gate.
 - No release signing, publishing, telemetry or network access beyond restoring NuGet packages and GitHub-hosted
   actions.
