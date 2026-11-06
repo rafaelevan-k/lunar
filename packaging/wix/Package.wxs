@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Lunar per-user MSI (ADR-0004, BE-29). AUTHORED BUT NOT YET BUILT OR RUN: the WiX terms (ADR-0004) are the
-  owner's to accept, so no WiX tool has been restored. Treat every element below as unverified until
-  scripts\package-installer.ps1 has produced an MSI and docs\evidence\sprint-7\BE-29.md records the smoke tests.
+  Lunar per-user MSI (ADR-0004, BE-29). Built with WiX 7.0.0 only by the owner (scripts\package-installer.ps1
+  -WixTermsReviewedByOwner -AcceptWixEula). Smoke-test results are in docs\evidence\sprint-7\BE-29.md.
 
   Behavior:
     * Scope perUser: installs to %LocalAppData%\Programs\Lunar, HKCU only, no elevation prompt.
@@ -39,7 +38,9 @@
 
     <!-- Every file of the publish folder, subfolders included. -->
     <ComponentGroup Id="Components" Directory="INSTALLFOLDER">
-      <Files Include="$(var.PayloadDir)\**" Exclude="$(var.PayloadDir)\**\*.pdb" />
+      <Files Include="$(var.PayloadDir)\**">
+        <Exclude Files="$(var.PayloadDir)\**\*.pdb" />
+      </Files>
     </ComponentGroup>
 
     <StandardDirectory Id="ProgramMenuFolder">

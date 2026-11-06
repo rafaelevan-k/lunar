@@ -14,6 +14,10 @@
 .PARAMETER WixTermsReviewedByOwner
     Pass only after the owner has reviewed the WiX terms for the intended distribution.
 
+.PARAMETER AcceptWixEula
+    Passes AcceptEula=wix7 to the WiX build (WiX 7 refuses to build without it). Only the owner may choose this: it
+    accepts the WiX OSMF EULA (and any fee that applies) on their behalf. Nothing is stored; it applies to this build only.
+
 .PARAMETER SigningCertificateThumbprint
     Optional. Signs the MSI with signtool when that certificate exists. Without it the MSI is unsigned.
 #>
@@ -24,6 +28,7 @@ param(
     [string]$DotnetRoot,
     [string]$OutputDirectory,
     [switch]$WixTermsReviewedByOwner,
+    [switch]$AcceptWixEula,
     [string]$SigningCertificateThumbprint
 )
 
@@ -64,9 +69,10 @@ if (-not $WixTermsReviewedByOwner) {
     exit 0
 }
 
-Invoke-Dotnet 'Build per-user MSI (WiX)' @(
-    'build', 'packaging\wix\Lunar.Installer.wixproj', '-c', $Configuration,
+$wixArguments = @('build', 'packaging\wix\Lunar.Installer.wixproj', '-c', $Configuration,
     "-p:PayloadDir=$payload", "-p:ProductVersion=$Version", '-o', $OutputDirectory)
+if ($AcceptWixEula) { $wixArguments += '-p:AcceptEula=wix7' }
+Invoke-Dotnet 'Build per-user MSI (WiX)' $wixArguments
 
 $msi = Join-Path $OutputDirectory 'Lunar.msi'
 if (-not (Test-Path $msi)) { throw 'WiX finished without producing Lunar.msi.' }
