@@ -6,6 +6,7 @@ using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Usage;
 using Lunar.Application.Usage.Models;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -109,9 +110,9 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
 
     public bool ShowLimits => Mode == UsagePageMode.Active && _state.Snapshot is not null;
 
-    public UsageLimitView FiveHour => Limit("5-hour limit", _state.Snapshot?.FiveHour);
+    public UsageLimitView FiveHour => Limit(Strings.Get("Usage.FiveHourLimit"), _state.Snapshot?.FiveHour);
 
-    public UsageLimitView Weekly => Limit("Weekly limit", _state.Snapshot?.Weekly);
+    public UsageLimitView Weekly => Limit(Strings.Get("Usage.WeeklyLimit"), _state.Snapshot?.Weekly);
 
     /// <summary>One line under the limits: when the reading was taken, or what is wrong. Null when there is nothing to say.</summary>
     public string? StatusText
@@ -124,11 +125,11 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
             return _state.Status switch
             {
                 UsageStatus.Ready when snapshot is not null => UsageText.Updated(snapshot.FetchedAt, _culture),
-                UsageStatus.SignedOut => _state.Message ?? "Claude Code is not signed in on this PC.",
+                UsageStatus.SignedOut => _state.Message ?? Strings.Get("Usage.SignedOut"),
                 UsageStatus.Unavailable or UsageStatus.Unreadable =>
-                    (_state.Message ?? "The limits cannot be read right now.")
-                    + (snapshot is null ? string.Empty : " Showing the " + UsageText.Updated(snapshot.FetchedAt, _culture).ToLowerInvariant() + "."),
-                _ => "Reading your limits…"
+                    (_state.Message ?? Strings.Get("Usage.CannotRead"))
+                    + (snapshot is null ? string.Empty : Strings.Format("Usage.ShowingLast", UsageText.Updated(snapshot.FetchedAt, _culture).ToLowerInvariant())),
+                _ => Strings.Get("Usage.Reading")
             };
         }
     }
@@ -149,8 +150,7 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>The result of the last switch action, in words, when it did not work. Null when there is none.</summary>
     public string? Notice => _notice;
 
-    public string Disclosure =>
-        "Lunar reads the Claude Code sign-in on this PC (read-only) and asks Anthropic over HTTPS for your usage limits. Nothing else is sent.";
+    public string Disclosure => Strings.Get("Usage.Disclosure");
 
     public ICommand ToggleEnabledCommand { get; }
 
@@ -216,7 +216,7 @@ public sealed class UsagePageViewModel : INotifyPropertyChanged, IDisposable
         if (saved.IsFailure)
         {
             Log(DiagnosticLevel.Warning, "usage.enable.failed", "Toggle", saved.Error!.Code);
-            _notice = "Lunar could not save this choice. Nothing changed.";
+            _notice = Strings.Get("Usage.SaveFailed");
             Changed();
             return;
         }

@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common.ErrorPrefix" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="Common.Loading" xml:space="preserve"><value>Loading</value></data>
+  <data name="Common.Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="Conv.AddFiles" xml:space="preserve"><value>Add files to convert.</value></data>
+  <data name="Conv.AddFilesFirst" xml:space="preserve"><value>Add files first.</value></data>
+  <data name="Conv.AddOneConvertible" xml:space="preserve"><value>Add at least one file that can be converted.</value></data>
+  <data name="Conv.CannotBecome" xml:space="preserve"><value>{0} files can't become {1} in this version.</value></data>
+  <data name="Conv.CheckFailed" xml:space="preserve"><value>Lunar couldn't check these files. Try adding them again.</value></data>
+  <data name="Conv.Checking" xml:space="preserve"><value>Checking the files...</value></data>
+  <data name="Conv.CheckingShort" xml:space="preserve"><value>checking...</value></data>
+  <data name="Conv.DuplicateMany" xml:space="preserve"><value>{0} files were already in the list.</value></data>
+  <data name="Conv.DuplicateOne" xml:space="preserve"><value>1 file was already in the list.</value></data>
+  <data name="Conv.FileReadyMany" xml:space="preserve"><value>{0} files ready</value></data>
+  <data name="Conv.FileReadyOne" xml:space="preserve"><value>1 file ready</value></data>
+  <data name="Conv.FixPages" xml:space="preserve"><value>Fix the list of pages first.</value></data>
+  <data name="Conv.FolderPickerFailed" xml:space="preserve"><value>Lunar couldn't open the folder chooser.</value></data>
+  <data name="Conv.ItemChecking" xml:space="preserve"><value>Checking...</value></data>
+  <data name="Conv.KindJpeg" xml:space="preserve"><value>JPEG picture</value></data>
+  <data name="Conv.KindPdf" xml:space="preserve"><value>PDF document</value></data>
+  <data name="Conv.KindPng" xml:space="preserve"><value>PNG picture</value></data>
+  <data name="Conv.KindWord" xml:space="preserve"><value>Word document</value></data>
+  <data name="Conv.ModeEmbed" xml:space="preserve"><value>the picture is placed inside the document</value></data>
+  <data name="Conv.ModeExternal" xml:space="preserve"><value>laid out by LibreOffice, so the layout may differ</value></data>
+  <data name="Conv.ModeNative" xml:space="preserve"><value>the picture is re-encoded</value></data>
+  <data name="Conv.ModeRasterize" xml:space="preserve"><value>each page becomes a picture</value></data>
+  <data name="Conv.ModeSame" xml:space="preserve"><value>a copy under the new name</value></data>
+  <data name="Conv.NeedsLibreOffice" xml:space="preserve"><value>Not available yet: it needs LibreOffice, which you install yourself (Lunar never installs it for you).</value></data>
+  <data name="Conv.NoFormatFits" xml:space="preserve"><value>No format fits every file in the list.</value></data>
+  <data name="Conv.NoneConvertible" xml:space="preserve"><value>None of the files can be converted yet.</value></data>
+  <data name="Conv.NotChecked" xml:space="preserve"><value>Not checked.</value></data>
+  <data name="Conv.NothingLeft" xml:space="preserve"><value>Nothing was left to convert. Check the list and try again.</value></data>
+  <data name="Conv.OverflowMany" xml:space="preserve"><value>Lunar converts at most {0} files at a time, so {1} files were not added.</value></data>
+  <data name="Conv.OverflowOne" xml:space="preserve"><value>Lunar converts at most {0} files at a time, so 1 file was not added.</value></data>
+  <data name="Conv.PickerFailed" xml:space="preserve"><value>Lunar couldn't open the file chooser. You can also drag files onto this page.</value></data>
+  <data name="Conv.Ready" xml:space="preserve"><value>Ready.</value></data>
+  <data name="Conv.ReadyRenamed" xml:space="preserve"><value>Ready. The name is taken, so the result will be {0}.</value></data>
+  <data name="Conv.RefusedMany" xml:space="preserve"><value>{0} can't be converted</value></data>
+  <data name="Conv.RefusedOne" xml:space="preserve"><value>1 can't be converted</value></data>
+  <data name="Conv.RowAutomation" xml:space="preserve"><value>{0}, {1}, {2}</value></data>
+  <data name="Conv.SavingBeside" xml:space="preserve"><value>saving next to the originals</value></data>
+  <data name="Conv.SavingTo" xml:space="preserve"><value>saving to {0}</value></data>
+  <data name="Conv.SkippedExists" xml:space="preserve"><value>Skipped: a file with the result's name already exists.</value></data>
+  <data name="Conv.StartFailed" xml:space="preserve"><value>Lunar couldn't start the conversion. Try again.</value></data>
+  <data name="Conv.TargetAutomation" xml:space="preserve"><value>{0}, {1}{2}</value></data>
+  <data name="Conv.TargetSelectedPrefix" xml:space="preserve"><value>selected, </value></data>
+  <data name="Conv.TargetUnavailablePrefix" xml:space="preserve"><value>not available, </value></data>
+  <data name="Conv.UnknownType" xml:space="preserve"><value>Unknown type</value></data>
+  <data name="Conv.Unnamed" xml:space="preserve"><value>(unnamed)</value></data>
+  <data name="Media.CommandClosed" xml:space="preserve"><value>That player has closed.</value></data>
+  <data name="Media.CommandOther" xml:space="preserve"><value>The player didn't accept that.</value></data>
+  <data name="Media.CommandTimeout" xml:space="preserve"><value>The player didn't answer.</value></data>
+  <data name="Media.CommandUnsupported" xml:space="preserve"><value>This app doesn't offer that.</value></data>
+  <data name="Media.LiveNote" xml:space="preserve"><value>Live or no timeline</value></data>
+  <data name="Media.NoSessionHint" xml:space="preserve"><value>Play music or a video in any app and it shows up here.</value></data>
+  <data name="Media.NoSessionTitle" xml:space="preserve"><value>Nothing is playing</value></data>
+  <data name="Media.NotSeekableNote" xml:space="preserve"><value>This app doesn't allow seeking</value></data>
+  <data name="Media.Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Media.Paused" xml:space="preserve"><value>Paused</value></data>
+  <data name="Media.Play" xml:space="preserve"><value>Play</value></data>
+  <data name="Media.Playing" xml:space="preserve"><value>Playing</value></data>
+  <data name="Media.SeekChanged" xml:space="preserve"><value>The media changed, so that position no longer applies.</value></data>
+  <data name="Media.SeekOther" xml:space="preserve"><value>The player didn't move to that position.</value></data>
+  <data name="Media.SeekUnsupported" xml:space="preserve"><value>This app doesn't allow seeking.</value></data>
+  <data name="Media.SessionPosition" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Media.SourceLine" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Media.Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="Media.Summary" xml:space="preserve"><value>{0} by {1}, from {2}</value></data>
+  <data name="Media.SummaryWithStatus" xml:space="preserve"><value>{0} by {1}, from {2}, {3}</value></data>
+  <data name="Media.SwitchPlayer" xml:space="preserve"><value>Switch player</value></data>
+  <data name="Media.SwitchTo" xml:space="preserve"><value>Switch to {0}</value></data>
+  <data name="Media.TimelineLabel" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Media.UnavailableDenied" xml:space="preserve"><value>Windows didn't allow access to what's playing.</value></data>
+  <data name="Media.UnavailableOther" xml:space="preserve"><value>Couldn't read what's playing.</value></data>
+  <data name="Media.UnavailableUnsupported" xml:space="preserve"><value>Media controls aren't available on this PC.</value></data>
+  <data name="Media.UnknownArtist" xml:space="preserve"><value>Unknown artist</value></data>
+  <data name="Media.UnknownSource" xml:space="preserve"><value>Unknown app</value></data>
+  <data name="Media.UnknownTitle" xml:space="preserve"><value>Unknown title</value></data>
+  <data name="Nav.Converter" xml:space="preserve"><value>File converter</value></data>
+  <data name="Nav.Media" xml:space="preserve"><value>Media</value></data>
+  <data name="Nav.PageDot" xml:space="preserve"><value>{0} page</value></data>
+  <data name="Nav.System" xml:space="preserve"><value>System</value></data>
+  <data name="Nav.Usage" xml:space="preserve"><value>Usage</value></data>
+  <data name="Opt.AllPages" xml:space="preserve"><value>all pages</value></data>
+  <data name="Opt.AutomationChoice" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Opt.AutomationChoiceSelected" xml:space="preserve"><value>{0}: {1}, selected</value></data>
+  <data name="Opt.Black" xml:space="preserve"><value>Black</value></data>
+  <data name="Opt.Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Opt.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Opt.FillPage" xml:space="preserve"><value>Fill the page</value></data>
+  <data name="Opt.FitPicture" xml:space="preserve"><value>Fit the picture</value></data>
+  <data name="Opt.GroupBackground" xml:space="preserve"><value>Background for transparent areas</value></data>
+  <data name="Opt.GroupCollision" xml:space="preserve"><value>If a result's name is taken</value></data>
+  <data name="Opt.GroupFit" xml:space="preserve"><value>Fit</value></data>
+  <data name="Opt.GroupMargin" xml:space="preserve"><value>Margin</value></data>
+  <data name="Opt.GroupPageSize" xml:space="preserve"><value>Page size</value></data>
+  <data name="Opt.GroupResolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="Opt.JpegQuality" xml:space="preserve"><value>JPEG quality: {0}</value></data>
+  <data name="Opt.KeepBoth" xml:space="preserve"><value>Keep both</value></data>
+  <data name="Opt.LightGray" xml:space="preserve"><value>Light gray</value></data>
+  <data name="Opt.MarginNarrow" xml:space="preserve"><value>Narrow</value></data>
+  <data name="Opt.MarginNone" xml:space="preserve"><value>None</value></data>
+  <data name="Opt.MarginNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Opt.NoticeCopy" xml:space="preserve"><value>A copy under the new name; nothing is re-encoded.</value></data>
+  <data name="Opt.NoticeEmbedPdf" xml:space="preserve"><value>The picture is placed inside the PDF. No text is recognised, so there is no text to select or search.</value></data>
+  <data name="Opt.NoticeEmbedWord" xml:space="preserve"><value>The picture is placed inside a Word file. No text is recognised, so there is no text to edit or search.</value></data>
+  <data name="Opt.NoticeLayout" xml:space="preserve"><value>Needs LibreOffice, which you installed yourself. It lays the pages out its own way, so fonts and layout may differ from Word.</value></data>
+  <data name="Opt.NoticeLossy" xml:space="preserve"><value>JPEG is lossy: some detail is lost, and transparent areas are filled with the background colour. Camera details and other metadata are not copied.</value></data>
+  <data name="Opt.NoticePixels" xml:space="preserve"><value>The picture keeps its pixels exactly, but a PNG is usually larger. Camera details and other metadata are not copied.</value></data>
+  <data name="Opt.NoticeRaster" xml:space="preserve"><value>Each page becomes a picture, so its text can no longer be selected, and a result is written for every page.</value></data>
+  <data name="Opt.PageFits" xml:space="preserve"><value>page fits the picture</value></data>
+  <data name="Opt.Pages" xml:space="preserve"><value>pages {0}</value></data>
+  <data name="Opt.Ppi" xml:space="preserve"><value>{0} ppi</value></data>
+  <data name="Opt.Quality" xml:space="preserve"><value>Quality {0}</value></data>
+  <data name="Opt.Replace" xml:space="preserve"><value>Replace</value></data>
+  <data name="Opt.Skip" xml:space="preserve"><value>Skip</value></data>
+  <data name="Opt.SumKeep" xml:space="preserve"><value>keep both if taken</value></data>
+  <data name="Opt.SumReplace" xml:space="preserve"><value>replace if taken</value></data>
+  <data name="Opt.SumSkip" xml:space="preserve"><value>skip if taken</value></data>
+  <data name="Opt.White" xml:space="preserve"><value>White</value></data>
+  <data name="Opt.WholePicture" xml:space="preserve"><value>Whole picture</value></data>
+  <data name="Opt.WithMargin" xml:space="preserve"><value>with margin</value></data>
+  <data name="Picker.All" xml:space="preserve"><value>All files</value></data>
+  <data name="Picker.FilesTitle" xml:space="preserve"><value>Choose files to convert</value></data>
+  <data name="Picker.FolderTitle" xml:space="preserve"><value>Choose where to save the results</value></data>
+  <data name="Picker.Supported" xml:space="preserve"><value>Supported files</value></data>
+  <data name="Queue.CancelledStatus" xml:space="preserve"><value>Cancelled. Nothing was saved.</value></data>
+  <data name="Queue.Converting" xml:space="preserve"><value>Converting</value></data>
+  <data name="Queue.CouldNotConvert" xml:space="preserve"><value>It could not be converted.</value></data>
+  <data name="Queue.DidNotWork" xml:space="preserve"><value>That did not work. Try again.</value></data>
+  <data name="Queue.Done" xml:space="preserve"><value>{0} done</value></data>
+  <data name="Queue.DoneStatus" xml:space="preserve"><value>Done</value></data>
+  <data name="Queue.Failed" xml:space="preserve"><value>{0} failed</value></data>
+  <data name="Queue.FailedStatus" xml:space="preserve"><value>{0} Nothing was saved.</value></data>
+  <data name="Queue.InProgress" xml:space="preserve"><value>{0} in progress</value></data>
+  <data name="Queue.Pages" xml:space="preserve"><value>{0} of {1} pages</value></data>
+  <data name="Queue.PicturesSaved" xml:space="preserve"><value>{0} pictures saved</value></data>
+  <data name="Queue.SavedAs" xml:space="preserve"><value>Saved as {0}</value></data>
+  <data name="Queue.Stopping" xml:space="preserve"><value>Stopping and cleaning up...</value></data>
+  <data name="Queue.Title" xml:space="preserve"><value>{0} to {1}</value></data>
+  <data name="Queue.Waiting" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Settings.DiagnosticsHelp" xml:space="preserve"><value>Writes more detail to Lunar's log files on this PC. Logs never contain file names, file contents, passwords or what you play.</value></data>
+  <data name="Settings.DiagnosticsRestart" xml:space="preserve"><value>Takes effect the next time Lunar starts.</value></data>
+  <data name="Settings.FolderDefault" xml:space="preserve"><value>Next to the files you convert</value></data>
+  <data name="Settings.FolderRejected" xml:space="preserve"><value>That folder cannot be used. Choose a folder on this PC.</value></data>
+  <data name="Settings.LanguageEn" xml:space="preserve"><value>English</value></data>
+  <data name="Settings.LanguageHeading" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings.LanguageId" xml:space="preserve"><value>Bahasa Indonesia</value></data>
+  <data name="Settings.LanguageMatch" xml:space="preserve"><value>Match Windows</value></data>
+  <data name="Settings.LanguageRestart" xml:space="preserve"><value>Takes effect the next time Lunar starts.</value></data>
+  <data name="Settings.MainDisplay" xml:space="preserve"><value>Main display</value></data>
+  <data name="Settings.MissingDisplay" xml:space="preserve"><value>Saved display (not connected)</value></data>
+  <data name="Settings.Monitor" xml:space="preserve"><value>Display {0}{1}, {2} x {3}</value></data>
+  <data name="Settings.MonitorMain" xml:space="preserve"><value> (main)</value></data>
+  <data name="Settings.Offset" xml:space="preserve"><value>{0} px</value></data>
+  <data name="Settings.ReadOnly" xml:space="preserve"><value>These settings come from a newer version of Lunar, so this version shows them but cannot change them.</value></data>
+  <data name="Settings.RecoveryBackup" xml:space="preserve"><value>Your settings file was damaged, so Lunar used the last good copy.</value></data>
+  <data name="Settings.RecoveryDefaults" xml:space="preserve"><value>Your settings file was damaged and could not be restored, so Lunar started with the defaults.</value></data>
+  <data name="Settings.RecoveryValues" xml:space="preserve"><value>Some saved values were not valid and were set back to their defaults.</value></data>
+  <data name="Settings.ResetQuestion" xml:space="preserve"><value>Reset every setting to its default? This also turns the Usage page off.</value></data>
+  <data name="Settings.SaveFailed" xml:space="preserve"><value>Lunar could not save this. Nothing was changed.</value></data>
+  <data name="Settings.SavedOnThisPc" xml:space="preserve"><value>Settings are saved only on this PC.</value></data>
+  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Not available yet. It arrives with the installer.</value></data>
+  <data name="Settings.ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Settings.ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="Settings.ThemeMatch" xml:space="preserve"><value>Match Windows</value></data>
+  <data name="Settings.Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="System.AccessDenied" xml:space="preserve"><value>Access denied</value></data>
+  <data name="System.ChangeVolumeFailed" xml:space="preserve"><value>Couldn't change the volume.</value></data>
+  <data name="System.Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="System.ClockLabel" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="System.Connected" xml:space="preserve"><value>Connected</value></data>
+  <data name="System.CouldntOpenSettings" xml:space="preserve"><value>Couldn't open Settings.</value></data>
+  <data name="System.FailDenied" xml:space="preserve"><value>Windows didn't allow this change. Use Settings to switch {0}.</value></data>
+  <data name="System.FailOther" xml:space="preserve"><value>Couldn't change {0}.</value></data>
+  <data name="System.FailTimeout" xml:space="preserve"><value>Windows didn't confirm the change. Try again.</value></data>
+  <data name="System.FailUnavailable" xml:space="preserve"><value>{0} isn't available.</value></data>
+  <data name="System.FailUnsupported" xml:space="preserve"><value>{0} can't be switched from here. Use Settings.</value></data>
+  <data name="System.HintCannotSwitch" xml:space="preserve"><value>Can't be switched from here.</value></data>
+  <data name="System.HintDenied" xml:space="preserve"><value>Windows didn't allow access.</value></data>
+  <data name="System.HintUnsupported" xml:space="preserve"><value>This PC doesn't allow controlling it.</value></data>
+  <data name="System.Mute" xml:space="preserve"><value>Mute</value></data>
+  <data name="System.Muted" xml:space="preserve"><value>Muted</value></data>
+  <data name="System.NoBluetooth" xml:space="preserve"><value>No Bluetooth radio</value></data>
+  <data name="System.NoWifi" xml:space="preserve"><value>No Wi-Fi adapter</value></data>
+  <data name="System.NotSupported" xml:space="preserve"><value>Not supported</value></data>
+  <data name="System.Off" xml:space="preserve"><value>Off</value></data>
+  <data name="System.On" xml:space="preserve"><value>On</value></data>
+  <data name="System.OnNotConnected" xml:space="preserve"><value>On, not connected</value></data>
+  <data name="System.ReadBluetoothFailed" xml:space="preserve"><value>Couldn't read the Bluetooth state.</value></data>
+  <data name="System.ReadVolumeFailed" xml:space="preserve"><value>Couldn't read the volume.</value></data>
+  <data name="System.ReadWifiFailed" xml:space="preserve"><value>Couldn't read the Wi-Fi state.</value></data>
+  <data name="System.SwitchLabel" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="System.TurnOff" xml:space="preserve"><value>Turn off</value></data>
+  <data name="System.TurnOn" xml:space="preserve"><value>Turn on</value></data>
+  <data name="System.TurningOff" xml:space="preserve"><value>Turning off…</value></data>
+  <data name="System.TurningOn" xml:space="preserve"><value>Turning on…</value></data>
+  <data name="System.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="System.UnknownHint" xml:space="preserve"><value>The state couldn't be determined.</value></data>
+  <data name="System.Unmute" xml:space="preserve"><value>Unmute</value></data>
+  <data name="System.VolumeDenied" xml:space="preserve"><value>Windows didn't allow access to the volume</value></data>
+  <data name="System.VolumeNoDevice" xml:space="preserve"><value>No audio output device</value></data>
+  <data name="System.VolumeUnavailable" xml:space="preserve"><value>Volume is unavailable</value></data>
+  <data name="System.VolumeUnsupported" xml:space="preserve"><value>Volume can't be controlled on this PC</value></data>
+  <data name="Toast.AutomationName" xml:space="preserve"><value>Claude: {0}</value></data>
+  <data name="Toast.Both" xml:space="preserve"><value>Your 5-hour and weekly limits have reset.</value></data>
+  <data name="Toast.Heading" xml:space="preserve"><value>Claude limit reset</value></data>
+  <data name="Toast.OneFive" xml:space="preserve"><value>Your 5-hour limit has reset.</value></data>
+  <data name="Toast.OneWeek" xml:space="preserve"><value>Your weekly limit has reset.</value></data>
+  <data name="Toast.WasAt" xml:space="preserve"><value> It was at {0}%.</value></data>
+  <data name="Tray.Exit" xml:space="preserve"><value>E&amp;xit</value></data>
+  <data name="Tray.Open" xml:space="preserve"><value>&amp;Open</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>&amp;Settings</value></data>
+  <data name="Tray.SettingsMissingTip" xml:space="preserve"><value>Settings are not available yet.</value></data>
+  <data name="Tray.SettingsTip" xml:space="preserve"><value>Open the Settings window.</value></data>
+  <data name="Tray.Startup" xml:space="preserve"><value>Start with &amp;Windows</value></data>
+  <data name="Tray.StartupTip" xml:space="preserve"><value>Starting with Windows is not available yet.</value></data>
+  <data name="Usage.CannotRead" xml:space="preserve"><value>The limits cannot be read right now.</value></data>
+  <data name="Usage.Disclosure" xml:space="preserve"><value>Lunar reads the Claude Code sign-in on this PC (read-only) and asks Anthropic over HTTPS for your usage limits. Nothing else is sent.</value></data>
+  <data name="Usage.FiveHourLimit" xml:space="preserve"><value>5-hour limit</value></data>
+  <data name="Usage.NoFigure" xml:space="preserve"><value>No figure reported</value></data>
+  <data name="Usage.Percent" xml:space="preserve"><value>{0}% used</value></data>
+  <data name="Usage.Reading" xml:space="preserve"><value>Reading your limits…</value></data>
+  <data name="Usage.ResetIn" xml:space="preserve"><value>Resets in {0} ({1})</value></data>
+  <data name="Usage.ResetNotReported" xml:space="preserve"><value>Reset time not reported</value></data>
+  <data name="Usage.ResetPassed" xml:space="preserve"><value>Reset time has passed; waiting for the next reading</value></data>
+  <data name="Usage.SaveFailed" xml:space="preserve"><value>Lunar could not save this choice. Nothing changed.</value></data>
+  <data name="Usage.ShowingLast" xml:space="preserve"><value> Showing the {0}.</value></data>
+  <data name="Usage.SignedOut" xml:space="preserve"><value>Claude Code is not signed in on this PC.</value></data>
+  <data name="Usage.SpanDay" xml:space="preserve"><value>{0} d</value></data>
+  <data name="Usage.SpanDayHour" xml:space="preserve"><value>{0} d {1} h</value></data>
+  <data name="Usage.SpanHour" xml:space="preserve"><value>{0} h</value></data>
+  <data name="Usage.SpanHourMin" xml:space="preserve"><value>{0} h {1} min</value></data>
+  <data name="Usage.SpanMin" xml:space="preserve"><value>{0} min</value></data>
+  <data name="Usage.SpanUnderMinute" xml:space="preserve"><value>under a minute</value></data>
+  <data name="Usage.Spoken" xml:space="preserve"><value>{0}: {1}. {2}</value></data>
+  <data name="Usage.Updated" xml:space="preserve"><value>Updated {0}</value></data>
+  <data name="Usage.WeeklyLimit" xml:space="preserve"><value>Weekly limit</value></data>
+  <data name="X.1IsTheSmallestFile" xml:space="preserve"><value>1 is the smallest file, 100 the sharpest</value></data>
+  <data name="X.AddFiles" xml:space="preserve"><value>Add files</value></data>
+  <data name="X.AddFilesToConvert" xml:space="preserve"><value>Add files to convert</value></data>
+  <data name="X.AnimatedEyes" xml:space="preserve"><value>Animated eyes</value></data>
+  <data name="X.Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="X.Back" xml:space="preserve"><value>Back</value></data>
+  <data name="X.BackgroundForTransparentAreas" xml:space="preserve"><value>Background for transparent areas</value></data>
+  <data name="X.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="X.CancelAll" xml:space="preserve"><value>Cancel all</value></data>
+  <data name="X.CancelEveryWaitingAndRunning" xml:space="preserve"><value>Cancel every waiting and running conversion</value></data>
+  <data name="X.CancelThisConversion" xml:space="preserve"><value>Cancel this conversion</value></data>
+  <data name="X.Change" xml:space="preserve"><value>Change</value></data>
+  <data name="X.ChooseAFolderForConverted" xml:space="preserve"><value>Choose a folder for converted files</value></data>
+  <data name="X.ChooseFolder" xml:space="preserve"><value>Choose folder...</value></data>
+  <data name="X.ChooseTheFolderForThe" xml:space="preserve"><value>Choose the folder for the results</value></data>
+  <data name="X.ClaudeLimitReset" xml:space="preserve"><value>Claude limit reset</value></data>
+  <data name="X.Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="X.ClearFinished" xml:space="preserve"><value>Clear finished</value></data>
+  <data name="X.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="X.ConfirmResetAllSettings" xml:space="preserve"><value>Confirm: reset all settings</value></data>
+  <data name="X.Conversions" xml:space="preserve"><value>Conversions</value></data>
+  <data name="X.Convert" xml:space="preserve"><value>Convert</value></data>
+  <data name="X.ConvertMoreFiles" xml:space="preserve"><value>Convert more files</value></data>
+  <data name="X.ConvertTheListedFiles" xml:space="preserve"><value>Convert the listed files</value></data>
+  <data name="X.DetailedDiagnostics" xml:space="preserve"><value>Detailed diagnostics</value></data>
+  <data name="X.Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="X.DismissTheNotice" xml:space="preserve"><value>Dismiss the notice</value></data>
+  <data name="X.DismissThisNotice" xml:space="preserve"><value>Dismiss this notice</value></data>
+  <data name="X.Display" xml:space="preserve"><value>Display</value></data>
+  <data name="X.DistanceFromTheTop" xml:space="preserve"><value>Distance from the top</value></data>
+  <data name="X.DistanceFromTheTopOf" xml:space="preserve"><value>Distance from the top of the screen</value></data>
+  <data name="X.DoNotReplaceGoBack" xml:space="preserve"><value>Do not replace; go back</value></data>
+  <data name="X.DropFilesHere" xml:space="preserve"><value>Drop files here</value></data>
+  <data name="X.ExistingResultsWithTheSame" xml:space="preserve"><value>Existing results with the same name will be replaced. Your original files are never replaced.</value></data>
+  <data name="X.FileConverter" xml:space="preserve"><value>File converter</value></data>
+  <data name="X.FolderForConvertedFiles" xml:space="preserve"><value>Folder for converted files</value></data>
+  <data name="X.GoBackOneStep" xml:space="preserve"><value>Go back one step</value></data>
+  <data name="X.GoToTheNextStep" xml:space="preserve"><value>Go to the next step</value></data>
+  <data name="X.IfAResultSName" xml:space="preserve"><value>If a result's name is taken</value></data>
+  <data name="X.JPEGQuality" xml:space="preserve"><value>JPEG quality</value></data>
+  <data name="X.KeepMySettings" xml:space="preserve"><value>Keep my settings</value></data>
+  <data name="X.LunarEyes" xml:space="preserve"><value>Lunar eyes</value></data>
+  <data name="X.LunarSettings" xml:space="preserve"><value>Lunar settings</value></data>
+  <data name="X.Margin" xml:space="preserve"><value>Margin</value></data>
+  <data name="X.Media" xml:space="preserve"><value>Media</value></data>
+  <data name="X.MoveTheIslandCloserTo" xml:space="preserve"><value>Move the island closer to the top</value></data>
+  <data name="X.MoveTheIslandFurtherFrom" xml:space="preserve"><value>Move the island further from the top</value></data>
+  <data name="X.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="X.NextPage" xml:space="preserve"><value>Next page</value></data>
+  <data name="X.NoFilesYetDropFiles" xml:space="preserve"><value>No files yet. Drop files here or press Add files.</value></data>
+  <data name="X.NoSlidesFadesOrConfetti" xml:space="preserve"><value>No slides, fades or confetti. Windows' own animation setting is always respected.</value></data>
+  <data name="X.NotAvailableYetItArrives" xml:space="preserve"><value>Not available yet. It arrives with the installer.</value></data>
+  <data name="X.OK" xml:space="preserve"><value>OK</value></data>
+  <data name="X.OpenSettings" xml:space="preserve"><value>Open Settings</value></data>
+  <data name="X.PDFPassword" xml:space="preserve"><value>PDF password</value></data>
+  <data name="X.PNGJPGJPEGDOCXAnd" xml:space="preserve"><value>PNG, JPG, JPEG, DOCX and PDF. Your originals are never changed.</value></data>
+  <data name="X.PageSize" xml:space="preserve"><value>Page size</value></data>
+  <data name="X.Pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="X.PagesEmptyMeansEveryPage" xml:space="preserve"><value>Pages (empty means every page; for example 1-3, 5, 8-)</value></data>
+  <data name="X.PagesToConvert" xml:space="preserve"><value>Pages to convert</value></data>
+  <data name="X.PasswordIfAPDFIs" xml:space="preserve"><value>Password, if a PDF is protected (kept in memory only)</value></data>
+  <data name="X.PickAFormat" xml:space="preserve"><value>Pick a format</value></data>
+  <data name="X.PictureOnThePage" xml:space="preserve"><value>Picture on the page</value></data>
+  <data name="X.PlaybackPosition" xml:space="preserve"><value>Playback position</value></data>
+  <data name="X.PreviousPage" xml:space="preserve"><value>Previous page</value></data>
+  <data name="X.Privacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="X.Progress" xml:space="preserve"><value>Progress</value></data>
+  <data name="X.ReadTheLimitsAgain" xml:space="preserve"><value>Read the limits again</value></data>
+  <data name="X.ReduceMotion" xml:space="preserve"><value>Reduce motion</value></data>
+  <data name="X.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="X.RemoveAllFilesFromThe" xml:space="preserve"><value>Remove all files from the list</value></data>
+  <data name="X.RemoveFinishedConversionsFromThe" xml:space="preserve"><value>Remove finished conversions from the list</value></data>
+  <data name="X.ReplaceAndConvert" xml:space="preserve"><value>Replace and convert</value></data>
+  <data name="X.ReplaceExistingResultsAndConvert" xml:space="preserve"><value>Replace existing results and convert</value></data>
+  <data name="X.ReplaceExistingResultsWithThe" xml:space="preserve"><value>Replace existing results with the same name? Your original files are never replaced.</value></data>
+  <data name="X.Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="X.ResetAllSettings" xml:space="preserve"><value>Reset all settings...</value></data>
+  <data name="X.ResetAllSettings2" xml:space="preserve"><value>Reset all settings</value></data>
+  <data name="X.ResetEverySettingToIts" xml:space="preserve"><value>Reset every setting to its default? This also turns the Usage page off.</value></data>
+  <data name="X.ResolutionPixelsPerInch" xml:space="preserve"><value>Resolution (pixels per inch)</value></data>
+  <data name="X.Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="X.RetryReadingMedia" xml:space="preserve"><value>Retry reading media</value></data>
+  <data name="X.SaveResultsIn" xml:space="preserve"><value>Save results in</value></data>
+  <data name="X.Seek" xml:space="preserve"><value>Seek</value></data>
+  <data name="X.Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="X.SettingsAreSavedOnlyOn" xml:space="preserve"><value>Settings are saved only on this PC.</value></data>
+  <data name="X.ShowClaudeUsage" xml:space="preserve"><value>Show Claude usage</value></data>
+  <data name="X.ShowInFolder" xml:space="preserve"><value>Show in folder</value></data>
+  <data name="X.ShowLunarOn" xml:space="preserve"><value>Show Lunar on</value></data>
+  <data name="X.ShowTheConversionsThatWere" xml:space="preserve"><value>Show the conversions that were started</value></data>
+  <data name="X.ShowTheResultInIts" xml:space="preserve"><value>Show the result in its folder</value></data>
+  <data name="X.StartOverWithNewFiles" xml:space="preserve"><value>Start over with new files</value></data>
+  <data name="X.StartWithWindows" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="X.StartWithWindowsNotAvailable" xml:space="preserve"><value>Start with Windows, not available yet</value></data>
+  <data name="X.SystemControls" xml:space="preserve"><value>System controls</value></data>
+  <data name="X.TakesEffectTheNextTime" xml:space="preserve"><value>Takes effect the next time Lunar starts.</value></data>
+  <data name="X.TheEyesBlinkAndLook" xml:space="preserve"><value>The eyes blink and look around while the island is closed.</value></data>
+  <data name="X.Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="X.TryAgain" xml:space="preserve"><value>Try again</value></data>
+  <data name="X.TryThisConversionAgain" xml:space="preserve"><value>Try this conversion again</value></data>
+  <data name="X.Tweaks" xml:space="preserve"><value>Tweaks</value></data>
+  <data name="X.Usage" xml:space="preserve"><value>Usage</value></data>
+  <data name="X.UseTheDefault" xml:space="preserve"><value>Use the default</value></data>
+  <data name="X.UseTheDefaultFolder" xml:space="preserve"><value>Use the default folder</value></data>
+  <data name="X.Volume" xml:space="preserve"><value>Volume</value></data>
+  <data name="X.WhereConvertedFilesGo" xml:space="preserve"><value>Where converted files go</value></data>
+  <data name="X.WritesMoreDetailToLunar" xml:space="preserve"><value>Writes more detail to Lunar's log files on this PC. Logs never contain file names, file contents, passwords or what you play.</value></data>
+  <data name="Nav.PageChanged" xml:space="preserve"><value>{0}, page {1} of {2}</value></data>
+</root>

@@ -1,14 +1,15 @@
 <Window x:Class="Lunar.Desktop.Features.Settings.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
         xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
         xmlns:c="clr-namespace:Lunar.Desktop.Controls"
-        Title="Lunar settings" Width="480" Height="680" MinWidth="380" MinHeight="420"
+        Title="{res:Text X.LunarSettings}" Width="480" Height="680" MinWidth="380" MinHeight="420"
         WindowStartupLocation="CenterScreen" ShowInTaskbar="True" UseLayoutRounding="True" SnapsToDevicePixels="True"
         Background="{DynamicResource Lunar.Brush.Background}"
         FontFamily="{DynamicResource Lunar.Font.Family}" FontSize="{DynamicResource Lunar.Font.Size.Body}"
         Foreground="{DynamicResource Lunar.Brush.TextPrimary}"
-        automation:AutomationProperties.Name="Lunar settings">
+        automation:AutomationProperties.Name="{res:Text X.LunarSettings}">
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
@@ -80,7 +81,7 @@
 
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="20,18,20,12">
-      <TextBlock Text="Settings" Style="{DynamicResource Lunar.Text.Title}" FontWeight="SemiBold" Margin="0,0,0,12"
+      <TextBlock Text="{res:Text X.Settings}" Style="{DynamicResource Lunar.Text.Title}" FontWeight="SemiBold" Margin="0,0,0,12"
                  automation:AutomationProperties.HeadingLevel="Level1" />
 
       <!-- A repair made when Lunar started, or a newer file that cannot be changed. -->
@@ -88,8 +89,8 @@
               automation:AutomationProperties.LiveSetting="Polite">
         <StackPanel>
           <TextBlock x:Name="NoticeText" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
-          <Button x:Name="DismissNoticeButton" Content="Dismiss" Command="{Binding DismissNoticeCommand}" HorizontalAlignment="Left" Margin="0,8,0,0"
-                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Dismiss this notice" />
+          <Button x:Name="DismissNoticeButton" Content="{res:Text X.Dismiss}" Command="{Binding DismissNoticeCommand}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.DismissThisNotice}" />
         </StackPanel>
       </Border>
 
@@ -107,20 +108,20 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <StackPanel>
-            <TextBlock Text="Start with Windows" Style="{StaticResource SectionTitle}" Margin="0" />
-            <TextBlock x:Name="StartupHint" Text="Not available yet. It arrives with the installer." Style="{StaticResource Hint}" />
+            <TextBlock Text="{res:Text X.StartWithWindows}" Style="{StaticResource SectionTitle}" Margin="0" />
+            <TextBlock x:Name="StartupHint" Text="{res:Text X.NotAvailableYetItArrives}" Style="{StaticResource Hint}" />
           </StackPanel>
           <Button x:Name="StartupSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" IsEnabled="False" VerticalAlignment="Center"
-                  c:SwitchState.IsOn="False" automation:AutomationProperties.Name="Start with Windows, not available yet" />
+                  c:SwitchState.IsOn="False" automation:AutomationProperties.Name="{res:Text X.StartWithWindowsNotAvailable}" />
         </Grid>
       </Border>
 
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="Display" Style="{StaticResource SectionTitle}" />
-          <TextBlock Text="Show Lunar on" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,0,0,6" />
+          <TextBlock Text="{res:Text X.Display}" Style="{StaticResource SectionTitle}" />
+          <TextBlock Text="{res:Text X.ShowLunarOn}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,0,0,6" />
           <ItemsControl x:Name="MonitorList" ItemsSource="{Binding Monitors}" Focusable="False" IsTabStop="False"
-                        automation:AutomationProperties.Name="Show Lunar on">
+                        automation:AutomationProperties.Name="{res:Text X.ShowLunarOn}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <RadioButton Style="{StaticResource ChoiceRadio}" GroupName="Lunar.Settings.Monitor" Content="{Binding Label}"
@@ -130,23 +131,23 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
-          <TextBlock Text="Distance from the top of the screen" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,6,0,6" />
+          <TextBlock Text="{res:Text X.DistanceFromTheTopOf}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,6,0,6" />
           <StackPanel Orientation="Horizontal">
             <Button x:Name="OffsetDownButton" Content="&#x2212;" Command="{Binding OffsetDownCommand}" MinWidth="36"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Move the island closer to the top" />
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.MoveTheIslandCloserTo}" />
             <TextBlock x:Name="OffsetValue" Text="{Binding TopOffsetText}" Style="{DynamicResource Lunar.Text.Body}" MinWidth="64" TextAlignment="Center"
-                       VerticalAlignment="Center" Margin="8,0" automation:AutomationProperties.Name="Distance from the top" />
+                       VerticalAlignment="Center" Margin="8,0" automation:AutomationProperties.Name="{res:Text X.DistanceFromTheTop}" />
             <Button x:Name="OffsetUpButton" Content="+" Command="{Binding OffsetUpCommand}" MinWidth="36"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Move the island further from the top" />
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.MoveTheIslandFurtherFrom}" />
           </StackPanel>
         </StackPanel>
       </Border>
 
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="Appearance" Style="{StaticResource SectionTitle}" />
-          <TextBlock Text="Theme" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,0,0,6" />
-          <ItemsControl x:Name="ThemeList" ItemsSource="{Binding Themes}" Focusable="False" IsTabStop="False" automation:AutomationProperties.Name="Theme">
+          <TextBlock Text="{res:Text X.Appearance}" Style="{StaticResource SectionTitle}" />
+          <TextBlock Text="{res:Text X.Theme}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,0,0,6" />
+          <ItemsControl x:Name="ThemeList" ItemsSource="{Binding Themes}" Focusable="False" IsTabStop="False" automation:AutomationProperties.Name="{res:Text X.Theme}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel Orientation="Horizontal" />
@@ -161,18 +162,36 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
+          <TextBlock Text="{res:Text Settings.LanguageHeading}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,12,0,6" />
+          <ItemsControl x:Name="LanguageList" ItemsSource="{Binding Languages}" Focusable="False" IsTabStop="False" automation:AutomationProperties.Name="{res:Text Settings.LanguageHeading}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <RadioButton Style="{StaticResource ChoiceRadio}" GroupName="Lunar.Settings.Language" Content="{Binding Label}"
+                             IsChecked="{Binding IsSelected, Mode=OneWay}" Command="{Binding Command}"
+                             automation:AutomationProperties.Name="{Binding Label}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock x:Name="LanguageRestart" Text="{res:Text Settings.LanguageRestart}" Style="{StaticResource Hint}"
+                     Visibility="{Binding LanguageNeedsRestart, Converter={StaticResource BoolToVisible}}" />
+
           <Grid Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock Text="Reduce motion" Style="{DynamicResource Lunar.Text.Body}" />
-              <TextBlock Text="No slides, fades or confetti. Windows' own animation setting is always respected." Style="{StaticResource Hint}" />
+              <TextBlock Text="{res:Text X.ReduceMotion}" Style="{DynamicResource Lunar.Text.Body}" />
+              <TextBlock Text="{res:Text X.NoSlidesFadesOrConfetti}" Style="{StaticResource Hint}" />
             </StackPanel>
             <Button x:Name="ReduceMotionSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
                     c:SwitchState.IsOn="{Binding ReduceMotion}" Command="{Binding ToggleReduceMotionCommand}"
-                    automation:AutomationProperties.Name="Reduce motion" />
+                    automation:AutomationProperties.Name="{res:Text X.ReduceMotion}" />
           </Grid>
 
           <Grid Margin="0,12,0,0">
@@ -181,69 +200,69 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock Text="Animated eyes" Style="{DynamicResource Lunar.Text.Body}" />
-              <TextBlock Text="The eyes blink and look around while the island is closed." Style="{StaticResource Hint}" />
+              <TextBlock Text="{res:Text X.AnimatedEyes}" Style="{DynamicResource Lunar.Text.Body}" />
+              <TextBlock Text="{res:Text X.TheEyesBlinkAndLook}" Style="{StaticResource Hint}" />
             </StackPanel>
             <Button x:Name="EyesSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
                     c:SwitchState.IsOn="{Binding EyeAnimationEnabled}" Command="{Binding ToggleEyesCommand}"
-                    automation:AutomationProperties.Name="Animated eyes" />
+                    automation:AutomationProperties.Name="{res:Text X.AnimatedEyes}" />
           </Grid>
         </StackPanel>
       </Border>
 
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="File converter" Style="{StaticResource SectionTitle}" />
-          <TextBlock Text="Where converted files go" Style="{DynamicResource Lunar.Text.Secondary}" />
+          <TextBlock Text="{res:Text X.FileConverter}" Style="{StaticResource SectionTitle}" />
+          <TextBlock Text="{res:Text X.WhereConvertedFilesGo}" Style="{DynamicResource Lunar.Text.Secondary}" />
           <TextBlock x:Name="FolderText" Text="{Binding OutputFolderText}" Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" Margin="0,2,0,8"
-                     automation:AutomationProperties.Name="Folder for converted files" />
+                     automation:AutomationProperties.Name="{res:Text X.FolderForConvertedFiles}" />
           <StackPanel Orientation="Horizontal">
-            <Button x:Name="ChooseFolderButton" Content="Choose folder..." Command="{Binding ChooseFolderCommand}" Margin="0,0,8,0"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Choose a folder for converted files" />
-            <Button x:Name="ClearFolderButton" Content="Use the default" Command="{Binding ClearFolderCommand}"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Use the default folder" />
+            <Button x:Name="ChooseFolderButton" Content="{res:Text X.ChooseFolder}" Command="{Binding ChooseFolderCommand}" Margin="0,0,8,0"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ChooseAFolderForConverted}" />
+            <Button x:Name="ClearFolderButton" Content="{res:Text X.UseTheDefault}" Command="{Binding ClearFolderCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.UseTheDefaultFolder}" />
           </StackPanel>
         </StackPanel>
       </Border>
 
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="Privacy" Style="{StaticResource SectionTitle}" />
+          <TextBlock Text="{res:Text X.Privacy}" Style="{StaticResource SectionTitle}" />
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock Text="Detailed diagnostics" Style="{DynamicResource Lunar.Text.Body}" />
+              <TextBlock Text="{res:Text X.DetailedDiagnostics}" Style="{DynamicResource Lunar.Text.Body}" />
               <TextBlock x:Name="DiagnosticsHint" Style="{StaticResource Hint}"
-                         Text="Writes more detail to Lunar's log files on this PC. Logs never contain file names, file contents, passwords or what you play." />
+                         Text="{res:Text X.WritesMoreDetailToLunar}" />
             </StackPanel>
             <Button x:Name="DiagnosticsSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
                     c:SwitchState.IsOn="{Binding DiagnosticsEnabled}" Command="{Binding ToggleDiagnosticsCommand}"
-                    automation:AutomationProperties.Name="Detailed diagnostics" />
+                    automation:AutomationProperties.Name="{res:Text X.DetailedDiagnostics}" />
           </Grid>
-          <TextBlock x:Name="DiagnosticsRestart" Text="Takes effect the next time Lunar starts." Style="{StaticResource Hint}"
+          <TextBlock x:Name="DiagnosticsRestart" Text="{res:Text X.TakesEffectTheNextTime}" Style="{StaticResource Hint}"
                      Visibility="{Binding DiagnosticsNeedsRestart, Converter={StaticResource BoolToVisible}}" />
-          <TextBlock Text="Settings are saved only on this PC." Style="{StaticResource Hint}" Margin="0,10,0,0" />
+          <TextBlock Text="{res:Text X.SettingsAreSavedOnlyOn}" Style="{StaticResource Hint}" Margin="0,10,0,0" />
         </StackPanel>
       </Border>
 
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="Reset" Style="{StaticResource SectionTitle}" />
+          <TextBlock Text="{res:Text X.Reset}" Style="{StaticResource SectionTitle}" />
           <StackPanel Visibility="{Binding IsNotConfirmingReset, Converter={StaticResource BoolToVisible}}">
-            <Button x:Name="AskResetButton" Content="Reset all settings..." Command="{Binding AskResetCommand}" HorizontalAlignment="Left"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Reset all settings" />
+            <Button x:Name="AskResetButton" Content="{res:Text X.ResetAllSettings}" Command="{Binding AskResetCommand}" HorizontalAlignment="Left"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ResetAllSettings2}" />
           </StackPanel>
           <StackPanel x:Name="ResetConfirm" Visibility="{Binding IsConfirmingReset, Converter={StaticResource BoolToVisible}}"
                       automation:AutomationProperties.LiveSetting="Polite">
-            <TextBlock Text="Reset every setting to its default? This also turns the Usage page off." Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
+            <TextBlock Text="{res:Text X.ResetEverySettingToIts}" Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-              <Button x:Name="ConfirmResetButton" Content="Reset" Command="{Binding ConfirmResetCommand}" Margin="0,0,8,0"
-                      Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Confirm: reset all settings" />
-              <Button x:Name="CancelResetButton" Content="Keep my settings" Command="{Binding CancelResetCommand}"
-                      Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Keep my settings" />
+              <Button x:Name="ConfirmResetButton" Content="{res:Text X.Reset}" Command="{Binding ConfirmResetCommand}" Margin="0,0,8,0"
+                      Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ConfirmResetAllSettings}" />
+              <Button x:Name="CancelResetButton" Content="{res:Text X.KeepMySettings}" Command="{Binding CancelResetCommand}"
+                      Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.KeepMySettings}" />
             </StackPanel>
           </StackPanel>
         </StackPanel>

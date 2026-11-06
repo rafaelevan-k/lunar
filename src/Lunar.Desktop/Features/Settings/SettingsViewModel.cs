@@ -6,6 +6,7 @@ using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Features.Converter;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -33,6 +34,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private readonly CancellationTokenSource _lifetime = new();
 
     private IReadOnlyList<SettingsChoice> _themes = [];
+    private IReadOnlyList<SettingsChoice> _languages = [];
+    private readonly string _languageInUse = Strings.Culture.TwoLetterISOLanguageName;
     private IReadOnlyList<SettingsChoice> _monitors = [];
     private string? _problem;
     private bool _noticeDismissed;
@@ -123,6 +126,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     public bool DiagnosticsNeedsRestart => DiagnosticsEnabled != _diagnosticsInUse;
 
     public IReadOnlyList<SettingsChoice> Themes => _themes;
+
+    /// <summary>The language choices (ADR-0017): follow Windows, English, Bahasa Indonesia.</summary>
+    public IReadOnlyList<SettingsChoice> Languages => _languages;
+
+    /// <summary>True when the saved language is not the one this run is showing (it applies at the next start).</summary>
+    public bool LanguageNeedsRestart =>
+        Strings.Resolve(_settings.Current.Locale ?? Strings.FromWindows(System.Globalization.CultureInfo.CurrentUICulture)) != _languageInUse;
 
     public IReadOnlyList<SettingsChoice> Monitors => _monitors;
 
@@ -259,12 +269,22 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         var current = _settings.Current;
         _themes =
         [
-            Theme("Match Windows", ThemePreference.System, current),
-            Theme("Dark", ThemePreference.Dark, current),
-            Theme("Light", ThemePreference.Light, current)
+            Theme(Strings.Get("Settings.ThemeMatch"), ThemePreference.System, current),
+            Theme(Strings.Get("Settings.ThemeDark"), ThemePreference.Dark, current),
+            Theme(Strings.Get("Settings.ThemeLight"), ThemePreference.Light, current)
+        ];
+        _languages =
+        [
+            Language(Strings.Get("Settings.LanguageMatch"), null, current),
+            Language(Strings.Get("Settings.LanguageEn"), "en", current),
+            Language(Strings.Get("Settings.LanguageId"), "id", current)
         ];
         _monitors = BuildMonitors(current.Island.PreferredMonitorId);
     }
+
+    private SettingsChoice Language(string label, string? tag, LunarSettings current) =>
+        new(label, tag is null ? current.Locale is null : current.Locale is not null && Strings.Resolve(current.Locale) == tag,
+            Save(s => s with { Locale = tag }, _lifetime.Token));
 
     private SettingsChoice Theme(string label, ThemePreference value, LunarSettings current) =>
         new(label, current.Appearance.Theme == value, Save(s => s with { Appearance = s.Appearance with { Theme = value } }, _lifetime.Token));

@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common.ErrorPrefix" xml:space="preserve"><value>Kesalahan: {0}</value></data>
+  <data name="Common.Loading" xml:space="preserve"><value>Memuat</value></data>
+  <data name="Common.Retry" xml:space="preserve"><value>Coba lagi</value></data>
+  <data name="Conv.AddFiles" xml:space="preserve"><value>Tambahkan berkas untuk dikonversi.</value></data>
+  <data name="Conv.AddFilesFirst" xml:space="preserve"><value>Tambahkan berkas dulu.</value></data>
+  <data name="Conv.AddOneConvertible" xml:space="preserve"><value>Tambahkan setidaknya satu berkas yang dapat dikonversi.</value></data>
+  <data name="Conv.CannotBecome" xml:space="preserve"><value>Berkas {0} tidak dapat menjadi {1} di versi ini.</value></data>
+  <data name="Conv.CheckFailed" xml:space="preserve"><value>Lunar tidak dapat memeriksa berkas ini. Coba tambahkan lagi.</value></data>
+  <data name="Conv.Checking" xml:space="preserve"><value>Memeriksa berkas...</value></data>
+  <data name="Conv.CheckingShort" xml:space="preserve"><value>memeriksa...</value></data>
+  <data name="Conv.DuplicateMany" xml:space="preserve"><value>{0} berkas sudah ada dalam daftar.</value></data>
+  <data name="Conv.DuplicateOne" xml:space="preserve"><value>1 berkas sudah ada dalam daftar.</value></data>
+  <data name="Conv.FileReadyMany" xml:space="preserve"><value>{0} berkas siap</value></data>
+  <data name="Conv.FileReadyOne" xml:space="preserve"><value>1 berkas siap</value></data>
+  <data name="Conv.FixPages" xml:space="preserve"><value>Perbaiki daftar halaman dulu.</value></data>
+  <data name="Conv.FolderPickerFailed" xml:space="preserve"><value>Lunar tidak dapat membuka pemilih folder.</value></data>
+  <data name="Conv.ItemChecking" xml:space="preserve"><value>Memeriksa...</value></data>
+  <data name="Conv.KindJpeg" xml:space="preserve"><value>Gambar JPEG</value></data>
+  <data name="Conv.KindPdf" xml:space="preserve"><value>Dokumen PDF</value></data>
+  <data name="Conv.KindPng" xml:space="preserve"><value>Gambar PNG</value></data>
+  <data name="Conv.KindWord" xml:space="preserve"><value>Dokumen Word</value></data>
+  <data name="Conv.ModeEmbed" xml:space="preserve"><value>gambar ditempatkan di dalam dokumen</value></data>
+  <data name="Conv.ModeExternal" xml:space="preserve"><value>ditata oleh LibreOffice, sehingga tata letak bisa berbeda</value></data>
+  <data name="Conv.ModeNative" xml:space="preserve"><value>gambar dienkode ulang</value></data>
+  <data name="Conv.ModeRasterize" xml:space="preserve"><value>setiap halaman menjadi gambar</value></data>
+  <data name="Conv.ModeSame" xml:space="preserve"><value>salinan dengan nama baru</value></data>
+  <data name="Conv.NeedsLibreOffice" xml:space="preserve"><value>Belum tersedia: perlu LibreOffice, yang Anda pasang sendiri (Lunar tidak pernah memasangnya untuk Anda).</value></data>
+  <data name="Conv.NoFormatFits" xml:space="preserve"><value>Tidak ada format yang cocok untuk semua berkas dalam daftar.</value></data>
+  <data name="Conv.NoneConvertible" xml:space="preserve"><value>Belum ada berkas yang dapat dikonversi.</value></data>
+  <data name="Conv.NotChecked" xml:space="preserve"><value>Belum diperiksa.</value></data>
+  <data name="Conv.NothingLeft" xml:space="preserve"><value>Tidak ada yang tersisa untuk dikonversi. Periksa daftar dan coba lagi.</value></data>
+  <data name="Conv.OverflowMany" xml:space="preserve"><value>Lunar mengonversi paling banyak {0} berkas sekaligus, jadi {1} berkas tidak ditambahkan.</value></data>
+  <data name="Conv.OverflowOne" xml:space="preserve"><value>Lunar mengonversi paling banyak {0} berkas sekaligus, jadi 1 berkas tidak ditambahkan.</value></data>
+  <data name="Conv.PickerFailed" xml:space="preserve"><value>Lunar tidak dapat membuka pemilih berkas. Anda juga dapat menyeret berkas ke halaman ini.</value></data>
+  <data name="Conv.Ready" xml:space="preserve"><value>Siap.</value></data>
+  <data name="Conv.ReadyRenamed" xml:space="preserve"><value>Siap. Namanya sudah dipakai, jadi hasilnya akan bernama {0}.</value></data>
+  <data name="Conv.RefusedMany" xml:space="preserve"><value>{0} tidak dapat dikonversi</value></data>
+  <data name="Conv.RefusedOne" xml:space="preserve"><value>1 tidak dapat dikonversi</value></data>
+  <data name="Conv.RowAutomation" xml:space="preserve"><value>{0}, {1}, {2}</value></data>
+  <data name="Conv.SavingBeside" xml:space="preserve"><value>salin di samping berkas asli</value></data>
+  <data name="Conv.SavingTo" xml:space="preserve"><value>simpan ke {0}</value></data>
+  <data name="Conv.SkippedExists" xml:space="preserve"><value>Dilewati: sudah ada berkas dengan nama hasil itu.</value></data>
+  <data name="Conv.StartFailed" xml:space="preserve"><value>Lunar tidak dapat memulai konversi. Coba lagi.</value></data>
+  <data name="Conv.TargetAutomation" xml:space="preserve"><value>{0}, {1}{2}</value></data>
+  <data name="Conv.TargetSelectedPrefix" xml:space="preserve"><value>dipilih, </value></data>
+  <data name="Conv.TargetUnavailablePrefix" xml:space="preserve"><value>tidak tersedia, </value></data>
+  <data name="Conv.UnknownType" xml:space="preserve"><value>Jenis tidak dikenal</value></data>
+  <data name="Conv.Unnamed" xml:space="preserve"><value>(tanpa nama)</value></data>
+  <data name="Media.CommandClosed" xml:space="preserve"><value>Pemutar itu sudah ditutup.</value></data>
+  <data name="Media.CommandOther" xml:space="preserve"><value>Pemutar tidak menerima perintah itu.</value></data>
+  <data name="Media.CommandTimeout" xml:space="preserve"><value>Pemutar tidak menjawab.</value></data>
+  <data name="Media.CommandUnsupported" xml:space="preserve"><value>Aplikasi ini tidak menyediakannya.</value></data>
+  <data name="Media.LiveNote" xml:space="preserve"><value>Siaran langsung atau tanpa lini masa</value></data>
+  <data name="Media.NoSessionHint" xml:space="preserve"><value>Putar musik atau video di aplikasi mana pun dan akan muncul di sini.</value></data>
+  <data name="Media.NoSessionTitle" xml:space="preserve"><value>Tidak ada yang diputar</value></data>
+  <data name="Media.NotSeekableNote" xml:space="preserve"><value>Aplikasi ini tidak mengizinkan penggeseran posisi</value></data>
+  <data name="Media.Pause" xml:space="preserve"><value>Jeda</value></data>
+  <data name="Media.Paused" xml:space="preserve"><value>Dijeda</value></data>
+  <data name="Media.Play" xml:space="preserve"><value>Putar</value></data>
+  <data name="Media.Playing" xml:space="preserve"><value>Diputar</value></data>
+  <data name="Media.SeekChanged" xml:space="preserve"><value>Medianya berubah, sehingga posisi itu tidak berlaku lagi.</value></data>
+  <data name="Media.SeekOther" xml:space="preserve"><value>Pemutar tidak pindah ke posisi itu.</value></data>
+  <data name="Media.SeekUnsupported" xml:space="preserve"><value>Aplikasi ini tidak mengizinkan penggeseran posisi.</value></data>
+  <data name="Media.SessionPosition" xml:space="preserve"><value>{0} dari {1}</value></data>
+  <data name="Media.SourceLine" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Media.Stopped" xml:space="preserve"><value>Berhenti</value></data>
+  <data name="Media.Summary" xml:space="preserve"><value>{0} oleh {1}, dari {2}</value></data>
+  <data name="Media.SummaryWithStatus" xml:space="preserve"><value>{0} oleh {1}, dari {2}, {3}</value></data>
+  <data name="Media.SwitchPlayer" xml:space="preserve"><value>Ganti pemutar</value></data>
+  <data name="Media.SwitchTo" xml:space="preserve"><value>Beralih ke {0}</value></data>
+  <data name="Media.TimelineLabel" xml:space="preserve"><value>{0} dari {1}</value></data>
+  <data name="Media.UnavailableDenied" xml:space="preserve"><value>Windows tidak mengizinkan akses ke apa yang sedang diputar.</value></data>
+  <data name="Media.UnavailableOther" xml:space="preserve"><value>Tidak dapat membaca apa yang sedang diputar.</value></data>
+  <data name="Media.UnavailableUnsupported" xml:space="preserve"><value>Kontrol media tidak tersedia di PC ini.</value></data>
+  <data name="Media.UnknownArtist" xml:space="preserve"><value>Artis tidak diketahui</value></data>
+  <data name="Media.UnknownSource" xml:space="preserve"><value>Aplikasi tidak diketahui</value></data>
+  <data name="Media.UnknownTitle" xml:space="preserve"><value>Judul tidak diketahui</value></data>
+  <data name="Nav.Converter" xml:space="preserve"><value>Pengonversi berkas</value></data>
+  <data name="Nav.Media" xml:space="preserve"><value>Media</value></data>
+  <data name="Nav.PageDot" xml:space="preserve"><value>Halaman {0}</value></data>
+  <data name="Nav.System" xml:space="preserve"><value>Sistem</value></data>
+  <data name="Nav.Usage" xml:space="preserve"><value>Pemakaian</value></data>
+  <data name="Opt.AllPages" xml:space="preserve"><value>semua halaman</value></data>
+  <data name="Opt.AutomationChoice" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Opt.AutomationChoiceSelected" xml:space="preserve"><value>{0}: {1}, dipilih</value></data>
+  <data name="Opt.Black" xml:space="preserve"><value>Hitam</value></data>
+  <data name="Opt.Done" xml:space="preserve"><value>Selesai</value></data>
+  <data name="Opt.Edit" xml:space="preserve"><value>Ubah</value></data>
+  <data name="Opt.FillPage" xml:space="preserve"><value>Penuhi halaman</value></data>
+  <data name="Opt.FitPicture" xml:space="preserve"><value>Sesuaikan gambar</value></data>
+  <data name="Opt.GroupBackground" xml:space="preserve"><value>Latar untuk area transparan</value></data>
+  <data name="Opt.GroupCollision" xml:space="preserve"><value>Jika nama hasil sudah dipakai</value></data>
+  <data name="Opt.GroupFit" xml:space="preserve"><value>Penyesuaian</value></data>
+  <data name="Opt.GroupMargin" xml:space="preserve"><value>Margin</value></data>
+  <data name="Opt.GroupPageSize" xml:space="preserve"><value>Ukuran halaman</value></data>
+  <data name="Opt.GroupResolution" xml:space="preserve"><value>Resolusi</value></data>
+  <data name="Opt.JpegQuality" xml:space="preserve"><value>Kualitas JPEG: {0}</value></data>
+  <data name="Opt.KeepBoth" xml:space="preserve"><value>Simpan keduanya</value></data>
+  <data name="Opt.LightGray" xml:space="preserve"><value>Abu-abu muda</value></data>
+  <data name="Opt.MarginNarrow" xml:space="preserve"><value>Sempit</value></data>
+  <data name="Opt.MarginNone" xml:space="preserve"><value>Tanpa</value></data>
+  <data name="Opt.MarginNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Opt.NoticeCopy" xml:space="preserve"><value>Salinan dengan nama baru; tidak ada yang dienkode ulang.</value></data>
+  <data name="Opt.NoticeEmbedPdf" xml:space="preserve"><value>Gambar ditempatkan di dalam PDF. Tidak ada teks yang dikenali, jadi tidak ada teks untuk dipilih atau dicari.</value></data>
+  <data name="Opt.NoticeEmbedWord" xml:space="preserve"><value>Gambar ditempatkan di dalam berkas Word. Tidak ada teks yang dikenali, jadi tidak ada teks untuk diedit atau dicari.</value></data>
+  <data name="Opt.NoticeLayout" xml:space="preserve"><value>Perlu LibreOffice, yang Anda pasang sendiri. Ia menata halaman dengan caranya sendiri, sehingga font dan tata letak bisa berbeda dari Word.</value></data>
+  <data name="Opt.NoticeLossy" xml:space="preserve"><value>JPEG bersifat lossy: sebagian detail hilang, dan area transparan diisi dengan warna latar. Detail kamera dan metadata lain tidak disalin.</value></data>
+  <data name="Opt.NoticePixels" xml:space="preserve"><value>Gambar mempertahankan pikselnya persis, tetapi PNG biasanya lebih besar. Detail kamera dan metadata lain tidak disalin.</value></data>
+  <data name="Opt.NoticeRaster" xml:space="preserve"><value>Setiap halaman menjadi gambar, sehingga teksnya tidak dapat dipilih lagi, dan satu hasil ditulis untuk setiap halaman.</value></data>
+  <data name="Opt.PageFits" xml:space="preserve"><value>halaman sesuai gambar</value></data>
+  <data name="Opt.Pages" xml:space="preserve"><value>halaman {0}</value></data>
+  <data name="Opt.Ppi" xml:space="preserve"><value>{0} ppi</value></data>
+  <data name="Opt.Quality" xml:space="preserve"><value>Kualitas {0}</value></data>
+  <data name="Opt.Replace" xml:space="preserve"><value>Ganti</value></data>
+  <data name="Opt.Skip" xml:space="preserve"><value>Lewati</value></data>
+  <data name="Opt.SumKeep" xml:space="preserve"><value>simpan keduanya jika sudah ada</value></data>
+  <data name="Opt.SumReplace" xml:space="preserve"><value>ganti jika sudah ada</value></data>
+  <data name="Opt.SumSkip" xml:space="preserve"><value>lewati jika sudah ada</value></data>
+  <data name="Opt.White" xml:space="preserve"><value>Putih</value></data>
+  <data name="Opt.WholePicture" xml:space="preserve"><value>Seluruh gambar</value></data>
+  <data name="Opt.WithMargin" xml:space="preserve"><value>dengan margin</value></data>
+  <data name="Picker.All" xml:space="preserve"><value>Semua berkas</value></data>
+  <data name="Picker.FilesTitle" xml:space="preserve"><value>Pilih berkas untuk dikonversi</value></data>
+  <data name="Picker.FolderTitle" xml:space="preserve"><value>Pilih tempat menyimpan hasil</value></data>
+  <data name="Picker.Supported" xml:space="preserve"><value>Berkas yang didukung</value></data>
+  <data name="Queue.CancelledStatus" xml:space="preserve"><value>Dibatalkan. Tidak ada yang disimpan.</value></data>
+  <data name="Queue.Converting" xml:space="preserve"><value>Mengonversi</value></data>
+  <data name="Queue.CouldNotConvert" xml:space="preserve"><value>Tidak dapat dikonversi.</value></data>
+  <data name="Queue.DidNotWork" xml:space="preserve"><value>Itu tidak berhasil. Coba lagi.</value></data>
+  <data name="Queue.Done" xml:space="preserve"><value>{0} selesai</value></data>
+  <data name="Queue.DoneStatus" xml:space="preserve"><value>Selesai</value></data>
+  <data name="Queue.Failed" xml:space="preserve"><value>{0} gagal</value></data>
+  <data name="Queue.FailedStatus" xml:space="preserve"><value>{0} Tidak ada yang disimpan.</value></data>
+  <data name="Queue.InProgress" xml:space="preserve"><value>{0} berjalan</value></data>
+  <data name="Queue.Pages" xml:space="preserve"><value>{0} dari {1} halaman</value></data>
+  <data name="Queue.PicturesSaved" xml:space="preserve"><value>{0} gambar disimpan</value></data>
+  <data name="Queue.SavedAs" xml:space="preserve"><value>Disimpan sebagai {0}</value></data>
+  <data name="Queue.Stopping" xml:space="preserve"><value>Menghentikan dan membersihkan...</value></data>
+  <data name="Queue.Title" xml:space="preserve"><value>{0} ke {1}</value></data>
+  <data name="Queue.Waiting" xml:space="preserve"><value>Menunggu</value></data>
+  <data name="Settings.DiagnosticsHelp" xml:space="preserve"><value>Menulis lebih banyak detail ke berkas log Lunar di PC ini. Log tidak pernah berisi nama berkas, isi berkas, kata sandi, atau apa yang Anda putar.</value></data>
+  <data name="Settings.DiagnosticsRestart" xml:space="preserve"><value>Berlaku saat Lunar dijalankan lagi.</value></data>
+  <data name="Settings.FolderDefault" xml:space="preserve"><value>Di samping berkas yang Anda konversi</value></data>
+  <data name="Settings.FolderRejected" xml:space="preserve"><value>Folder itu tidak dapat dipakai. Pilih folder di PC ini.</value></data>
+  <data name="Settings.LanguageEn" xml:space="preserve"><value>English</value></data>
+  <data name="Settings.LanguageHeading" xml:space="preserve"><value>Bahasa</value></data>
+  <data name="Settings.LanguageId" xml:space="preserve"><value>Bahasa Indonesia</value></data>
+  <data name="Settings.LanguageMatch" xml:space="preserve"><value>Ikuti Windows</value></data>
+  <data name="Settings.LanguageRestart" xml:space="preserve"><value>Berlaku saat Lunar dijalankan lagi.</value></data>
+  <data name="Settings.MainDisplay" xml:space="preserve"><value>Layar utama</value></data>
+  <data name="Settings.MissingDisplay" xml:space="preserve"><value>Layar tersimpan (tidak terhubung)</value></data>
+  <data name="Settings.Monitor" xml:space="preserve"><value>Layar {0}{1}, {2} x {3}</value></data>
+  <data name="Settings.MonitorMain" xml:space="preserve"><value> (utama)</value></data>
+  <data name="Settings.Offset" xml:space="preserve"><value>{0} px</value></data>
+  <data name="Settings.ReadOnly" xml:space="preserve"><value>Pengaturan ini berasal dari Lunar versi lebih baru, jadi versi ini hanya menampilkannya dan tidak dapat mengubahnya.</value></data>
+  <data name="Settings.RecoveryBackup" xml:space="preserve"><value>Berkas pengaturan Anda rusak, jadi Lunar memakai salinan terakhir yang baik.</value></data>
+  <data name="Settings.RecoveryDefaults" xml:space="preserve"><value>Berkas pengaturan Anda rusak dan tidak dapat dipulihkan, jadi Lunar dimulai dengan pengaturan bawaan.</value></data>
+  <data name="Settings.RecoveryValues" xml:space="preserve"><value>Sebagian nilai tersimpan tidak valid dan dikembalikan ke bawaan.</value></data>
+  <data name="Settings.ResetQuestion" xml:space="preserve"><value>Atur ulang semua pengaturan ke bawaan? Ini juga mematikan halaman Pemakaian.</value></data>
+  <data name="Settings.SaveFailed" xml:space="preserve"><value>Lunar tidak dapat menyimpan ini. Tidak ada yang diubah.</value></data>
+  <data name="Settings.SavedOnThisPc" xml:space="preserve"><value>Pengaturan hanya disimpan di PC ini.</value></data>
+  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Belum tersedia. Akan hadir bersama penginstal.</value></data>
+  <data name="Settings.ThemeDark" xml:space="preserve"><value>Gelap</value></data>
+  <data name="Settings.ThemeLight" xml:space="preserve"><value>Terang</value></data>
+  <data name="Settings.ThemeMatch" xml:space="preserve"><value>Ikuti Windows</value></data>
+  <data name="Settings.Title" xml:space="preserve"><value>Pengaturan</value></data>
+  <data name="System.AccessDenied" xml:space="preserve"><value>Akses ditolak</value></data>
+  <data name="System.ChangeVolumeFailed" xml:space="preserve"><value>Tidak dapat mengubah volume.</value></data>
+  <data name="System.Checking" xml:space="preserve"><value>Memeriksa…</value></data>
+  <data name="System.ClockLabel" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="System.Connected" xml:space="preserve"><value>Terhubung</value></data>
+  <data name="System.CouldntOpenSettings" xml:space="preserve"><value>Tidak dapat membuka Pengaturan.</value></data>
+  <data name="System.FailDenied" xml:space="preserve"><value>Windows tidak mengizinkan perubahan ini. Gunakan Pengaturan untuk mengalihkan {0}.</value></data>
+  <data name="System.FailOther" xml:space="preserve"><value>Tidak dapat mengubah {0}.</value></data>
+  <data name="System.FailTimeout" xml:space="preserve"><value>Windows tidak mengonfirmasi perubahan. Coba lagi.</value></data>
+  <data name="System.FailUnavailable" xml:space="preserve"><value>{0} tidak tersedia.</value></data>
+  <data name="System.FailUnsupported" xml:space="preserve"><value>{0} tidak dapat dialihkan dari sini. Gunakan Pengaturan.</value></data>
+  <data name="System.HintCannotSwitch" xml:space="preserve"><value>Tidak dapat dialihkan dari sini.</value></data>
+  <data name="System.HintDenied" xml:space="preserve"><value>Windows tidak mengizinkan akses.</value></data>
+  <data name="System.HintUnsupported" xml:space="preserve"><value>PC ini tidak mengizinkan pengendaliannya.</value></data>
+  <data name="System.Mute" xml:space="preserve"><value>Senyapkan</value></data>
+  <data name="System.Muted" xml:space="preserve"><value>Senyap</value></data>
+  <data name="System.NoBluetooth" xml:space="preserve"><value>Tidak ada radio Bluetooth</value></data>
+  <data name="System.NoWifi" xml:space="preserve"><value>Tidak ada adaptor Wi-Fi</value></data>
+  <data name="System.NotSupported" xml:space="preserve"><value>Tidak didukung</value></data>
+  <data name="System.Off" xml:space="preserve"><value>Mati</value></data>
+  <data name="System.On" xml:space="preserve"><value>Hidup</value></data>
+  <data name="System.OnNotConnected" xml:space="preserve"><value>Hidup, tidak terhubung</value></data>
+  <data name="System.ReadBluetoothFailed" xml:space="preserve"><value>Tidak dapat membaca status Bluetooth.</value></data>
+  <data name="System.ReadVolumeFailed" xml:space="preserve"><value>Tidak dapat membaca volume.</value></data>
+  <data name="System.ReadWifiFailed" xml:space="preserve"><value>Tidak dapat membaca status Wi-Fi.</value></data>
+  <data name="System.SwitchLabel" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="System.TurnOff" xml:space="preserve"><value>Matikan</value></data>
+  <data name="System.TurnOn" xml:space="preserve"><value>Hidupkan</value></data>
+  <data name="System.TurningOff" xml:space="preserve"><value>Mematikan…</value></data>
+  <data name="System.TurningOn" xml:space="preserve"><value>Menghidupkan…</value></data>
+  <data name="System.Unknown" xml:space="preserve"><value>Tidak diketahui</value></data>
+  <data name="System.UnknownHint" xml:space="preserve"><value>Status tidak dapat ditentukan.</value></data>
+  <data name="System.Unmute" xml:space="preserve"><value>Bunyikan</value></data>
+  <data name="System.VolumeDenied" xml:space="preserve"><value>Windows tidak mengizinkan akses ke volume</value></data>
+  <data name="System.VolumeNoDevice" xml:space="preserve"><value>Tidak ada perangkat keluaran audio</value></data>
+  <data name="System.VolumeUnavailable" xml:space="preserve"><value>Volume tidak tersedia</value></data>
+  <data name="System.VolumeUnsupported" xml:space="preserve"><value>Volume tidak dapat dikendalikan di PC ini</value></data>
+  <data name="Toast.AutomationName" xml:space="preserve"><value>Claude: {0}</value></data>
+  <data name="Toast.Both" xml:space="preserve"><value>Batas 5 jam dan batas mingguan Anda sudah direset.</value></data>
+  <data name="Toast.Heading" xml:space="preserve"><value>Batas Claude direset</value></data>
+  <data name="Toast.OneFive" xml:space="preserve"><value>Batas 5 jam Anda sudah direset.</value></data>
+  <data name="Toast.OneWeek" xml:space="preserve"><value>Batas mingguan Anda sudah direset.</value></data>
+  <data name="Toast.WasAt" xml:space="preserve"><value> Sebelumnya {0}%.</value></data>
+  <data name="Tray.Exit" xml:space="preserve"><value>&amp;Keluar</value></data>
+  <data name="Tray.Open" xml:space="preserve"><value>&amp;Buka</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>&amp;Pengaturan</value></data>
+  <data name="Tray.SettingsMissingTip" xml:space="preserve"><value>Pengaturan belum tersedia.</value></data>
+  <data name="Tray.SettingsTip" xml:space="preserve"><value>Buka jendela Pengaturan.</value></data>
+  <data name="Tray.Startup" xml:space="preserve"><value>Mulai bersama &amp;Windows</value></data>
+  <data name="Tray.StartupTip" xml:space="preserve"><value>Mulai bersama Windows belum tersedia.</value></data>
+  <data name="Usage.CannotRead" xml:space="preserve"><value>Batas belum dapat dibaca saat ini.</value></data>
+  <data name="Usage.Disclosure" xml:space="preserve"><value>Lunar membaca sign-in Claude Code di PC ini (hanya-baca) dan meminta batas pemakaian Anda ke Anthropic lewat HTTPS. Tidak ada hal lain yang dikirim.</value></data>
+  <data name="Usage.FiveHourLimit" xml:space="preserve"><value>Batas 5 jam</value></data>
+  <data name="Usage.NoFigure" xml:space="preserve"><value>Angka tidak dilaporkan</value></data>
+  <data name="Usage.Percent" xml:space="preserve"><value>{0}% terpakai</value></data>
+  <data name="Usage.Reading" xml:space="preserve"><value>Membaca batas Anda…</value></data>
+  <data name="Usage.ResetIn" xml:space="preserve"><value>Reset dalam {0} ({1})</value></data>
+  <data name="Usage.ResetNotReported" xml:space="preserve"><value>Waktu reset tidak dilaporkan</value></data>
+  <data name="Usage.ResetPassed" xml:space="preserve"><value>Waktu reset sudah lewat; menunggu pembacaan berikutnya</value></data>
+  <data name="Usage.SaveFailed" xml:space="preserve"><value>Lunar tidak dapat menyimpan pilihan ini. Tidak ada yang berubah.</value></data>
+  <data name="Usage.ShowingLast" xml:space="preserve"><value> Menampilkan pembacaan {0}.</value></data>
+  <data name="Usage.SignedOut" xml:space="preserve"><value>Claude Code belum masuk (sign in) di PC ini.</value></data>
+  <data name="Usage.SpanDay" xml:space="preserve"><value>{0} h</value></data>
+  <data name="Usage.SpanDayHour" xml:space="preserve"><value>{0} h {1} j</value></data>
+  <data name="Usage.SpanHour" xml:space="preserve"><value>{0} j</value></data>
+  <data name="Usage.SpanHourMin" xml:space="preserve"><value>{0} j {1} mnt</value></data>
+  <data name="Usage.SpanMin" xml:space="preserve"><value>{0} mnt</value></data>
+  <data name="Usage.SpanUnderMinute" xml:space="preserve"><value>kurang dari semenit</value></data>
+  <data name="Usage.Spoken" xml:space="preserve"><value>{0}: {1}. {2}</value></data>
+  <data name="Usage.Updated" xml:space="preserve"><value>Diperbarui {0}</value></data>
+  <data name="Usage.WeeklyLimit" xml:space="preserve"><value>Batas mingguan</value></data>
+  <data name="X.1IsTheSmallestFile" xml:space="preserve"><value>1 berkas terkecil, 100 paling tajam</value></data>
+  <data name="X.AddFiles" xml:space="preserve"><value>Tambah berkas</value></data>
+  <data name="X.AddFilesToConvert" xml:space="preserve"><value>Tambahkan berkas untuk dikonversi</value></data>
+  <data name="X.AnimatedEyes" xml:space="preserve"><value>Mata beranimasi</value></data>
+  <data name="X.Appearance" xml:space="preserve"><value>Tampilan</value></data>
+  <data name="X.Back" xml:space="preserve"><value>Kembali</value></data>
+  <data name="X.BackgroundForTransparentAreas" xml:space="preserve"><value>Latar untuk area transparan</value></data>
+  <data name="X.Cancel" xml:space="preserve"><value>Batal</value></data>
+  <data name="X.CancelAll" xml:space="preserve"><value>Batalkan semua</value></data>
+  <data name="X.CancelEveryWaitingAndRunning" xml:space="preserve"><value>Batalkan setiap konversi yang menunggu dan berjalan</value></data>
+  <data name="X.CancelThisConversion" xml:space="preserve"><value>Batalkan konversi ini</value></data>
+  <data name="X.Change" xml:space="preserve"><value>Ubah</value></data>
+  <data name="X.ChooseAFolderForConverted" xml:space="preserve"><value>Pilih folder untuk berkas hasil konversi</value></data>
+  <data name="X.ChooseFolder" xml:space="preserve"><value>Pilih folder...</value></data>
+  <data name="X.ChooseTheFolderForThe" xml:space="preserve"><value>Pilih folder untuk hasil</value></data>
+  <data name="X.ClaudeLimitReset" xml:space="preserve"><value>Batas Claude direset</value></data>
+  <data name="X.Clear" xml:space="preserve"><value>Kosongkan</value></data>
+  <data name="X.ClearFinished" xml:space="preserve"><value>Hapus yang selesai</value></data>
+  <data name="X.Close" xml:space="preserve"><value>Tutup</value></data>
+  <data name="X.ConfirmResetAllSettings" xml:space="preserve"><value>Konfirmasi: atur ulang semua pengaturan</value></data>
+  <data name="X.Conversions" xml:space="preserve"><value>Konversi</value></data>
+  <data name="X.Convert" xml:space="preserve"><value>Konversi</value></data>
+  <data name="X.ConvertMoreFiles" xml:space="preserve"><value>Konversi berkas lain</value></data>
+  <data name="X.ConvertTheListedFiles" xml:space="preserve"><value>Konversi berkas dalam daftar</value></data>
+  <data name="X.DetailedDiagnostics" xml:space="preserve"><value>Diagnostik terperinci</value></data>
+  <data name="X.Dismiss" xml:space="preserve"><value>Tutup</value></data>
+  <data name="X.DismissTheNotice" xml:space="preserve"><value>Tutup pemberitahuan</value></data>
+  <data name="X.DismissThisNotice" xml:space="preserve"><value>Tutup pemberitahuan ini</value></data>
+  <data name="X.Display" xml:space="preserve"><value>Layar</value></data>
+  <data name="X.DistanceFromTheTop" xml:space="preserve"><value>Jarak dari atas</value></data>
+  <data name="X.DistanceFromTheTopOf" xml:space="preserve"><value>Jarak dari bagian atas layar</value></data>
+  <data name="X.DoNotReplaceGoBack" xml:space="preserve"><value>Jangan ganti; kembali</value></data>
+  <data name="X.DropFilesHere" xml:space="preserve"><value>Letakkan berkas di sini</value></data>
+  <data name="X.ExistingResultsWithTheSame" xml:space="preserve"><value>Hasil lama dengan nama yang sama akan diganti. Berkas asli Anda tidak pernah diganti.</value></data>
+  <data name="X.FileConverter" xml:space="preserve"><value>Pengonversi berkas</value></data>
+  <data name="X.FolderForConvertedFiles" xml:space="preserve"><value>Folder untuk berkas hasil konversi</value></data>
+  <data name="X.GoBackOneStep" xml:space="preserve"><value>Kembali satu langkah</value></data>
+  <data name="X.GoToTheNextStep" xml:space="preserve"><value>Ke langkah berikutnya</value></data>
+  <data name="X.IfAResultSName" xml:space="preserve"><value>Jika nama hasil sudah dipakai</value></data>
+  <data name="X.JPEGQuality" xml:space="preserve"><value>Kualitas JPEG</value></data>
+  <data name="X.KeepMySettings" xml:space="preserve"><value>Pertahankan pengaturan saya</value></data>
+  <data name="X.LunarEyes" xml:space="preserve"><value>Mata Lunar</value></data>
+  <data name="X.LunarSettings" xml:space="preserve"><value>Pengaturan Lunar</value></data>
+  <data name="X.Margin" xml:space="preserve"><value>Margin</value></data>
+  <data name="X.Media" xml:space="preserve"><value>Media</value></data>
+  <data name="X.MoveTheIslandCloserTo" xml:space="preserve"><value>Dekatkan pulau ke bagian atas</value></data>
+  <data name="X.MoveTheIslandFurtherFrom" xml:space="preserve"><value>Jauhkan pulau dari bagian atas</value></data>
+  <data name="X.Next" xml:space="preserve"><value>Berikutnya</value></data>
+  <data name="X.NextPage" xml:space="preserve"><value>Halaman berikutnya</value></data>
+  <data name="X.NoFilesYetDropFiles" xml:space="preserve"><value>Belum ada berkas. Letakkan berkas di sini atau tekan Tambah berkas.</value></data>
+  <data name="X.NoSlidesFadesOrConfetti" xml:space="preserve"><value>Tanpa geser, pudar, atau konfeti. Pengaturan animasi Windows selalu dihormati.</value></data>
+  <data name="X.NotAvailableYetItArrives" xml:space="preserve"><value>Belum tersedia. Akan hadir bersama penginstal.</value></data>
+  <data name="X.OK" xml:space="preserve"><value>OK</value></data>
+  <data name="X.OpenSettings" xml:space="preserve"><value>Buka Pengaturan</value></data>
+  <data name="X.PDFPassword" xml:space="preserve"><value>Kata sandi PDF</value></data>
+  <data name="X.PNGJPGJPEGDOCXAnd" xml:space="preserve"><value>PNG, JPG, JPEG, DOCX, dan PDF. Berkas asli Anda tidak pernah diubah.</value></data>
+  <data name="X.PageSize" xml:space="preserve"><value>Ukuran halaman</value></data>
+  <data name="X.Pages" xml:space="preserve"><value>Halaman</value></data>
+  <data name="X.PagesEmptyMeansEveryPage" xml:space="preserve"><value>Halaman (kosong berarti semua halaman; misalnya 1-3, 5, 8-)</value></data>
+  <data name="X.PagesToConvert" xml:space="preserve"><value>Halaman yang dikonversi</value></data>
+  <data name="X.PasswordIfAPDFIs" xml:space="preserve"><value>Kata sandi, jika PDF dilindungi (hanya disimpan di memori)</value></data>
+  <data name="X.PickAFormat" xml:space="preserve"><value>Pilih format</value></data>
+  <data name="X.PictureOnThePage" xml:space="preserve"><value>Gambar pada halaman</value></data>
+  <data name="X.PlaybackPosition" xml:space="preserve"><value>Posisi pemutaran</value></data>
+  <data name="X.PreviousPage" xml:space="preserve"><value>Halaman sebelumnya</value></data>
+  <data name="X.Privacy" xml:space="preserve"><value>Privasi</value></data>
+  <data name="X.Progress" xml:space="preserve"><value>Kemajuan</value></data>
+  <data name="X.ReadTheLimitsAgain" xml:space="preserve"><value>Baca batas lagi</value></data>
+  <data name="X.ReduceMotion" xml:space="preserve"><value>Kurangi gerakan</value></data>
+  <data name="X.Refresh" xml:space="preserve"><value>Segarkan</value></data>
+  <data name="X.RemoveAllFilesFromThe" xml:space="preserve"><value>Hapus semua berkas dari daftar</value></data>
+  <data name="X.RemoveFinishedConversionsFromThe" xml:space="preserve"><value>Hapus konversi yang selesai dari daftar</value></data>
+  <data name="X.ReplaceAndConvert" xml:space="preserve"><value>Ganti dan konversi</value></data>
+  <data name="X.ReplaceExistingResultsAndConvert" xml:space="preserve"><value>Ganti hasil lama dan konversi</value></data>
+  <data name="X.ReplaceExistingResultsWithThe" xml:space="preserve"><value>Ganti hasil lama dengan nama yang sama? Berkas asli Anda tidak pernah diganti.</value></data>
+  <data name="X.Reset" xml:space="preserve"><value>Atur ulang</value></data>
+  <data name="X.ResetAllSettings" xml:space="preserve"><value>Atur ulang semua pengaturan...</value></data>
+  <data name="X.ResetAllSettings2" xml:space="preserve"><value>Atur ulang semua pengaturan</value></data>
+  <data name="X.ResetEverySettingToIts" xml:space="preserve"><value>Atur ulang semua pengaturan ke bawaan? Ini juga mematikan halaman Pemakaian.</value></data>
+  <data name="X.ResolutionPixelsPerInch" xml:space="preserve"><value>Resolusi (piksel per inci)</value></data>
+  <data name="X.Retry" xml:space="preserve"><value>Coba lagi</value></data>
+  <data name="X.RetryReadingMedia" xml:space="preserve"><value>Coba baca media lagi</value></data>
+  <data name="X.SaveResultsIn" xml:space="preserve"><value>Simpan hasil di</value></data>
+  <data name="X.Seek" xml:space="preserve"><value>Geser posisi</value></data>
+  <data name="X.Settings" xml:space="preserve"><value>Pengaturan</value></data>
+  <data name="X.SettingsAreSavedOnlyOn" xml:space="preserve"><value>Pengaturan hanya disimpan di PC ini.</value></data>
+  <data name="X.ShowClaudeUsage" xml:space="preserve"><value>Tampilkan pemakaian Claude</value></data>
+  <data name="X.ShowInFolder" xml:space="preserve"><value>Tampilkan di folder</value></data>
+  <data name="X.ShowLunarOn" xml:space="preserve"><value>Tampilkan Lunar di</value></data>
+  <data name="X.ShowTheConversionsThatWere" xml:space="preserve"><value>Tampilkan konversi yang sudah dimulai</value></data>
+  <data name="X.ShowTheResultInIts" xml:space="preserve"><value>Tampilkan hasil di foldernya</value></data>
+  <data name="X.StartOverWithNewFiles" xml:space="preserve"><value>Mulai lagi dengan berkas baru</value></data>
+  <data name="X.StartWithWindows" xml:space="preserve"><value>Mulai bersama Windows</value></data>
+  <data name="X.StartWithWindowsNotAvailable" xml:space="preserve"><value>Mulai bersama Windows, belum tersedia</value></data>
+  <data name="X.SystemControls" xml:space="preserve"><value>Kontrol sistem</value></data>
+  <data name="X.TakesEffectTheNextTime" xml:space="preserve"><value>Berlaku saat Lunar dijalankan lagi.</value></data>
+  <data name="X.TheEyesBlinkAndLook" xml:space="preserve"><value>Mata berkedip dan melihat sekeliling saat pulau tertutup.</value></data>
+  <data name="X.Theme" xml:space="preserve"><value>Tema</value></data>
+  <data name="X.TryAgain" xml:space="preserve"><value>Coba lagi</value></data>
+  <data name="X.TryThisConversionAgain" xml:space="preserve"><value>Coba konversi ini lagi</value></data>
+  <data name="X.Tweaks" xml:space="preserve"><value>Penyesuaian</value></data>
+  <data name="X.Usage" xml:space="preserve"><value>Pemakaian</value></data>
+  <data name="X.UseTheDefault" xml:space="preserve"><value>Gunakan bawaan</value></data>
+  <data name="X.UseTheDefaultFolder" xml:space="preserve"><value>Gunakan folder bawaan</value></data>
+  <data name="X.Volume" xml:space="preserve"><value>Volume</value></data>
+  <data name="X.WhereConvertedFilesGo" xml:space="preserve"><value>Tempat berkas hasil konversi</value></data>
+  <data name="X.WritesMoreDetailToLunar" xml:space="preserve"><value>Menulis lebih banyak detail ke berkas log Lunar di PC ini. Log tidak pernah berisi nama berkas, isi berkas, kata sandi, atau apa yang Anda putar.</value></data>
+  <data name="Nav.PageChanged" xml:space="preserve"><value>{0}, halaman {1} dari {2}</value></data>
+</root>

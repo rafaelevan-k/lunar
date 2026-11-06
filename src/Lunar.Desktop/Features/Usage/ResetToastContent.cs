@@ -1,11 +1,12 @@
 using Lunar.Application.Usage.Models;
+using Lunar.Desktop.Resources;
 
 namespace Lunar.Desktop.Features.Usage;
 
 /// <summary>What the reset pop-up says (FE-28). <see cref="AutomationName"/> is what a screen reader announces.</summary>
 public sealed record ResetToastContent(string Title, string Message, string AutomationName)
 {
-    public const string HeadingText = "Claude limit reset";
+    public static string HeadingText => Strings.Get("Toast.Heading");
 
     /// <summary>
     /// The words for one batch of resets: "Your 5-hour limit has reset. It was at 92%." for one limit (the share is left out when unknown),
@@ -22,15 +23,15 @@ public sealed record ResetToastContent(string Title, string Message, string Auto
         string message;
         if (five is not null && week is not null)
         {
-            message = "Your 5-hour and weekly limits have reset.";
+            message = Strings.Get("Toast.Both");
         }
         else
         {
             var only = five ?? week!;
-            var name = only.Kind == UsageWindowKind.FiveHour ? "5-hour" : "weekly";
-            message = $"Your {name} limit has reset." + (only.PreviousUsedPercent is { } percent ? $" It was at {percent}%." : string.Empty);
+            message = Strings.Get(only.Kind == UsageWindowKind.FiveHour ? "Toast.OneFive" : "Toast.OneWeek")
+                + (only.PreviousUsedPercent is { } percent ? Strings.Format("Toast.WasAt", percent) : string.Empty);
         }
 
-        return new ResetToastContent(HeadingText, message, "Claude: " + message);
+        return new ResetToastContent(HeadingText, message, Strings.Format("Toast.AutomationName", message));
     }
 }

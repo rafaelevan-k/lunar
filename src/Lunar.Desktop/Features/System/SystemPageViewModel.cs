@@ -8,6 +8,7 @@ using Lunar.Application.System;
 using Lunar.Application.System.Models;
 using Lunar.Application.System.UseCases;
 using Lunar.Desktop.Controls;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -215,7 +216,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     public string MuteGlyph => _isMuted ? "" : "";
 
     /// <summary>What pressing the mute button would do (also its accessible name).</summary>
-    public string MuteLabel => _isMuted ? "Unmute" : "Mute";
+    public string MuteLabel => _isMuted ? Strings.Get("System.Unmute") : Strings.Get("System.Mute");
 
     public string? VolumeError
     {
@@ -257,7 +258,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>The time and date as one sentence for assistive technology, for example "2:05 PM, Wednesday, November 4, 2026".</summary>
-    public string ClockLabel => $"{_timeText}, {_dateText}";
+    public string ClockLabel => Strings.Format("System.ClockLabel", _timeText, _dateText);
 
     /// <summary>The time zone the clock is showing ("Pacific Daylight Time"), for the tooltip and the accessible description.</summary>
     public string TimeZoneText
@@ -379,7 +380,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         if (result.IsSuccess)
             _post(() => ApplyWifi(result.Value));
         else if (!result.IsCancelled)
-            _post(() => Wifi.ShowFault("Couldn't read the Wi-Fi state."));
+            _post(() => Wifi.ShowFault(Strings.Get("System.ReadWifiFailed")));
     }
 
     private async Task ReadBluetoothAsync(CancellationToken ct)
@@ -388,7 +389,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         if (result.IsSuccess)
             _post(() => ApplyBluetooth(result.Value));
         else if (!result.IsCancelled)
-            _post(() => Bluetooth.ShowFault("Couldn't read the Bluetooth state."));
+            _post(() => Bluetooth.ShowFault(Strings.Get("System.ReadBluetoothFailed")));
     }
 
     // After a switch request: read the real state again and apply it before returning, so the card ends the request showing
@@ -403,7 +404,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             if (result.IsSuccess)
                 ApplyWifi(result.Value);
             else
-                Wifi.ShowFault("Couldn't read the Wi-Fi state.");
+                Wifi.ShowFault(Strings.Get("System.ReadWifiFailed"));
         }, ct).ConfigureAwait(false);
     }
 
@@ -417,7 +418,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             if (result.IsSuccess)
                 ApplyBluetooth(result.Value);
             else
-                Bluetooth.ShowFault("Couldn't read the Bluetooth state.");
+                Bluetooth.ShowFault(Strings.Get("System.ReadBluetoothFailed"));
         }, ct).ConfigureAwait(false);
     }
 
@@ -505,7 +506,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             return;
         VolumeNote = SystemPageText.VolumeNote(CapabilityStatus.Unknown);
         IsVolumeLoaded = true;
-        VolumeError = "Couldn't read the volume.";
+        VolumeError = Strings.Get("System.ReadVolumeFailed");
         ((AsyncRelayCommand)ToggleMuteCommand).NotifyCanExecuteChanged();
     }
 
@@ -535,7 +536,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
         IsMuted = !_isMuted; // optimistic; a refused change comes back as a corrected snapshot
         var result = await _volume.ToggleMuteAsync(ct);
         if (result.IsFailure && !result.IsCancelled)
-            VolumeError = "Couldn't change the volume.";
+            VolumeError = Strings.Get("System.ChangeVolumeFailed");
     }
 
     // Never throws: every outcome ends in state or a log entry, so the task kept in _lastWrite cannot fault.
@@ -548,7 +549,7 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
             var mute = unmute ? _volume.SetMuteAsync(false, _lifetime.Token) : Task.FromResult(Result.Success());
             var results = await Task.WhenAll(level, mute);
             if (results.Any(r => r.IsFailure && !r.IsCancelled))
-                _post(() => VolumeError = "Couldn't change the volume.");
+                _post(() => VolumeError = Strings.Get("System.ChangeVolumeFailed"));
         }
         catch (OperationCanceledException)
         {

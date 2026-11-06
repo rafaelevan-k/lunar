@@ -1,11 +1,12 @@
 <UserControl x:Class="Lunar.Desktop.Features.Converter.ConverterPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              xmlns:nav="clr-namespace:Lunar.Desktop.Navigation"
              Focusable="False" IsTabStop="False" Background="Transparent" AllowDrop="True"
-             automation:AutomationProperties.Name="File converter">
+             automation:AutomationProperties.Name="{res:Text X.FileConverter}">
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
@@ -90,16 +91,16 @@
         <StackPanel x:Name="FilesStep" Visibility="{Binding IsFilesStep, Converter={StaticResource BoolToVisible}}">
         <!-- Step 1: the files. -->
         <DockPanel Margin="0,0,0,6" LastChildFill="False">
-          <Button x:Name="ShowConversionsButton" DockPanel.Dock="Right" Content="Conversions" Command="{Binding ShowConversionsCommand}" Margin="6,0,0,0" Visibility="{Binding Queue.HasRows, Converter={StaticResource BoolToVisible}}" Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Show the conversions that were started" />
-          <Button x:Name="ClearButton" DockPanel.Dock="Right" Content="Clear" Command="{Binding ClearCommand}" Visibility="{Binding HasItems, Converter={StaticResource BoolToVisible}}"
-                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Remove all files from the list" />
-          <Button x:Name="AddButton" DockPanel.Dock="Right" Content="Add files" Command="{Binding AddFilesCommand}" Margin="0,0,6,0"
-                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Add files to convert" />
+          <Button x:Name="ShowConversionsButton" DockPanel.Dock="Right" Content="{res:Text X.Conversions}" Command="{Binding ShowConversionsCommand}" Margin="6,0,0,0" Visibility="{Binding Queue.HasRows, Converter={StaticResource BoolToVisible}}" Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ShowTheConversionsThatWere}" />
+          <Button x:Name="ClearButton" DockPanel.Dock="Right" Content="{res:Text X.Clear}" Command="{Binding ClearCommand}" Visibility="{Binding HasItems, Converter={StaticResource BoolToVisible}}"
+                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.RemoveAllFilesFromThe}" />
+          <Button x:Name="AddButton" DockPanel.Dock="Right" Content="{res:Text X.AddFiles}" Command="{Binding AddFilesCommand}" Margin="0,0,6,0"
+                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.AddFilesToConvert}" />
           <Border DockPanel.Dock="Left" Style="{StaticResource StepBadge}">
             <TextBlock Text="1" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.OnAccent}" />
           </Border>
           <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
-            <TextBlock Text="Add files" Style="{DynamicResource Lunar.Text.Subtitle}" />
+            <TextBlock Text="{res:Text X.AddFiles}" Style="{DynamicResource Lunar.Text.Subtitle}" />
             <TextBlock x:Name="SummaryText" Text="{Binding SummaryText}" Style="{DynamicResource Lunar.Text.Caption}" TextTrimming="CharacterEllipsis"
                        automation:AutomationProperties.LiveSetting="Polite" />
           </StackPanel>
@@ -121,11 +122,11 @@
           <Grid>
             <StackPanel x:Name="EmptyFace" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12"
                         Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisible}}"
-                        automation:AutomationProperties.Name="No files yet. Drop files here or press Add files.">
+                        automation:AutomationProperties.Name="{res:Text X.NoFilesYetDropFiles}">
               <TextBlock Text="&#xE8E5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28" HorizontalAlignment="Center"
                          Foreground="{DynamicResource Lunar.Brush.Accent}" />
-              <TextBlock Text="Drop files here" Style="{DynamicResource Lunar.Text.Subtitle}" HorizontalAlignment="Center" Margin="0,6,0,0" />
-              <TextBlock Text="PNG, JPG, JPEG, DOCX and PDF. Your originals are never changed." Style="{DynamicResource Lunar.Text.Secondary}"
+              <TextBlock Text="{res:Text X.DropFilesHere}" Style="{DynamicResource Lunar.Text.Subtitle}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+              <TextBlock Text="{res:Text X.PNGJPGJPEGDOCXAnd}" Style="{DynamicResource Lunar.Text.Secondary}"
                          TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0" />
             </StackPanel>
 
@@ -174,10 +175,10 @@
         <!-- The conversions that were started: state, honest progress, cancel, retry, show in folder. They keep running when the island closes. -->
         <StackPanel x:Name="QueuePanel" DataContext="{Binding Queue}" Margin="0,10,0,0" Visibility="{Binding HasRows, Converter={StaticResource BoolToVisible}}">
           <DockPanel LastChildFill="False" Margin="0,0,0,4">
-            <Button x:Name="ClearFinishedButton" DockPanel.Dock="Right" Content="Clear finished" Command="{Binding ClearFinishedCommand}"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Remove finished conversions from the list" />
-            <Button x:Name="CancelAllButton" DockPanel.Dock="Right" Content="Cancel all" Command="{Binding CancelAllCommand}" Margin="0,0,6,0"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Cancel every waiting and running conversion" />
+            <Button x:Name="ClearFinishedButton" DockPanel.Dock="Right" Content="{res:Text X.ClearFinished}" Command="{Binding ClearFinishedCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.RemoveFinishedConversionsFromThe}" />
+            <Button x:Name="CancelAllButton" DockPanel.Dock="Right" Content="{res:Text X.CancelAll}" Command="{Binding CancelAllCommand}" Margin="0,0,6,0"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.CancelEveryWaitingAndRunning}" />
             <TextBlock x:Name="QueueSummary" DockPanel.Dock="Left" Text="{Binding SummaryText}" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center"
                        automation:AutomationProperties.LiveSetting="Polite" />
           </DockPanel>
@@ -194,16 +195,16 @@
                     <!-- Progress is shown only as the converter reports it: a value and "n of m pages" when the page count is known, an indeterminate bar otherwise. -->
                     <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay, TargetNullValue=0}" IsIndeterminate="{Binding IsIndeterminate}" Height="6" Margin="0,6,0,0"
                                  BorderThickness="0" Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}"
-                                 Visibility="{Binding ShowProgressBar, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Progress" />
+                                 Visibility="{Binding ShowProgressBar, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.Progress}" />
                     <TextBlock Text="{Binding ProgressText}" Style="{DynamicResource Lunar.Text.Caption}" Margin="0,2,0,0" />
                     <TextBlock Text="{Binding ResultText}" Style="{DynamicResource Lunar.Text.Caption}" TextTrimming="CharacterEllipsis" />
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                      <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
-                              Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Cancel this conversion" />
-                      <Button Content="Try again" Command="{Binding RetryCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
-                              Visibility="{Binding CanRetry, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Try this conversion again" />
-                      <Button Content="Show in folder" Command="{Binding RevealCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                              Visibility="{Binding CanReveal, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Show the result in its folder" />
+                      <Button Content="{res:Text X.Cancel}" Command="{Binding CancelCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
+                              Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.CancelThisConversion}" />
+                      <Button Content="{res:Text X.TryAgain}" Command="{Binding RetryCommand}" Margin="0,0,6,0" Style="{DynamicResource Lunar.Style.ActionButton}"
+                              Visibility="{Binding CanRetry, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.TryThisConversionAgain}" />
+                      <Button Content="{res:Text X.ShowInFolder}" Command="{Binding RevealCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                              Visibility="{Binding CanReveal, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.ShowTheResultInIts}" />
                     </StackPanel>
                   </StackPanel>
                 </Border>
@@ -217,8 +218,8 @@
         <!-- Notice and error. -->
         <Border Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisible}}" Margin="0,8,0,0">
           <DockPanel automation:AutomationProperties.LiveSetting="Polite">
-            <Button DockPanel.Dock="Right" Content="OK" Command="{Binding DismissNoticeCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                    automation:AutomationProperties.Name="Dismiss the notice" />
+            <Button DockPanel.Dock="Right" Content="{res:Text X.OK}" Command="{Binding DismissNoticeCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                    automation:AutomationProperties.Name="{res:Text X.DismissTheNotice}" />
             <TextBlock x:Name="NoticeText" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" VerticalAlignment="Center" />
           </DockPanel>
         </Border>
@@ -230,7 +231,7 @@
           <Border Style="{StaticResource StepBadge}">
             <TextBlock Text="2" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.OnAccent}" />
           </Border>
-          <TextBlock Text="Pick a format" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center" />
+          <TextBlock Text="{res:Text X.PickAFormat}" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center" />
         </StackPanel>
         <ItemsControl x:Name="FormatList" ItemsSource="{Binding Targets}" Focusable="False" ItemsPanel="{StaticResource WrapPanelTemplate}">
           <ItemsControl.ItemTemplate>
@@ -256,7 +257,7 @@
           <Border Style="{StaticResource StepBadge}">
             <TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.OnAccent}" />
           </Border>
-          <TextBlock Text="Tweaks" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center" />
+          <TextBlock Text="{res:Text X.Tweaks}" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center" />
         </StackPanel>
         <TextBlock x:Name="TweaksSummaryText" Text="{Binding TweaksSummary}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,4" />
         <StackPanel x:Name="TweaksFold" DataContext="{Binding Options}" Margin="0,4,0,0">
@@ -264,53 +265,53 @@
             <StackPanel x:Name="QualityBlock" Visibility="{Binding ShowQuality, Converter={StaticResource BoolToVisible}}">
               <TextBlock x:Name="QualityLabel" Text="{Binding QualityText}" Style="{StaticResource OptionLabel}" />
               <Slider Minimum="1" Maximum="100" Value="{Binding JpegQuality, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="10"
-                      Style="{DynamicResource Lunar.Style.Slider}" automation:AutomationProperties.Name="JPEG quality"
-                      automation:AutomationProperties.HelpText="1 is the smallest file, 100 the sharpest" />
+                      Style="{DynamicResource Lunar.Style.Slider}" automation:AutomationProperties.Name="{res:Text X.JPEGQuality}"
+                      automation:AutomationProperties.HelpText="{res:Text X.1IsTheSmallestFile}" />
             </StackPanel>
 
             <StackPanel x:Name="BackgroundBlock" Visibility="{Binding ShowBackground, Converter={StaticResource BoolToVisible}}">
-              <TextBlock Text="Background for transparent areas" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.BackgroundForTransparentAreas}" Style="{StaticResource OptionLabel}" />
               <ItemsControl ItemsSource="{Binding Background.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
             </StackPanel>
 
             <StackPanel x:Name="PdfBlock" Visibility="{Binding ShowPdf, Converter={StaticResource BoolToVisible}}">
-              <TextBlock Text="Resolution (pixels per inch)" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.ResolutionPixelsPerInch}" Style="{StaticResource OptionLabel}" />
               <ItemsControl ItemsSource="{Binding Dpi.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
-              <TextBlock Text="Pages (empty means every page; for example 1-3, 5, 8-)" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.PagesEmptyMeansEveryPage}" Style="{StaticResource OptionLabel}" />
               <TextBox x:Name="PagesBox" Text="{Binding PagesText, UpdateSourceTrigger=PropertyChanged}" MaxLength="500"
                        Background="{DynamicResource Lunar.Brush.Surface}" Foreground="{DynamicResource Lunar.Brush.TextPrimary}"
                        BorderBrush="{DynamicResource Lunar.Brush.Border}" CaretBrush="{DynamicResource Lunar.Brush.TextPrimary}" Padding="6,4"
-                       automation:AutomationProperties.Name="Pages to convert" />
+                       automation:AutomationProperties.Name="{res:Text X.PagesToConvert}" />
               <TextBlock x:Name="PagesProblemText" Text="{Binding PagesProblem}" Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" Margin="0,4,0,0"
                          Visibility="{Binding HasPagesProblem, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.LiveSetting="Assertive" />
-              <TextBlock Text="Password, if a PDF is protected (kept in memory only)" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.PasswordIfAPDFIs}" Style="{StaticResource OptionLabel}" />
               <PasswordBox x:Name="PdfPasswordBox" Background="{DynamicResource Lunar.Brush.Surface}" Foreground="{DynamicResource Lunar.Brush.TextPrimary}"
                            BorderBrush="{DynamicResource Lunar.Brush.Border}" CaretBrush="{DynamicResource Lunar.Brush.TextPrimary}" Padding="6,4" MaxLength="256"
-                           automation:AutomationProperties.Name="PDF password" />
+                           automation:AutomationProperties.Name="{res:Text X.PDFPassword}" />
             </StackPanel>
 
             <StackPanel x:Name="LayoutBlock" Visibility="{Binding ShowLayout, Converter={StaticResource BoolToVisible}}">
-              <TextBlock Text="Page size" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.PageSize}" Style="{StaticResource OptionLabel}" />
               <ItemsControl ItemsSource="{Binding PageSizes.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
-              <TextBlock Text="Margin" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.Margin}" Style="{StaticResource OptionLabel}" />
               <ItemsControl ItemsSource="{Binding Margins.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
-              <TextBlock Text="Picture on the page" Style="{StaticResource OptionLabel}" />
+              <TextBlock Text="{res:Text X.PictureOnThePage}" Style="{StaticResource OptionLabel}" />
               <ItemsControl ItemsSource="{Binding Fits.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
             </StackPanel>
 
             <!-- If a result's name is taken. -->
-            <TextBlock Text="If a result's name is taken" Style="{StaticResource OptionLabel}" />
+            <TextBlock Text="{res:Text X.IfAResultSName}" Style="{StaticResource OptionLabel}" />
             <ItemsControl ItemsSource="{Binding Collisions.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
-            <TextBlock x:Name="OverwriteWarning" Text="Existing results with the same name will be replaced. Your original files are never replaced."
+            <TextBlock x:Name="OverwriteWarning" Text="{res:Text X.ExistingResultsWithTheSame}"
                        Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding ShowOverwriteWarning, Converter={StaticResource BoolToVisible}}" />
           </StackPanel>
         </StackPanel>
 
         <!-- Where the results go (also part of the tweaks; always visible so there is never a doubt). -->
-        <TextBlock Text="Save results in" Style="{StaticResource OptionLabel}" Margin="0,10,0,4" />
+        <TextBlock Text="{res:Text X.SaveResultsIn}" Style="{StaticResource OptionLabel}" Margin="0,10,0,4" />
         <DockPanel>
-          <Button x:Name="FolderButton" DockPanel.Dock="Right" Content="Change" Command="{Binding ChooseFolderCommand}" Margin="8,0,0,0"
-                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Choose the folder for the results" />
+          <Button x:Name="FolderButton" DockPanel.Dock="Right" Content="{res:Text X.Change}" Command="{Binding ChooseFolderCommand}" Margin="8,0,0,0"
+                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ChooseTheFolderForThe}" />
           <TextBlock x:Name="FolderText" Text="{Binding OutputFolder}" ToolTip="{Binding OutputFolder}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis"
                      VerticalAlignment="Center" />
         </DockPanel>
@@ -324,12 +325,12 @@
               Background="{DynamicResource Lunar.Brush.Surface}" Visibility="{Binding IsConfirmingOverwrite, Converter={StaticResource BoolToVisible}}"
               automation:AutomationProperties.LiveSetting="Assertive">
         <StackPanel>
-          <TextBlock Text="Replace existing results with the same name? Your original files are never replaced." Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
+          <TextBlock Text="{res:Text X.ReplaceExistingResultsWithThe}" Style="{DynamicResource Lunar.Text.Body}" TextWrapping="Wrap" />
           <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-            <Button x:Name="ConfirmReplaceButton" Content="Replace and convert" Command="{Binding ConfirmOverwriteCommand}" Margin="0,0,6,0"
-                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Replace existing results and convert" />
-            <Button x:Name="CancelReplaceButton" Content="Cancel" Command="{Binding CancelOverwriteCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
-                    automation:AutomationProperties.Name="Do not replace; go back" />
+            <Button x:Name="ConfirmReplaceButton" Content="{res:Text X.ReplaceAndConvert}" Command="{Binding ConfirmOverwriteCommand}" Margin="0,0,6,0"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ReplaceExistingResultsAndConvert}" />
+            <Button x:Name="CancelReplaceButton" Content="{res:Text X.Cancel}" Command="{Binding CancelOverwriteCommand}" Style="{DynamicResource Lunar.Style.ActionButton}"
+                    automation:AutomationProperties.Name="{res:Text X.DoNotReplaceGoBack}" />
           </StackPanel>
         </StackPanel>
       </Border>
@@ -340,15 +341,15 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Button x:Name="BackButton" Grid.Column="0" Content="Back" Command="{Binding BackCommand}" Margin="0,0,8,0" Style="{DynamicResource Lunar.Style.ActionButton}"
-                Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Go back one step" />
-        <Button x:Name="NextButton" Grid.Column="1" Content="Next" Command="{Binding NextCommand}" Style="{DynamicResource Lunar.Style.PrimaryButton}"
-                Visibility="{Binding ShowNext, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Go to the next step" />
-        <Button x:Name="ConvertButton" Grid.Column="1" Content="Convert" Command="{Binding StartCommand}" HorizontalAlignment="Stretch"
-                Style="{DynamicResource Lunar.Style.PrimaryButton}" automation:AutomationProperties.Name="Convert the listed files"
+        <Button x:Name="BackButton" Grid.Column="0" Content="{res:Text X.Back}" Command="{Binding BackCommand}" Margin="0,0,8,0" Style="{DynamicResource Lunar.Style.ActionButton}"
+                Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.GoBackOneStep}" />
+        <Button x:Name="NextButton" Grid.Column="1" Content="{res:Text X.Next}" Command="{Binding NextCommand}" Style="{DynamicResource Lunar.Style.PrimaryButton}"
+                Visibility="{Binding ShowNext, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.GoToTheNextStep}" />
+        <Button x:Name="ConvertButton" Grid.Column="1" Content="{res:Text X.Convert}" Command="{Binding StartCommand}" HorizontalAlignment="Stretch"
+                Style="{DynamicResource Lunar.Style.PrimaryButton}" automation:AutomationProperties.Name="{res:Text X.ConvertTheListedFiles}"
                 automation:AutomationProperties.HelpText="{Binding StartHint}" Visibility="{Binding IsTweaksStep, Converter={StaticResource BoolToVisible}}" />
-        <Button x:Name="ConvertMoreButton" Grid.Column="1" Content="Convert more files" Command="{Binding ConvertMoreCommand}" Style="{DynamicResource Lunar.Style.PrimaryButton}"
-                Visibility="{Binding IsProgressStep, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="Start over with new files" />
+        <Button x:Name="ConvertMoreButton" Grid.Column="1" Content="{res:Text X.ConvertMoreFiles}" Command="{Binding ConvertMoreCommand}" Style="{DynamicResource Lunar.Style.PrimaryButton}"
+                Visibility="{Binding IsProgressStep, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.StartOverWithNewFiles}" />
       </Grid>      <TextBlock x:Name="StartHintText" Text="{Binding StepHint}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0"
                  automation:AutomationProperties.LiveSetting="Polite" />
     </StackPanel>

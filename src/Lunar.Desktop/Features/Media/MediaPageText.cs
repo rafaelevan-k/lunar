@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lunar.Application.Media.Models;
+using Lunar.Desktop.Resources;
 using Lunar.Domain.Shared;
 
 namespace Lunar.Desktop.Features.MediaControls;
@@ -11,15 +12,15 @@ namespace Lunar.Desktop.Features.MediaControls;
 /// </summary>
 internal static class MediaPageText
 {
-    public const string UnknownTitle = "Unknown title";
-    public const string UnknownArtist = "Unknown artist";
-    public const string UnknownSource = "Unknown app";
+    public static string UnknownTitle => Strings.Get("Media.UnknownTitle");
+    public static string UnknownArtist => Strings.Get("Media.UnknownArtist");
+    public static string UnknownSource => Strings.Get("Media.UnknownSource");
 
-    public const string NoSessionTitle = "Nothing is playing";
-    public const string NoSessionHint = "Play music or a video in any app and it shows up here.";
+    public static string NoSessionTitle => Strings.Get("Media.NoSessionTitle");
+    public static string NoSessionHint => Strings.Get("Media.NoSessionHint");
 
-    public const string LiveNote = "Live or no timeline";
-    public const string NotSeekableNote = "This app doesn't allow seeking";
+    public static string LiveNote => Strings.Get("Media.LiveNote");
+    public static string NotSeekableNote => Strings.Get("Media.NotSeekableNote");
 
     /// <summary>mm:ss, or hh:mm:ss from one hour on; never negative. A 100-hour value stays readable (the hours keep growing).</summary>
     public static string FormatTime(TimeSpan value)
@@ -40,14 +41,14 @@ internal static class MediaPageText
 
     public static string Status(MediaPlaybackStatus status) => status switch
     {
-        MediaPlaybackStatus.Playing => "Playing",
-        MediaPlaybackStatus.Paused => "Paused",
-        MediaPlaybackStatus.Stopped => "Stopped",
+        MediaPlaybackStatus.Playing => Strings.Get("Media.Playing"),
+        MediaPlaybackStatus.Paused => Strings.Get("Media.Paused"),
+        MediaPlaybackStatus.Stopped => Strings.Get("Media.Stopped"),
         _ => string.Empty
     };
 
     /// <summary>"Spotify · Playing", or just the source when there is no state to say.</summary>
-    public static string SourceLine(string source, string status) => status.Length == 0 ? source : $"{source} · {status}";
+    public static string SourceLine(string source, string status) => status.Length == 0 ? source : Strings.Format("Media.SourceLine", source, status);
 
     /// <summary>The one sentence for a finite timeline that cannot be seeked, or for no timeline at all; null when seeking works.</summary>
     public static string? TimelineNote(MediaSessionSnapshot session)
@@ -61,27 +62,27 @@ internal static class MediaPageText
     /// <summary>Why the sessions could not be read, in words for the page.</summary>
     public static string Unavailable(ErrorCode code) => code switch
     {
-        ErrorCode.Unsupported => "Media controls aren't available on this PC.",
-        ErrorCode.AccessDenied => "Windows didn't allow access to what's playing.",
-        _ => "Couldn't read what's playing."
+        ErrorCode.Unsupported => Strings.Get("Media.UnavailableUnsupported"),
+        ErrorCode.AccessDenied => Strings.Get("Media.UnavailableDenied"),
+        _ => Strings.Get("Media.UnavailableOther")
     };
 
     /// <summary>Why a play, pause, next or previous request failed.</summary>
     public static string CommandFailed(ErrorCode code) => code switch
     {
-        ErrorCode.Unsupported => "This app doesn't offer that.",
-        ErrorCode.InvalidInput => "That player has closed.",
-        ErrorCode.Timeout => "The player didn't answer.",
-        _ => "The player didn't accept that."
+        ErrorCode.Unsupported => Strings.Get("Media.CommandUnsupported"),
+        ErrorCode.InvalidInput => Strings.Get("Media.CommandClosed"),
+        ErrorCode.Timeout => Strings.Get("Media.CommandTimeout"),
+        _ => Strings.Get("Media.CommandOther")
     };
 
     /// <summary>Why a seek (moving the position) failed. The page has already gone back to the real position.</summary>
     public static string SeekFailed(ErrorCode code) => code switch
     {
-        ErrorCode.Unsupported => "This app doesn't allow seeking.",
-        ErrorCode.InvalidInput => "The media changed, so that position no longer applies.",
-        ErrorCode.Timeout => "The player didn't answer.",
-        _ => "The player didn't move to that position."
+        ErrorCode.Unsupported => Strings.Get("Media.SeekUnsupported"),
+        ErrorCode.InvalidInput => Strings.Get("Media.SeekChanged"),
+        ErrorCode.Timeout => Strings.Get("Media.CommandTimeout"),
+        _ => Strings.Get("Media.SeekOther")
     };
 
     /// <summary>The whole session in one sentence for assistive technology.</summary>
@@ -89,7 +90,11 @@ internal static class MediaPageText
     {
         ArgumentNullException.ThrowIfNull(session);
         var status = Status(session.Status);
-        var text = $"{Title(session.Title)} by {Artist(session.Artist)}, from {Source(session.AppName)}";
-        return status.Length == 0 ? text : $"{text}, {status}";
+        var title = Title(session.Title);
+        var artist = Artist(session.Artist);
+        var source = Source(session.AppName);
+        return status.Length == 0
+            ? Strings.Format("Media.Summary", title, artist, source)
+            : Strings.Format("Media.SummaryWithStatus", title, artist, source, status);
     }
 }

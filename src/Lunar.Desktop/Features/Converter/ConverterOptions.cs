@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Lunar.Application.Conversion.Models;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Conversion;
 
@@ -15,7 +16,7 @@ namespace Lunar.Desktop.Features.Converter;
 /// <param name="SelectCommand">Chooses this one.</param>
 public sealed record ChoiceOption(string Group, string Label, bool IsSelected, ICommand SelectCommand)
 {
-    public string AutomationName => $"{Group}: {Label}{(IsSelected ? ", selected" : string.Empty)}";
+    public string AutomationName => IsSelected ? Strings.Format("Opt.AutomationChoiceSelected", Group, Label) : Strings.Format("Opt.AutomationChoice", Group, Label);
 }
 
 /// <summary>A group of exclusive choices with one current value. The buttons are rebuilt on every change so the selection shows.</summary>
@@ -97,15 +98,15 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
         _changed = changed;
         ToggleTweaksCommand = new RelayCommand(() => IsTweaksOpen = !IsTweaksOpen);
         void Same() => Changed(recheck: false);
-        Background = new ChoiceGroup<RgbColor>("Background for transparent areas",
-            [("White", RgbColor.White), ("Light gray", new RgbColor(230, 230, 230)), ("Black", new RgbColor(0, 0, 0))], RgbColor.White, Same);
-        Dpi = new ChoiceGroup<int>("Resolution",
+        Background = new ChoiceGroup<RgbColor>(Strings.Get("Opt.GroupBackground"),
+            [(Strings.Get("Opt.White"), RgbColor.White), (Strings.Get("Opt.LightGray"), new RgbColor(230, 230, 230)), (Strings.Get("Opt.Black"), new RgbColor(0, 0, 0))], RgbColor.White, Same);
+        Dpi = new ChoiceGroup<int>(Strings.Get("Opt.GroupResolution"),
             [("72", PdfRasterizationOptions.Dpi72), ("150", PdfRasterizationOptions.Dpi150), ("300", PdfRasterizationOptions.Dpi300)], PdfRasterizationOptions.Dpi150, Same);
-        PageSizes = new ChoiceGroup<PageSize>("Page size", [("Fit the picture", PageSize.Auto), ("A4", PageSize.A4), ("Letter", PageSize.Letter)], PageSize.Auto, Same);
-        Margins = new ChoiceGroup<double>("Margin", [("None", 0), ("Narrow", 18), ("Normal", 36)], 0, Same);
-        Fits = new ChoiceGroup<ImageFit>("Fit", [("Whole picture", ImageFit.Fit), ("Fill the page", ImageFit.Cover)], ImageFit.Fit, Same);
-        Collisions = new ChoiceGroup<CollisionPolicy>("If a result's name is taken",
-            [("Keep both", CollisionPolicy.Rename), ("Replace", CollisionPolicy.Overwrite), ("Skip", CollisionPolicy.Skip)], CollisionPolicy.Rename,
+        PageSizes = new ChoiceGroup<PageSize>(Strings.Get("Opt.GroupPageSize"), [(Strings.Get("Opt.FitPicture"), PageSize.Auto), ("A4", PageSize.A4), ("Letter", PageSize.Letter)], PageSize.Auto, Same);
+        Margins = new ChoiceGroup<double>(Strings.Get("Opt.GroupMargin"), [(Strings.Get("Opt.MarginNone"), 0), (Strings.Get("Opt.MarginNarrow"), 18), (Strings.Get("Opt.MarginNormal"), 36)], 0, Same);
+        Fits = new ChoiceGroup<ImageFit>(Strings.Get("Opt.GroupFit"), [(Strings.Get("Opt.WholePicture"), ImageFit.Fit), (Strings.Get("Opt.FillPage"), ImageFit.Cover)], ImageFit.Fit, Same);
+        Collisions = new ChoiceGroup<CollisionPolicy>(Strings.Get("Opt.GroupCollision"),
+            [(Strings.Get("Opt.KeepBoth"), CollisionPolicy.Rename), (Strings.Get("Opt.Replace"), CollisionPolicy.Overwrite), (Strings.Get("Opt.Skip"), CollisionPolicy.Skip)], CollisionPolicy.Rename,
             () => { Raise(nameof(ShowOverwriteWarning)); Changed(recheck: true); });
     }
 
@@ -132,32 +133,32 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
 
     public ICommand ToggleTweaksCommand { get; }
 
-    public string TweaksToggleText => _tweaksOpen ? "Done" : "Edit";
+    public string TweaksToggleText => _tweaksOpen ? Strings.Get("Opt.Done") : Strings.Get("Opt.Edit");
 
     /// <summary>The current choices in a few words, for the folded header: what will happen without opening it.</summary>
     public IReadOnlyList<string> SummaryParts()
     {
         var parts = new List<string>();
         if (_showQuality)
-            parts.Add($"Quality {(int)_jpegQuality}");
+            parts.Add(Strings.Format("Opt.Quality", (int)_jpegQuality));
         if (_showPdf)
         {
-            parts.Add($"{Dpi.Value} ppi");
-            parts.Add(_pages.IsAll ? "all pages" : $"pages {_pages}");
+            parts.Add(Strings.Format("Opt.Ppi", Dpi.Value));
+            parts.Add(_pages.IsAll ? Strings.Get("Opt.AllPages") : Strings.Format("Opt.Pages", _pages));
         }
 
         if (_showLayout)
         {
-            parts.Add(PageSizes.Value == PageSize.Auto ? "page fits the picture" : PageSizes.Value.ToString());
+            parts.Add(PageSizes.Value == PageSize.Auto ? Strings.Get("Opt.PageFits") : PageSizes.Value.ToString());
             if (Margins.Value > 0)
-                parts.Add("with margin");
+                parts.Add(Strings.Get("Opt.WithMargin"));
         }
 
         parts.Add(Collision switch
         {
-            CollisionPolicy.Overwrite => "replace if taken",
-            CollisionPolicy.Skip => "skip if taken",
-            _ => "keep both if taken"
+            CollisionPolicy.Overwrite => Strings.Get("Opt.SumReplace"),
+            CollisionPolicy.Skip => Strings.Get("Opt.SumSkip"),
+            _ => Strings.Get("Opt.SumKeep")
         });
         return parts;
     }
@@ -210,7 +211,7 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
         }
     }
 
-    public string QualityText => $"JPEG quality: {(int)_jpegQuality}";
+    public string QualityText => Strings.Format("Opt.JpegQuality", (int)_jpegQuality);
 
     /// <summary>The pages to convert, as the user typed them ("1-3, 5, 8-"); empty means every page.</summary>
     public string PagesText
@@ -332,24 +333,24 @@ public sealed class ConverterOptionsViewModel : INotifyPropertyChanged
             switch (route.Fidelity)
             {
                 case ConversionFidelity.Identical:
-                    Add("A copy under the new name; nothing is re-encoded.");
+                    Add(Strings.Get("Opt.NoticeCopy"));
                     break;
                 case ConversionFidelity.Lossy:
-                    Add("JPEG is lossy: some detail is lost, and transparent areas are filled with the background colour. Camera details and other metadata are not copied.");
+                    Add(Strings.Get("Opt.NoticeLossy"));
                     break;
                 case ConversionFidelity.PixelPreserving:
-                    Add("The picture keeps its pixels exactly, but a PNG is usually larger. Camera details and other metadata are not copied.");
+                    Add(Strings.Get("Opt.NoticePixels"));
                     break;
                 case ConversionFidelity.Embedded:
                     Add(route.Target == FileFormat.Docx
-                        ? "The picture is placed inside a Word file. No text is recognised, so there is no text to edit or search."
-                        : "The picture is placed inside the PDF. No text is recognised, so there is no text to select or search.");
+                        ? Strings.Get("Opt.NoticeEmbedWord")
+                        : Strings.Get("Opt.NoticeEmbedPdf"));
                     break;
                 case ConversionFidelity.Rasterized:
-                    Add("Each page becomes a picture, so its text can no longer be selected, and a result is written for every page.");
+                    Add(Strings.Get("Opt.NoticeRaster"));
                     break;
                 case ConversionFidelity.LayoutDependent:
-                    Add("Needs LibreOffice, which you installed yourself. It lays the pages out its own way, so fonts and layout may differ from Word.");
+                    Add(Strings.Get("Opt.NoticeLayout"));
                     break;
             }
         }

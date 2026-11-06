@@ -1,11 +1,12 @@
 <UserControl x:Class="Lunar.Desktop.Features.MediaControls.MediaPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              xmlns:behaviors="clr-namespace:Lunar.Desktop.Behaviors"
              Focusable="False" IsTabStop="False" Background="Transparent"
-             automation:AutomationProperties.Name="Media">
+             automation:AutomationProperties.Name="{res:Text X.Media}">
   <!--
     FE-17: the Media page. It only binds to MediaPageViewModel (state and commands); there is no Windows API here and no logic
     in the code-behind. Four faces, one visible at a time: loading (placeholder), no session (an explanation), unavailable
@@ -45,8 +46,8 @@
                 VerticalAlignment="Center" HorizontalAlignment="Center">
       <TextBlock x:Name="UnavailableText" Text="{Binding UnavailableText}" Style="{DynamicResource Lunar.Text.Secondary}"
                  TextWrapping="Wrap" TextAlignment="Center" />
-      <Button x:Name="RetryButton" Content="Retry" Command="{Binding RetryCommand}" HorizontalAlignment="Center" Margin="0,8,0,0"
-              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="Retry reading media" />
+      <Button x:Name="RetryButton" Content="{res:Text X.Retry}" Command="{Binding RetryCommand}" HorizontalAlignment="Center" Margin="0,8,0,0"
+              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.RetryReadingMedia}" />
     </StackPanel>
 
     <!-- A session. -->
@@ -98,7 +99,7 @@
       </Grid>
 
       <!-- Timeline: position, a read-only bar, length. A stream without a timeline or a timeline that cannot be seeked says so. -->
-      <Grid x:Name="Timeline" Grid.Row="1" Margin="0,10,0,0" automation:AutomationProperties.Name="Playback position"
+      <Grid x:Name="Timeline" Grid.Row="1" Margin="0,10,0,0" automation:AutomationProperties.Name="{res:Text X.PlaybackPosition}"
             automation:AutomationProperties.HelpText="{Binding TimelineLabel}">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
@@ -130,7 +131,7 @@
                   behaviors:SliderInteraction.IsAdjusting="{Binding IsScrubbing, Mode=OneWayToSource}"
                   Value="{Binding SeekValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                   Visibility="{Binding CanSeek, Converter={StaticResource BoolToVisible}}"
-                  automation:AutomationProperties.Name="Seek"
+                  automation:AutomationProperties.Name="{res:Text X.Seek}"
                   automation:AutomationProperties.HelpText="{Binding TimelineLabel}" />
         </Grid>
         <TextBlock x:Name="DurationTextBlock" Grid.Column="2" Text="{Binding DurationText}" Style="{DynamicResource Lunar.Text.Caption}"

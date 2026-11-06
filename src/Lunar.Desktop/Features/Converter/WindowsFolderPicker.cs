@@ -1,3 +1,4 @@
+using Lunar.Desktop.Resources;
 using Microsoft.Win32;
 
 namespace Lunar.Desktop.Features.Converter;
@@ -7,7 +8,7 @@ public sealed class WindowsFolderPicker : IFolderPicker
 {
     public string? PickFolder()
     {
-        var dialog = new OpenFolderDialog { Title = "Choose where to save the results", Multiselect = false };
+        var dialog = new OpenFolderDialog { Title = Strings.Get("Picker.FolderTitle"), Multiselect = false };
         return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 }

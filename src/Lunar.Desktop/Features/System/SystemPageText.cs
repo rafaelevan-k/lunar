@@ -1,6 +1,7 @@
 using System.Globalization;
 using Lunar.Application.System.Models;
 using Lunar.Desktop.Controls;
+using Lunar.Desktop.Resources;
 using Lunar.Domain.Shared;
 
 namespace Lunar.Desktop.Features.SystemControls;
@@ -20,12 +21,12 @@ internal static class SystemPageText
 
         return state.Radio switch
         {
-            RadioState.Unavailable => ("No Wi-Fi adapter", StatusKind.Unavailable),
-            RadioState.Disabled => ("Off", StatusKind.Neutral),
-            RadioState.Enabled when state.Connectivity == WifiConnectivity.Connected => ("Connected", StatusKind.Success),
-            RadioState.Enabled when state.Connectivity == WifiConnectivity.Disconnected => ("On, not connected", StatusKind.Info),
-            RadioState.Enabled => ("On", StatusKind.Info),
-            _ => ("Unknown", StatusKind.Neutral)
+            RadioState.Unavailable => (Strings.Get("System.NoWifi"), StatusKind.Unavailable),
+            RadioState.Disabled => (Strings.Get("System.Off"), StatusKind.Neutral),
+            RadioState.Enabled when state.Connectivity == WifiConnectivity.Connected => (Strings.Get("System.Connected"), StatusKind.Success),
+            RadioState.Enabled when state.Connectivity == WifiConnectivity.Disconnected => (Strings.Get("System.OnNotConnected"), StatusKind.Info),
+            RadioState.Enabled => (Strings.Get("System.On"), StatusKind.Info),
+            _ => (Strings.Get("System.Unknown"), StatusKind.Neutral)
         };
     }
 
@@ -37,17 +38,17 @@ internal static class SystemPageText
 
         return state.Radio switch
         {
-            RadioState.Unavailable => ("No Bluetooth radio", StatusKind.Unavailable),
-            RadioState.Disabled => ("Off", StatusKind.Neutral),
-            RadioState.Enabled => ("On", StatusKind.Success),
-            _ => ("Unknown", StatusKind.Neutral)
+            RadioState.Unavailable => (Strings.Get("System.NoBluetooth"), StatusKind.Unavailable),
+            RadioState.Disabled => (Strings.Get("System.Off"), StatusKind.Neutral),
+            RadioState.Enabled => (Strings.Get("System.On"), StatusKind.Success),
+            _ => (Strings.Get("System.Unknown"), StatusKind.Neutral)
         };
     }
 
-    public const string UnknownHint = "The state couldn't be determined.";
+    public static string UnknownHint => Strings.Get("System.UnknownHint");
 
     /// <summary>What the chip says while a switch request is out. An in-progress status, never a result.</summary>
-    public static string Switching(bool enabling) => enabling ? "Turning on…" : "Turning off…";
+    public static string Switching(bool enabling) => enabling ? Strings.Get("System.TurningOn") : Strings.Get("System.TurningOff");
 
     public static string? WifiHint(WifiState state)
     {
@@ -64,10 +65,10 @@ internal static class SystemPageText
     // One short sentence about why there is no switch. A machine with no adapter needs none: the chip says it.
     private static string? Hint(CapabilityStatus capability, RadioState radio, bool canToggle) => capability switch
     {
-        CapabilityStatus.Unsupported => "This PC doesn't allow controlling it.",
-        CapabilityStatus.PermissionDenied => "Windows didn't allow access.",
+        CapabilityStatus.Unsupported => Strings.Get("System.HintUnsupported"),
+        CapabilityStatus.PermissionDenied => Strings.Get("System.HintDenied"),
         CapabilityStatus.Unknown => UnknownHint,
-        CapabilityStatus.Supported when !canToggle && radio is RadioState.Enabled or RadioState.Disabled => "Can't be switched from here.",
+        CapabilityStatus.Supported when !canToggle && radio is RadioState.Enabled or RadioState.Disabled => Strings.Get("System.HintCannotSwitch"),
         CapabilityStatus.Supported when radio == RadioState.Unknown => UnknownHint,
         _ => null
     };
@@ -80,13 +81,13 @@ internal static class SystemPageText
     public static string? VolumeNote(CapabilityStatus capability) => capability switch
     {
         CapabilityStatus.Supported => null,
-        CapabilityStatus.Unavailable => "No audio output device",
-        CapabilityStatus.Unsupported => "Volume can't be controlled on this PC",
-        CapabilityStatus.PermissionDenied => "Windows didn't allow access to the volume",
-        _ => "Volume is unavailable"
+        CapabilityStatus.Unavailable => Strings.Get("System.VolumeNoDevice"),
+        CapabilityStatus.Unsupported => Strings.Get("System.VolumeUnsupported"),
+        CapabilityStatus.PermissionDenied => Strings.Get("System.VolumeDenied"),
+        _ => Strings.Get("System.VolumeUnavailable")
     };
 
-    public static string VolumeText(double percent, bool muted) => muted ? "Muted" : Math.Round(percent).ToString("0", CultureInfo.InvariantCulture) + "%";
+    public static string VolumeText(double percent, bool muted) => muted ? Strings.Get("System.Muted") : Math.Round(percent).ToString("0", CultureInfo.InvariantCulture) + "%";
 
     /// <summary>A short, user-safe sentence for a failed action. Never contains a device name or a raw exception message.</summary>
     public static string Failure(OperationError error, string subject)
@@ -94,20 +95,20 @@ internal static class SystemPageText
         ArgumentNullException.ThrowIfNull(error);
         return error.Code switch
         {
-            ErrorCode.AccessDenied => $"Windows didn't allow this change. Use Settings to switch {subject}.",
-            ErrorCode.Unsupported => $"{subject} can't be switched from here. Use Settings.",
-            ErrorCode.DeviceUnavailable => $"{subject} isn't available.",
-            ErrorCode.Timeout => "Windows didn't confirm the change. Try again.",
-            _ => $"Couldn't change {subject}."
+            ErrorCode.AccessDenied => Strings.Format("System.FailDenied", subject),
+            ErrorCode.Unsupported => Strings.Format("System.FailUnsupported", subject),
+            ErrorCode.DeviceUnavailable => Strings.Format("System.FailUnavailable", subject),
+            ErrorCode.Timeout => Strings.Get("System.FailTimeout"),
+            _ => Strings.Format("System.FailOther", subject)
         };
     }
 
     private static (string Text, StatusKind Kind)? Capability(CapabilityStatus capability, string subject) => capability switch
     {
         CapabilityStatus.Supported => null,
-        CapabilityStatus.Unsupported => ("Not supported", StatusKind.Unavailable),
-        CapabilityStatus.PermissionDenied => ("Access denied", StatusKind.Error),
-        CapabilityStatus.Unavailable => (subject == "Wi-Fi" ? "No Wi-Fi adapter" : "No Bluetooth radio", StatusKind.Unavailable),
-        _ => ("Unknown", StatusKind.Neutral)
+        CapabilityStatus.Unsupported => (Strings.Get("System.NotSupported"), StatusKind.Unavailable),
+        CapabilityStatus.PermissionDenied => (Strings.Get("System.AccessDenied"), StatusKind.Error),
+        CapabilityStatus.Unavailable => (Strings.Get(subject == "Wi-Fi" ? "System.NoWifi" : "System.NoBluetooth"), StatusKind.Unavailable),
+        _ => (Strings.Get("System.Unknown"), StatusKind.Neutral)
     };
 }

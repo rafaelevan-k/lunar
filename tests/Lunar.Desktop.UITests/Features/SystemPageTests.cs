@@ -853,4 +853,43 @@ public sealed class SystemPageTests
                 Assert.DoesNotContain(word, text, StringComparison.Ordinal);
         }
     }
+
+    // FE-24: names, tab stops and tab order of the real page, in English and in Indonesian (the longer words must fit and be named too).
+    [Theory]
+    [InlineData("en")]
+    [InlineData("id")]
+    public void TheSystemPageIsNamedAndReachableByKeyboard(string language) => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use(language);
+        try
+        {
+            using var rig = Create();
+            Lunar.Desktop.UITests.Accessibility.AutomationAudit.AssertAccessible(rig.Window);
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
+
+    // FE-24: Indonesian words are longer; the page must still fit the island (and nothing may be cut off).
+    [Fact]
+    public void TheSystemPageStillFitsTheIslandInIndonesian() => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use("id");
+        try
+        {
+            foreach (var colors in new[] { "Colors.Dark.xaml", "Colors.Light.xaml", "Colors.HighContrast.xaml" })
+            {
+                using var rig = Create(colors);
+                rig.Page.Measure(new Size(PageWidth, double.PositiveInfinity));
+                Assert.True(rig.Page.DesiredSize.Height <= PageHeight, $"Page wants {rig.Page.DesiredSize.Height} high, {PageHeight} available.");
+                Assert.True(rig.Page.DesiredSize.Width <= PageWidth);
+            }
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
 }

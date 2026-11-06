@@ -1,3 +1,4 @@
+using Lunar.Desktop.Resources;
 using Lunar.Domain.Conversion;
 using Microsoft.Win32;
 
@@ -15,11 +16,11 @@ public sealed class WindowsFilePicker : IFilePicker
         var supported = string.Join(';', FileFormats.All.Select(f => "*" + FileFormats.Extension(f)));
         var dialog = new OpenFileDialog
         {
-            Title = "Choose files to convert",
+            Title = Strings.Get("Picker.FilesTitle"),
             Multiselect = true,
             CheckFileExists = true,
             CheckPathExists = true,
-            Filter = $"Supported files ({supported})|{supported}|All files (*.*)|*.*"
+            Filter = $"{Strings.Get("Picker.Supported")} ({supported})|{supported}|{Strings.Get("Picker.All")} (*.*)|*.*"
         };
 
         return dialog.ShowDialog() == true ? dialog.FileNames : null;

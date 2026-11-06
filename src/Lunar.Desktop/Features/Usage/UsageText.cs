@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lunar.Application.Usage.Models;
+using Lunar.Desktop.Resources;
 
 namespace Lunar.Desktop.Features.Usage;
 
@@ -11,23 +12,23 @@ public static class UsageText
 {
     /// <summary>"67% used", or "No figure reported" when the service gave none.</summary>
     public static string Percent(UsageWindow? window) =>
-        window?.UsedPercent is { } percent ? $"{percent}% used" : "No figure reported";
+        window?.UsedPercent is { } percent ? Strings.Format("Usage.Percent", percent) : Strings.Get("Usage.NoFigure");
 
     /// <summary>A length of time in the two most useful units: "under a minute", "14 min", "2 h 5 min", "3 d 2 h".</summary>
     public static string Span(TimeSpan span)
     {
         if (span < TimeSpan.FromMinutes(1))
-            return "under a minute";
+            return Strings.Get("Usage.SpanUnderMinute");
         if (span < TimeSpan.FromHours(1))
-            return $"{(int)span.TotalMinutes} min";
+            return Strings.Format("Usage.SpanMin", (int)span.TotalMinutes);
         if (span < TimeSpan.FromDays(1))
         {
             var minutes = span.Minutes;
-            return minutes == 0 ? $"{(int)span.TotalHours} h" : $"{(int)span.TotalHours} h {minutes} min";
+            return minutes == 0 ? Strings.Format("Usage.SpanHour", (int)span.TotalHours) : Strings.Format("Usage.SpanHourMin", (int)span.TotalHours, minutes);
         }
 
         var hours = span.Hours;
-        return hours == 0 ? $"{(int)span.TotalDays} d" : $"{(int)span.TotalDays} d {hours} h";
+        return hours == 0 ? Strings.Format("Usage.SpanDay", (int)span.TotalDays) : Strings.Format("Usage.SpanDayHour", (int)span.TotalDays, hours);
     }
 
     /// <summary>
@@ -38,27 +39,27 @@ public static class UsageText
     {
         ArgumentNullException.ThrowIfNull(culture);
         if (window?.ResetsAt is not { } resetsAt)
-            return "Reset time not reported";
+            return Strings.Get("Usage.ResetNotReported");
 
         var remaining = resetsAt - now;
         if (remaining <= TimeSpan.Zero)
-            return "Reset time has passed; waiting for the next reading";
+            return Strings.Get("Usage.ResetPassed");
 
         var local = TimeZoneInfo.ConvertTime(resetsAt, zone ?? TimeZoneInfo.Local);
         var clock = remaining < TimeSpan.FromDays(1)
             ? local.ToString("t", culture)
             : local.ToString("ddd", culture) + " " + local.ToString("t", culture);
-        return $"Resets in {Span(remaining)} ({clock})";
+        return Strings.Format("Usage.ResetIn", Span(remaining), clock);
     }
 
     /// <summary>When the shown reading was taken: "Updated 14:02".</summary>
     public static string Updated(DateTimeOffset fetchedAt, CultureInfo culture, TimeZoneInfo? zone = null)
     {
         ArgumentNullException.ThrowIfNull(culture);
-        return "Updated " + TimeZoneInfo.ConvertTime(fetchedAt, zone ?? TimeZoneInfo.Local).ToString("t", culture);
+        return Strings.Format("Usage.Updated", TimeZoneInfo.ConvertTime(fetchedAt, zone ?? TimeZoneInfo.Local).ToString("t", culture));
     }
 
     /// <summary>The name a screen reader reads for one limit.</summary>
     public static string Spoken(string title, UsageWindow? window, DateTimeOffset now, CultureInfo culture, TimeZoneInfo? zone = null) =>
-        $"{title}: {Percent(window)}. {Reset(window, now, culture, zone)}";
+        Strings.Format("Usage.Spoken", title, Percent(window), Reset(window, now, culture, zone));
 }

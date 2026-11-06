@@ -1,8 +1,9 @@
 <Window x:Class="Lunar.Desktop.Features.Usage.ResetToastWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
         xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
-        Title="Claude limit reset"
+        Title="{res:Text X.ClaudeLimitReset}"
         Width="320" SizeToContent="Height"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
@@ -38,7 +39,7 @@
       </StackPanel>
 
       <Button x:Name="CloseButton" Grid.Column="2" VerticalAlignment="Top" Width="24" Height="24" Padding="0" Cursor="Hand"
-              Click="OnCloseClick" automation:AutomationProperties.Name="Close" Foreground="{DynamicResource Usage.Brush.Muted}">
+              Click="OnCloseClick" automation:AutomationProperties.Name="{res:Text X.Close}" Foreground="{DynamicResource Usage.Brush.Muted}">
         <Button.Template>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="12" Background="Transparent" BorderBrush="{DynamicResource Usage.Brush.Ink}" BorderThickness="0">

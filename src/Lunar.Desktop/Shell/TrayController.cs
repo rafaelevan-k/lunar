@@ -1,4 +1,5 @@
 using System.Drawing;
+using Lunar.Desktop.Resources;
 using Forms = System.Windows.Forms;
 
 namespace Lunar.Desktop.Shell;
@@ -31,19 +32,19 @@ internal sealed class TrayController : IDisposable
             ?? throw new InvalidOperationException("The tray icon resource is missing.");
         _iconImage = new Icon(stream);
 
-        OpenItem = new Forms.ToolStripMenuItem("&Open");
-        SettingsItem = new Forms.ToolStripMenuItem("&Settings")
+        OpenItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Open"));
+        SettingsItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Settings"))
         {
             Enabled = openSettings is not null,
-            ToolTipText = openSettings is null ? "Settings are not available yet." : "Open the Settings window."
+            ToolTipText = Strings.Get(openSettings is null ? "Tray.SettingsMissingTip" : "Tray.SettingsTip")
         };
-        StartupItem = new Forms.ToolStripMenuItem("Start with &Windows")
+        StartupItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Startup"))
         {
             Enabled = false,
             Checked = false,
-            ToolTipText = "Starting with Windows is not available yet."
+            ToolTipText = Strings.Get("Tray.StartupTip")
         };
-        ExitItem = new Forms.ToolStripMenuItem("E&xit");
+        ExitItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Exit"));
 
         OpenItem.Click += OnOpen;
         SettingsItem.Click += OnSettings;

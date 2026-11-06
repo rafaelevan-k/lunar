@@ -361,4 +361,42 @@ public sealed class UsagePageTests
         Assert.NotEmpty(colors);
         Assert.All(colors, e => Assert.StartsWith("SystemColors.", (string)e.Attribute("Member")!, StringComparison.Ordinal));
     }
+
+    // FE-24: names, tab stops and tab order of the real page, in English and in Indonesian (the longer words must fit and be named too).
+    [Theory]
+    [InlineData("en")]
+    [InlineData("id")]
+    public void TheUsagePageIsNamedAndReachableByKeyboard(string language) => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use(language);
+        try
+        {
+            using var rig = new Rig(enabled: true);
+            Lunar.Desktop.UITests.Accessibility.AutomationAudit.AssertAccessible(rig.Window);
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
+
+    // FE-24: Indonesian words are longer; the page must still fit the island (and nothing may be cut off).
+    [Fact]
+    public void TheUsagePageStillFitsTheIslandInIndonesian() => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use("id");
+        try
+        {
+            using (var off = new Rig(enabled: false))
+                AssertNoScrolling(off, "Off (Indonesian)");
+
+            using var active = new Rig(enabled: true);
+            Pump(() => active.Model.ShowLimits);
+            AssertNoScrolling(active, "Active with both limits (Indonesian)");
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
 }

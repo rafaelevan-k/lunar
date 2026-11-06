@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Conversion.Models;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Conversion;
 using Lunar.Domain.Shared;
@@ -148,7 +149,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             var folder = OutputFolder.TrimEnd('\\', '/');
             var cut = folder.LastIndexOfAny(['\\', '/']);
             var name = cut >= 0 ? folder[(cut + 1)..] : folder;
-            parts.Add(name.Length == 0 ? "saving next to the originals" : "saving to " + name);
+            parts.Add(name.Length == 0 ? Strings.Get("Conv.SavingBeside") : Strings.Format("Conv.SavingTo", name));
             return string.Join(" · ", parts);
         }
     }
@@ -226,14 +227,14 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             if (CanStart)
                 return string.Empty;
             if (_items.Count == 0)
-                return "Add files to convert.";
+                return Strings.Get("Conv.AddFiles");
             if (_isChecking)
-                return "Checking the files...";
+                return Strings.Get("Conv.Checking");
             if (_selected is null)
-                return "No format fits every file in the list.";
+                return Strings.Get("Conv.NoFormatFits");
             if (!Options.IsValid)
-                return "Fix the list of pages first.";
-            return "None of the files can be converted yet.";
+                return Strings.Get("Conv.FixPages");
+            return Strings.Get("Conv.NoneConvertible");
         }
     }
 
@@ -290,8 +291,8 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>A line under the main button: why Next or Convert cannot be pressed yet, in words; empty when it can.</summary>
     public string StepHint => _step switch
     {
-        ConverterStep.Files => CanNext ? string.Empty : (_isChecking ? "Checking the files..." : "Add at least one file that can be converted."),
-        ConverterStep.Format => CanNext ? string.Empty : "No format fits every file in the list.",
+        ConverterStep.Files => CanNext ? string.Empty : (_isChecking ? Strings.Get("Conv.Checking") : Strings.Get("Conv.AddOneConvertible")),
+        ConverterStep.Format => CanNext ? string.Empty : Strings.Get("Conv.NoFormatFits"),
         ConverterStep.Tweaks => StartHint,
         _ => string.Empty
     };
@@ -387,7 +388,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
                 continue;
             }
 
-            _items.Add(MakeItem(path, ConverterItemStatus.Checking, "Checking..."));
+            _items.Add(MakeItem(path, ConverterItemStatus.Checking, Strings.Get("Conv.ItemChecking")));
             added++;
         }
 
@@ -413,7 +414,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         catch (Exception ex)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "converter.picker.failed", Component, "PickFiles", ExceptionType: ex.GetType()));
-            ErrorMessage = "Lunar couldn't open the file chooser. You can also drag files onto this page.";
+            ErrorMessage = Strings.Get("Conv.PickerFailed");
         }
         finally
         {
@@ -470,7 +471,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
         if (started.Value.JobIds.Count == 0)
         {
-            Notice = "Nothing was left to convert. Check the list and try again.";
+            Notice = Strings.Get("Conv.NothingLeft");
             return;
         }
 
@@ -484,7 +485,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private void OnStartFault(Exception ex)
     {
         _log?.Write(new DiagnosticEvent(DiagnosticLevel.Error, "converter.start.failed", Component, "Start", ExceptionType: ex.GetType()));
-        ErrorMessage = "Lunar couldn't start the conversion. Try again.";
+        ErrorMessage = Strings.Get("Conv.StartFailed");
     }
 
     private void Remove(string fullPath)
@@ -576,7 +577,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         catch (Exception ex)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Error, "converter.check.failed", Component, "Check", ExceptionType: ex.GetType()));
-            _post(() => ApplyFailure(source, "Lunar couldn't check these files. Try adding them again."));
+            _post(() => ApplyFailure(source, Strings.Get("Conv.CheckFailed")));
         }
         finally
         {
@@ -631,7 +632,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             _plan = null;
             if (!planned.IsCancelled)
                 ErrorMessage = planned.Error!.SafeMessage;
-            MarkAll(ConverterItemStatus.NotChecked, "Not checked.");
+            MarkAll(ConverterItemStatus.NotChecked, Strings.Get("Conv.NotChecked"));
             Finish();
             return;
         }
@@ -650,11 +651,11 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
                 ({ } j, _, _) => item with
                 {
                     Status = ConverterItemStatus.Ready,
-                    Message = j.WasRenamed ? $"Ready. The name is taken, so the result will be {j.OutputBaseName + j.OutputExtension}." : "Ready."
+                    Message = j.WasRenamed ? Strings.Format("Conv.ReadyRenamed", j.OutputBaseName + j.OutputExtension) : Strings.Get("Conv.Ready")
                 },
                 (_, { } r, _) => item with { Status = ConverterItemStatus.Refused, Message = r.Error.SafeMessage },
-                (_, _, { }) => item with { Status = ConverterItemStatus.Skipped, Message = "Skipped: a file with the result's name already exists." },
-                _ => item with { Status = ConverterItemStatus.NotChecked, Message = "Not checked." }
+                (_, _, { }) => item with { Status = ConverterItemStatus.Skipped, Message = Strings.Get("Conv.SkippedExists") },
+                _ => item with { Status = ConverterItemStatus.NotChecked, Message = Strings.Get("Conv.NotChecked") }
             };
         }
 
@@ -668,7 +669,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
         _plan = null;
         ErrorMessage = message;
-        MarkAll(ConverterItemStatus.NotChecked, "Not checked.");
+        MarkAll(ConverterItemStatus.NotChecked, Strings.Get("Conv.NotChecked"));
         Finish();
     }
 
@@ -718,7 +719,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         catch (Exception ex)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "converter.folder_picker.failed", Component, "ChooseFolder", ExceptionType: ex.GetType()));
-            ErrorMessage = "Lunar couldn't open the folder chooser.";
+            ErrorMessage = Strings.Get("Conv.FolderPickerFailed");
         }
         finally
         {
@@ -785,7 +786,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         {
             if (sources.Count == 0)
             {
-                offered.Add(new Offered(target, false, "Add files first.", false));
+                offered.Add(new Offered(target, false, Strings.Get("Conv.AddFilesFirst"), false));
                 continue;
             }
 
@@ -793,11 +794,11 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
             var unsupported = routes.FirstOrDefault(r => !r.IsSupported);
             if (unsupported is not null)
             {
-                offered.Add(new Offered(target, false, $"{Label(unsupported.Source)} files can't become {Label(target)} in this version.", false));
+                offered.Add(new Offered(target, false, Strings.Format("Conv.CannotBecome", Label(unsupported.Source), Label(target)), false));
             }
             else if (routes.Any(r => r.RequiresExternalRenderer) && !rendererAvailable)
             {
-                offered.Add(new Offered(target, false, "Not available yet: it needs LibreOffice, which you install yourself (Lunar never installs it for you).", false));
+                offered.Add(new Offered(target, false, Strings.Get("Conv.NeedsLibreOffice"), false));
             }
             else
             {
@@ -836,11 +837,11 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
 
     private static string ModeNote(ConversionMode mode) => mode switch
     {
-        ConversionMode.SameFormat => "a copy under the new name",
-        ConversionMode.Native => "the picture is re-encoded",
-        ConversionMode.Embed => "the picture is placed inside the document",
-        ConversionMode.Rasterize => "each page becomes a picture",
-        ConversionMode.ExternalRenderer => "laid out by LibreOffice, so the layout may differ",
+        ConversionMode.SameFormat => Strings.Get("Conv.ModeSame"),
+        ConversionMode.Native => Strings.Get("Conv.ModeNative"),
+        ConversionMode.Embed => Strings.Get("Conv.ModeEmbed"),
+        ConversionMode.Rasterize => Strings.Get("Conv.ModeRasterize"),
+        ConversionMode.ExternalRenderer => Strings.Get("Conv.ModeExternal"),
         _ => string.Empty
     };
 
@@ -851,16 +852,16 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     private ConverterItem MakeItem(string path, ConverterItemStatus status, string message)
     {
         var name = NameOf(path);
-        var kind = FileFormats.TryFromExtension(ExtensionOf(path), out var format) ? KindText(format) : "Unknown type";
+        var kind = FileFormats.TryFromExtension(ExtensionOf(path), out var format) ? KindText(format) : Strings.Get("Conv.UnknownType");
         return new ConverterItem(path, name, kind, status, message, new RelayCommand(() => Remove(path)));
     }
 
     private static string KindText(FileFormat format) => format switch
     {
-        FileFormat.Png => "PNG picture",
-        FileFormat.Jpg or FileFormat.Jpeg => "JPEG picture",
-        FileFormat.Docx => "Word document",
-        _ => "PDF document"
+        FileFormat.Png => Strings.Get("Conv.KindPng"),
+        FileFormat.Jpg or FileFormat.Jpeg => Strings.Get("Conv.KindJpeg"),
+        FileFormat.Docx => Strings.Get("Conv.KindWord"),
+        _ => Strings.Get("Conv.KindPdf")
     };
 
     private void RefreshSummary()
@@ -872,11 +873,11 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         if (_items.Count > 0)
         {
             if (ready > 0)
-                parts.Add(ready == 1 ? "1 file ready" : $"{ready} files ready");
+                parts.Add(ready == 1 ? Strings.Get("Conv.FileReadyOne") : Strings.Format("Conv.FileReadyMany", ready));
             if (refused > 0)
-                parts.Add(refused == 1 ? "1 can't be converted" : $"{refused} can't be converted");
+                parts.Add(refused == 1 ? Strings.Get("Conv.RefusedOne") : Strings.Format("Conv.RefusedMany", refused));
             if (checking > 0)
-                parts.Add("checking...");
+                parts.Add(Strings.Get("Conv.CheckingShort"));
         }
 
         SummaryText = string.Join(", ", parts);
@@ -887,9 +888,9 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
     {
         var parts = new List<string>();
         if (duplicates > 0)
-            parts.Add(duplicates == 1 ? "1 file was already in the list." : $"{duplicates} files were already in the list.");
+            parts.Add(duplicates == 1 ? Strings.Get("Conv.DuplicateOne") : Strings.Format("Conv.DuplicateMany", duplicates));
         if (overflow > 0)
-            parts.Add($"Lunar converts at most {limit} files at a time, so {overflow} {(overflow == 1 ? "file was" : "files were")} not added.");
+            parts.Add(overflow == 1 ? Strings.Format("Conv.OverflowOne", limit) : Strings.Format("Conv.OverflowMany", limit, overflow));
         return parts.Count == 0 ? null : string.Join(' ', parts);
     }
 
@@ -902,7 +903,7 @@ public sealed class ConverterPageViewModel : INotifyPropertyChanged, IDisposable
         var trimmed = path.TrimEnd('\\', '/');
         var cut = trimmed.LastIndexOfAny(['\\', '/']);
         var name = cut >= 0 ? trimmed[(cut + 1)..] : trimmed;
-        return name.Length == 0 ? "(unnamed)" : name;
+        return name.Length == 0 ? Strings.Get("Conv.Unnamed") : name;
     }
 
     private static string ExtensionOf(string path)

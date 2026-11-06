@@ -93,7 +93,7 @@ public partial class SwiperView : UserControl
                 Style = (Style)FindResource("SwiperDot"),
                 IsChecked = i == navigation.SelectedIndex
             };
-            System.Windows.Automation.AutomationProperties.SetName(dot, navigation.Titles[i] + " page");
+            System.Windows.Automation.AutomationProperties.SetName(dot, Lunar.Desktop.Resources.Strings.Format("Nav.PageDot", navigation.Titles[i]));
             dot.Checked += (_, _) => navigation.GoTo(index);
             _dots.Add(dot);
             Dots.Children.Add(dot);
@@ -342,6 +342,10 @@ public partial class SwiperView : UserControl
         UpdateArrows();
         if (_controller is { IsDragging: false })
             SettleTo(_navigation.SelectedIndex);
+
+        // Moving between pages by mouse, touch or arrow keys changes no keyboard focus, so say where the user is now.
+        var index = _navigation.SelectedIndex;
+        Accessibility.LiveAnnouncer.Announce(this, Lunar.Desktop.Resources.Strings.Format("Nav.PageChanged", _navigation.Titles[index], index + 1, _navigation.Titles.Count), "Lunar.Page");
     }
 
     private void UpdateArrows()

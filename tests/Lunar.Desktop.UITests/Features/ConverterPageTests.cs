@@ -413,4 +413,38 @@ public sealed class ConverterPageTests
         Assert.Equal(Visibility.Visible, bar.Visibility);
         Assert.Contains("folder", bar.Message, StringComparison.OrdinalIgnoreCase);
     });
+
+    // FE-24: names, tab stops and tab order of the real page, in English and in Indonesian.
+    [Theory]
+    [InlineData("en")]
+    [InlineData("id")]
+    public void TheConverterPageIsNamedAndReachableByKeyboard(string language)
+    {
+        Lunar.Desktop.Resources.Strings.Use(language);
+        try
+        {
+            WithPage("Colors.Dark.xaml", (_, _, window, _) => Lunar.Desktop.UITests.Accessibility.AutomationAudit.AssertAccessible(window));
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    }
+
+    // FE-24: Indonesian words are longer; the page must still fit the island (and nothing may be cut off).
+    [Fact]
+    public void TheConverterPageStillFitsTheIslandInIndonesian() => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use("id");
+        try
+        {
+            // The converter helper starts its own STA thread, so the check runs inside it with the language already chosen.
+            WithPage("Colors.Dark.xaml", (page, _, _, _) =>
+                Assert.True(page.ActualWidth <= PageWidth + 0.5 && page.ActualHeight <= PageHeight + 0.5, "the page stays inside the island"));
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
 }

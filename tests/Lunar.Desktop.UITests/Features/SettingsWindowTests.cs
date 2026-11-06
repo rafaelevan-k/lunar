@@ -546,4 +546,73 @@ public sealed class SettingsWindowTests
 
         return (0.2126 * Channel(c.R)) + (0.7152 * Channel(c.G)) + (0.0722 * Channel(c.B));
     }
+
+    // FE-24: names, tab stops and tab order of the real page, in English and in Indonesian (the longer words must fit and be named too).
+    [Theory]
+    [InlineData("en")]
+    [InlineData("id")]
+    public void TheSettingsWindowIsNamedAndReachableByKeyboard(string language) => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use(language);
+        try
+        {
+            using var rig = new Rig();
+            Lunar.Desktop.UITests.Accessibility.AutomationAudit.AssertAccessible(rig.Window);
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
+
+    // FE-24, ADR-0017: the language is a choice like the theme; it is saved at once and applies at the next start, and the window says so.
+    [Fact]
+    public void ChoosingALanguageSavesItAndSaysItAppliesAtTheNextStart() => RunOnSta(() =>
+    {
+        using var rig = new Rig(r => r.Stored = LunarSettings.Defaults with { Locale = "en" });
+        var choices = () => Descendants<RadioButton>(rig.Named<ItemsControl>("LanguageList")).ToList();
+
+        Assert.Equal(["Match Windows", "English", "Bahasa Indonesia"], choices().Select(NameOf));
+        Assert.Equal([false, true, false], choices().Select(c => c.IsChecked == true));
+        Assert.Equal(Visibility.Collapsed, rig.Named<TextBlock>("LanguageRestart").Visibility);
+
+        choices().Single(c => NameOf(c) == "Bahasa Indonesia").Command.Execute(null);
+        Pump();
+        rig.Window.UpdateLayout();
+
+        Assert.Equal("id", rig.Repository.Stored.Locale);
+        Assert.Equal([false, false, true], choices().Select(c => c.IsChecked == true));
+        Assert.Equal(Visibility.Visible, rig.Named<TextBlock>("LanguageRestart").Visibility);
+    });
+
+    [Fact]
+    public void FollowingWindowsSavesNoLanguageAtAll() => RunOnSta(() =>
+    {
+        using var rig = new Rig(r => r.Stored = LunarSettings.Defaults with { Locale = "id" });
+
+        Descendants<RadioButton>(rig.Named<ItemsControl>("LanguageList")).Single(c => NameOf(c) == "Match Windows").Command.Execute(null);
+        Pump();
+
+        Assert.Null(rig.Repository.Stored.Locale);
+    });
+
+    // FE-24: Indonesian words are longer; the page must still fit the island (and nothing may be cut off).
+    [Fact]
+    public void TheSettingsWindowStillFitsItsSmallestSizeInIndonesian() => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use("id");
+        try
+        {
+            foreach (var palette in new[] { "Colors.Dark.xaml", "Colors.Light.xaml", "Colors.HighContrast.xaml" })
+            {
+                using var rig = new Rig(palette: palette, width: 380, height: 520);
+                var scroll = Descendants<ScrollViewer>(rig.Window).First();
+                Assert.True(scroll.ExtentWidth <= scroll.ViewportWidth + 0.5, $"Content is {scroll.ExtentWidth} wide in a {scroll.ViewportWidth} viewport.");
+            }
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
 }

@@ -497,4 +497,40 @@ public sealed class MediaPageTests
         Assert.Equal(Visibility.Collapsed, Named<InlineError>(rig, "PageError").Visibility);
         Assert.Equal(0, Named<InlineError>(rig, "PageError").ActualHeight);
     });
+
+    // FE-24: names, tab stops and tab order of the real page, in English and in Indonesian (the longer words must fit and be named too).
+    [Theory]
+    [InlineData("en")]
+    [InlineData("id")]
+    public void TheMediaPageIsNamedAndReachableByKeyboard(string language) => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use(language);
+        try
+        {
+            using var rig = Create(sessions: [S(), S(id: "b", app: "Other")]);
+            Lunar.Desktop.UITests.Accessibility.AutomationAudit.AssertAccessible(rig.Window);
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
+
+    // FE-24: Indonesian words are longer; the page must still fit the island (and nothing may be cut off).
+    [Fact]
+    public void TheMediaPageStillFitsTheIslandInIndonesian() => RunOnSta(() =>
+    {
+        Lunar.Desktop.Resources.Strings.Use("id");
+        try
+        {
+            using var rig = Create(sessions: [S(durationSeconds: 7300, positionSeconds: 3725), S(id: "b", app: "Other")]);
+            var face = Named<Grid>(rig, "SessionFace");
+            Assert.True(face.ActualHeight <= PageHeight - 4, $"The session face is {face.ActualHeight} high; the area is {PageHeight - 4}.");
+            Assert.True(rig.Page.ActualWidth <= PageWidth + 0.5);
+        }
+        finally
+        {
+            Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
 }

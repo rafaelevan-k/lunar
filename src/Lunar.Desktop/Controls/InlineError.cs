@@ -24,7 +24,7 @@ public sealed class InlineError : Control
         DependencyProperty.Register(nameof(ActionCommand), typeof(ICommand), typeof(InlineError));
 
     public static readonly DependencyProperty ActionTextProperty =
-        DependencyProperty.Register(nameof(ActionText), typeof(string), typeof(InlineError), new PropertyMetadata("Retry"));
+        DependencyProperty.Register(nameof(ActionText), typeof(string), typeof(InlineError), new PropertyMetadata(Lunar.Desktop.Resources.Strings.Get("Common.Retry")));
 
     static InlineError() =>
         DefaultStyleKeyProperty.OverrideMetadata(typeof(InlineError), new FrameworkPropertyMetadata(typeof(InlineError)));
@@ -70,6 +70,6 @@ public sealed class InlineError : Control
         var message = (string?)e.NewValue;
         var shown = !string.IsNullOrWhiteSpace(message);
         control.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
-        AutomationProperties.SetName(control, shown ? "Error: " + message : string.Empty);
+        AutomationProperties.SetName(control, shown ? Lunar.Desktop.Resources.Strings.Format("Common.ErrorPrefix", message) : string.Empty);
     }
 }

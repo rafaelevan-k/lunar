@@ -5,6 +5,7 @@ using System.Windows.Media;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Media.Models;
 using Lunar.Application.Media.UseCases;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -260,7 +261,7 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>The timeline in one sentence for assistive technology, for example "01:12 of 03:45".</summary>
-    public string TimelineLabel => HasTimeline ? $"{_positionText} of {_durationText}" : _timelineNote ?? string.Empty;
+    public string TimelineLabel => HasTimeline ? Strings.Format("Media.TimelineLabel", _positionText, _durationText) : _timelineNote ?? string.Empty;
 
     // ---- seeking (FE-18) ---------------------------------------------------------------------------------------------
 
@@ -341,7 +342,7 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     public string PlayPauseGlyph => IsPlaying ? "" : "";
 
     /// <summary>What pressing the button would do (also its accessible name).</summary>
-    public string PlayPauseLabel => IsPlaying ? "Pause" : "Play";
+    public string PlayPauseLabel => IsPlaying ? Strings.Get("Media.Pause") : Strings.Get("Media.Play");
 
     public ICommand PlayPauseCommand { get; }
 
@@ -368,10 +369,10 @@ public sealed class MediaPageViewModel : INotifyPropertyChanged, IDisposable
     public bool HasMultipleSessions => _mode == MediaPageMode.Session && _sessions.Count > 1;
 
     /// <summary>"1 of 2": which player is shown. Empty with a single player.</summary>
-    public string SessionPositionText => HasMultipleSessions && SessionIndex() is var i && i >= 0 ? $"{i + 1} of {_sessions.Count}" : string.Empty;
+    public string SessionPositionText => HasMultipleSessions && SessionIndex() is var i && i >= 0 ? Strings.Format("Media.SessionPosition", i + 1, _sessions.Count) : string.Empty;
 
     /// <summary>What the switch button does, in words (also its accessible name): names the player it would show next.</summary>
-    public string SwitchLabel => HasMultipleSessions && NextSession() is { } next ? $"Switch to {MediaPageText.Source(next.AppName)}" : "Switch player";
+    public string SwitchLabel => HasMultipleSessions && NextSession() is { } next ? Strings.Format("Media.SwitchTo", MediaPageText.Source(next.AppName)) : Strings.Get("Media.SwitchPlayer");
 
     /// <summary>True when the player on show was picked by the user, so the page can offer to go back to the automatic choice.</summary>
     public bool ShowAutomatic => HasMultipleSessions && _isUserChoice;

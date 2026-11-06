@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Lunar.Desktop.Resources;
 using Lunar.Domain.Conversion;
 
 namespace Lunar.Desktop.Features.Converter;
@@ -38,7 +39,7 @@ public sealed record ConverterItem(string FullPath, string Name, string KindText
     public bool IsReady => Status == ConverterItemStatus.Ready;
 
     /// <summary>What a screen reader says for the row.</summary>
-    public string AutomationName => $"{Name}, {KindText}, {Message}";
+    public string AutomationName => Strings.Format("Conv.RowAutomation", Name, KindText, Message);
 }
 
 /// <summary>One output format the user can pick, with whether it fits every file in the list and why not when it does not.</summary>
@@ -51,5 +52,5 @@ public sealed record ConverterItem(string FullPath, string Name, string KindText
 public sealed record TargetOption(FileFormat Format, string Label, bool IsAvailable, bool IsSelected, string Note, ICommand SelectCommand)
 {
     /// <summary>What a screen reader says for the button.</summary>
-    public string AutomationName => $"{Label}, {(IsAvailable ? (IsSelected ? "selected, " : string.Empty) : "not available, ")}{Note}";
+    public string AutomationName => Strings.Format("Conv.TargetAutomation", Label, IsAvailable ? (IsSelected ? Strings.Get("Conv.TargetSelectedPrefix") : string.Empty) : Strings.Get("Conv.TargetUnavailablePrefix"), Note);
 }

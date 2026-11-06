@@ -35,7 +35,7 @@ public sealed class SkeletonBlock : Control
         Focusable = false;
         IsTabStop = false;
         MinHeight = 12;
-        AutomationProperties.SetName(this, "Loading");
+        AutomationProperties.SetName(this, Lunar.Desktop.Resources.Strings.Get("Common.Loading"));
         Loaded += (_, _) => UpdatePulse();
         Unloaded += (_, _) => UpdatePulse();
         IsVisibleChanged += (_, _) => UpdatePulse();

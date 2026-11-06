@@ -20,6 +20,7 @@ using Lunar.Desktop.Features.Settings;
 using Lunar.Desktop.Features.SystemControls;
 using Lunar.Desktop.Features.Usage;
 using Lunar.Desktop.Navigation;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Desktop.Themes;
 using Lunar.Domain.Shared;
@@ -115,6 +116,10 @@ public partial class App : System.Windows.Application
         if (_services is null)
             return; // shut down while the file was being read
         var settings = _settingsService.Current;
+
+        // The language is fixed once, before any view exists (ADR-0017): the saved choice, or Windows' display language when none is saved.
+        Strings.Use(settings.Locale ?? Strings.FromWindows(System.Globalization.CultureInfo.CurrentUICulture));
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = Strings.Culture;
         Action<Action> toUi = work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); };
 
         // The palette (dark, light, Windows' choice, High Contrast) is in place before any view exists, so nothing flashes the wrong colours.
@@ -139,7 +144,7 @@ public partial class App : System.Windows.Application
         _eyes.Start();
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
-        var navigation = new PageNavigationViewModel(["System", "Media", "File converter", "Usage"]);
+        var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Usage")]);
         // All four pages are real now (the Converter page so far chooses files and a format).
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Lunar.Application.System.Models;
 using Lunar.Desktop.Controls;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -26,7 +27,7 @@ public sealed class RadioCardViewModel : INotifyPropertyChanged
     private readonly Func<CancellationToken, Task<Result>> _openSettings;
     private readonly Func<CancellationToken, Task> _refresh;
     private bool _isLoaded;
-    private string _statusText = "Checking…";
+    private string _statusText = Strings.Get("System.Checking");
     private StatusKind _statusKind = StatusKind.Neutral;
     private bool _isOn;
     private bool _canToggle;
@@ -138,10 +139,10 @@ public sealed class RadioCardViewModel : INotifyPropertyChanged
     public bool IsSwitchEnabled => _canToggle && _isLoaded && !_isSwitching;
 
     /// <summary>The label of the switch action: what pressing it would do.</summary>
-    public string ActionText => _isOn ? "Turn off" : "Turn on";
+    public string ActionText => _isOn ? Strings.Get("System.TurnOff") : Strings.Get("System.TurnOn");
 
     /// <summary>The accessible name of the switch: the action and what it acts on.</summary>
-    public string SwitchLabel => $"{ActionText} {_subject}";
+    public string SwitchLabel => Strings.Format("System.SwitchLabel", ActionText, _subject);
 
     /// <summary>True when the card should offer the Settings page instead of (or next to) a switch.</summary>
     public bool ShowSettingsLink
@@ -187,7 +188,7 @@ public sealed class RadioCardViewModel : INotifyPropertyChanged
     {
         Error = message;
         if (!_isLoaded)
-            Show("Unknown", StatusKind.Neutral, isOn: false, canToggle: false, showSettings: true, hint: SystemPageText.UnknownHint);
+            Show(Strings.Get("System.Unknown"), StatusKind.Neutral, isOn: false, canToggle: false, showSettings: true, hint: SystemPageText.UnknownHint);
     }
 
     private async Task ToggleAsync(CancellationToken ct)
@@ -216,7 +217,7 @@ public sealed class RadioCardViewModel : INotifyPropertyChanged
     {
         var result = await _openSettings(ct);
         if (result.IsFailure && !result.IsCancelled)
-            Error = "Couldn't open Settings.";
+            Error = Strings.Get("System.CouldntOpenSettings");
     }
 
     private bool Set<T>(ref T field, T value, [CallerMemberName] string? name = null)

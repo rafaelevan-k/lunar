@@ -1,11 +1,12 @@
 <UserControl x:Class="Lunar.Desktop.Features.Usage.UsagePage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              xmlns:local="clr-namespace:Lunar.Desktop.Features.Usage"
              Focusable="False" IsTabStop="False" Background="Transparent"
-             automation:AutomationProperties.Name="Usage">
+             automation:AutomationProperties.Name="{res:Text X.Usage}">
   <!--
     FE-27: the Usage page. It only binds to UsagePageViewModel. The cards use the Claude palette (Usage.* tokens, loaded by the
     code-behind: brand colors normally, Windows colors in High Contrast); the slim row and the switch at the bottom keep the island's own
@@ -133,10 +134,10 @@
         <!-- The brandmark, unmodified, on its own white tile; Refresh sits at the right when there is something to refresh. -->
         <Border x:Name="Header" Style="{StaticResource UsageCard}" Background="{DynamicResource Usage.Brush.Logo}" Padding="10,5">
           <DockPanel LastChildFill="False">
-            <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="Refresh" Command="{Binding RefreshCommand}" Margin="6,0,0,0"
+            <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="{res:Text X.Refresh}" Command="{Binding RefreshCommand}" Margin="6,0,0,0"
                     MinHeight="24" Padding="10,0" VerticalAlignment="Center"
                     Style="{StaticResource UsageQuietButton}" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}"
-                    automation:AutomationProperties.Name="Read the limits again" />
+                    automation:AutomationProperties.Name="{res:Text X.ReadTheLimitsAgain}" />
             <Image x:Name="Brandmark" DockPanel.Dock="Left" Height="18" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center"
                    Source="/Lunar.Desktop;component/Resources/ClaudeBrandmark.jpg" RenderOptions.BitmapScalingMode="HighQuality"
                    automation:AutomationProperties.Name="Claude" />
@@ -181,10 +182,10 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock Grid.Column="0" Text="Show Claude usage" Style="{DynamicResource Lunar.Text.Body}" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="0" Text="{res:Text X.ShowClaudeUsage}" Style="{DynamicResource Lunar.Text.Body}" VerticalAlignment="Center" />
           <Button x:Name="EnableSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}"
                   c:SwitchState.IsOn="{Binding IsEnabled, Mode=OneWay}" Command="{Binding ToggleEnabledCommand}"
-                  automation:AutomationProperties.Name="Show Claude usage" />
+                  automation:AutomationProperties.Name="{res:Text X.ShowClaudeUsage}" />
         </Grid>
         <TextBlock x:Name="NoticeLine" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="2,2,0,0"
                    Visibility="{Binding Notice, Converter={x:Static c:NullToVisibilityConverter.Instance}}"

@@ -6,6 +6,7 @@ using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Conversion.Models;
 using Lunar.Application.Conversion.UseCases;
+using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
 
@@ -203,11 +204,11 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
         var active = _rows.Count(r => !r.IsFinal);
         var parts = new List<string>();
         if (active > 0)
-            parts.Add($"{active} in progress");
+            parts.Add(Strings.Format("Queue.InProgress", active));
         if (done > 0)
-            parts.Add($"{done} done");
+            parts.Add(Strings.Format("Queue.Done", done));
         if (failed > 0)
-            parts.Add($"{failed} failed");
+            parts.Add(Strings.Format("Queue.Failed", failed));
         SummaryText = string.Join(", ", parts);
         Raise(nameof(SummaryText));
         Raise(nameof(HasRows));
@@ -221,7 +222,7 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
         var id = s.JobId;
         var running = s.State is ConversionJobState.Running or ConversionJobState.Cancelling;
         double? fraction = running && s.Progress.IsDeterminate ? s.Progress.Fraction : null;
-        var progressText = fraction is not null ? $"{s.Progress.PagesCompleted} of {s.Progress.PagesTotal} pages" : string.Empty;
+        var progressText = fraction is not null ? Strings.Format("Queue.Pages", s.Progress.PagesCompleted, s.Progress.PagesTotal) : string.Empty;
         var first = s.State == ConversionJobState.Succeeded && s.OutputPaths.Count > 0 ? s.OutputPaths[0] : null;
         return new JobRow(
             id,
@@ -244,19 +245,19 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
         var cut = name.LastIndexOfAny(['\\', '/']);
         if (cut >= 0)
             name = name[(cut + 1)..];
-        return $"{name} to {TargetLabel(job)}";
+        return Strings.Format("Queue.Title", name, TargetLabel(job));
     }
 
     private static string TargetLabel(PlannedConversion job) => job.OutputExtension.TrimStart('.').ToUpperInvariant();
 
     private static string StatusOf(ConversionJobSnapshot s) => s.State switch
     {
-        ConversionJobState.Queued => "Waiting",
-        ConversionJobState.Running => "Converting",
-        ConversionJobState.Cancelling => "Stopping and cleaning up...",
-        ConversionJobState.Succeeded => "Done",
-        ConversionJobState.Failed => (s.Error?.SafeMessage ?? "It could not be converted.") + " Nothing was saved.",
-        _ => "Cancelled. Nothing was saved."
+        ConversionJobState.Queued => Strings.Get("Queue.Waiting"),
+        ConversionJobState.Running => Strings.Get("Queue.Converting"),
+        ConversionJobState.Cancelling => Strings.Get("Queue.Stopping"),
+        ConversionJobState.Succeeded => Strings.Get("Queue.DoneStatus"),
+        ConversionJobState.Failed => Strings.Format("Queue.FailedStatus", s.Error?.SafeMessage ?? Strings.Get("Queue.CouldNotConvert")),
+        _ => Strings.Get("Queue.CancelledStatus")
     };
 
     private static string ResultOf(ConversionJobSnapshot s)
@@ -264,10 +265,10 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
         if (s.State != ConversionJobState.Succeeded || s.OutputPaths.Count == 0)
             return string.Empty;
         if (s.OutputPaths.Count > 1)
-            return $"{s.OutputPaths.Count} pictures saved";
+            return Strings.Format("Queue.PicturesSaved", s.OutputPaths.Count);
         var path = s.OutputPaths[0];
         var cut = path.LastIndexOfAny(['\\', '/']);
-        return "Saved as " + (cut >= 0 ? path[(cut + 1)..] : path);
+        return Strings.Format("Queue.SavedAs", cut >= 0 ? path[(cut + 1)..] : path);
     }
 
     // ---- row commands ------------------------------------------------------------------------------------------------
@@ -307,7 +308,7 @@ public sealed class ConverterQueueViewModel : INotifyPropertyChanged, IDisposabl
     private void OnFault(Exception ex)
     {
         _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "converter.queue.command_failed", Component, "Command", ExceptionType: ex.GetType()));
-        ErrorMessage = "That did not work. Try again.";
+        ErrorMessage = Strings.Get("Queue.DidNotWork");
     }
 
     // ---- plumbing ----------------------------------------------------------------------------------------------------

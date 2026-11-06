@@ -4,6 +4,7 @@ using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Lunar.Desktop.Accessibility;
 using Lunar.Desktop.Shell;
 
 namespace Lunar.Desktop.Features.Usage;
@@ -38,8 +39,7 @@ public partial class ResetToastWindow : Window
     /// </summary>
     internal void Announce(string text)
     {
-        var peer = UIElementAutomationPeer.FromElement(MessageText) ?? UIElementAutomationPeer.CreatePeerForElement(MessageText);
-        peer?.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, text, "Lunar.UsageReset");
+        LiveAnnouncer.Announce(MessageText, text, "Lunar.UsageReset", interrupt: true);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
