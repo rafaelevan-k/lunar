@@ -8,7 +8,7 @@
     <OutputName>Lunar</OutputName>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <!-- Folder produced by 'dotnet publish -r win-x64 --self-contained'; set by package-installer.ps1. -->
+    <!-- Folder produced by a self-contained win-x64 'dotnet publish'; set by package-installer.ps1 as an absolute path. -->
     <PayloadDir Condition="'$(PayloadDir)' == ''">..\..\artifacts\installer\payload</PayloadDir>
     <ProductVersion Condition="'$(ProductVersion)' == ''">0.0.0</ProductVersion>
     <!-- Per-user install under %LocalAppData%: the harvested files are their own key paths, which these profile ICEs reject.

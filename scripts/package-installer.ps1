@@ -39,6 +39,13 @@ if ($Version -notmatch '^\d{1,3}\.\d{1,3}\.\d{1,5}$') { throw "Version '$Version
 
 $root = Get-RepositoryRoot
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $root 'artifacts\installer' }
+# WiX resolves relative paths against packaging\wix, so everything passed on is absolute (relative = from the current folder).
+$OutputDirectory = [System.IO.Path]::GetFullPath($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputDirectory)).TrimEnd('\')
+# The folder is deleted and recreated below: never let that be a drive root, the repository or one of its parents.
+$rootFull = [System.IO.Path]::GetFullPath($root).TrimEnd('\')
+if ($OutputDirectory.Length -le 3 -or $rootFull.StartsWith($OutputDirectory, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "OutputDirectory '$OutputDirectory' is not a safe folder to replace; use a folder such as artifacts\installer-1.2.3."
+}
 $payload = Join-Path $OutputDirectory 'payload'
 
 Initialize-DotnetEnvironment -DotnetRoot $DotnetRoot

@@ -10,7 +10,7 @@
     * Start with Windows is NOT registered here; it stays an in-app opt-in (IStartupRegistration). The MSI never
       owns the HKCU Run value (a RemoveRegistryValue row would run at INSTALL and erase the user's choice).
       On a full uninstall only (not an upgrade's removal of the old version) the deferred custom action
-      LunarUninstallCleanup runs the installed exe with --uninstall-cleanup (ADR-0018, accepted): it removes
+      LunarUninstallCleanup runs the installed exe in its uninstall-cleanup mode (ADR-0018, accepted): it removes
       the Run value and, unless the uninstall is silent, asks whether to delete %LocalAppData%\Lunar
       (default No). Its exit code is ignored, so it can never block the uninstall.
     * Per-user files under the user profile use file key paths, which ICE38/ICE64/ICE91 flag; those checks are
