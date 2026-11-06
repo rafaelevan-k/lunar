@@ -1,6 +1,6 @@
 # Lunar
 
-Lunar is a floating "Dynamic Island" for Windows 10/11 (x64). A small always-on-top pill sits at the top centre of the
+Lunar is a floating "Dynamic Island" for Windows 11 (x64). A small always-on-top pill sits at the top centre of the
 screen, shows an animated pair of eyes while idle, and expands into quick controls for the system, media and file
 conversion. It is offline-first: no account, no telemetry, no network backend.
 
@@ -56,7 +56,7 @@ never call native, file or persistence APIs directly. These rules are checked by
 
 ## Requirements
 
-- Windows 10 or 11, x64
+- Windows 11, x64 (Windows 10 is not supported: the bundled .NET 10 runtime does not support Windows 10 22H2)
 - .NET SDK **10.0.402** with Windows Desktop support. `global.json` rejects other SDK versions. A portable copy
   placed in `.tools/dotnet` is picked up automatically by the scripts (that folder is git-ignored).
 - PowerShell 5.1 or later
