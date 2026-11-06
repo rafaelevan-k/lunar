@@ -76,13 +76,32 @@ if (-not $WixTermsReviewedByOwner) {
     exit 0
 }
 
-$wixArguments = @('build', 'packaging\wix\Lunar.Installer.wixproj', '-c', $Configuration,
+# --no-incremental: WiX does not see a new ProductVersion as a changed input and would reuse the previous MSI from obj\.
+$wixArguments = @('build', 'packaging\wix\Lunar.Installer.wixproj', '--no-incremental', '-c', $Configuration,
     "-p:PayloadDir=$payload", "-p:ProductVersion=$Version", '-o', $OutputDirectory)
 if ($AcceptWixEula) { $wixArguments += '-p:AcceptEula=wix7' }
 Invoke-Dotnet 'Build per-user MSI (WiX)' $wixArguments
 
 $msi = Join-Path $OutputDirectory 'Lunar.msi'
 if (-not (Test-Path $msi)) { throw 'WiX finished without producing Lunar.msi.' }
+
+# The MSI must carry the version that was asked for (a stale MSI from an earlier build would not).
+$installer = New-Object -ComObject WindowsInstaller.Installer
+try {
+    $database = $installer.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $installer, @($msi, 0))
+    $view = $database.GetType().InvokeMember('OpenView', 'InvokeMethod', $null, $database, @("SELECT Value FROM Property WHERE Property='ProductVersion'"))
+    $view.GetType().InvokeMember('Execute', 'InvokeMethod', $null, $view, $null)
+    $record = $view.GetType().InvokeMember('Fetch', 'InvokeMethod', $null, $view, $null)
+    $built = $record.GetType().InvokeMember('StringData', 'GetProperty', $null, $record, 1)
+    $view.GetType().InvokeMember('Close', 'InvokeMethod', $null, $view, $null)
+}
+finally {
+    # Release the read-only database before signtool or the hash read the file.
+    foreach ($com in @($record, $view, $database, $installer)) {
+        if ($null -ne $com) { [System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($com) | Out-Null }
+    }
+}
+if ($built -ne $Version) { throw "Lunar.msi says version '$built', not '$Version'; it is stale. Nothing was signed." }
 
 if ($SigningCertificateThumbprint) {
     $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
