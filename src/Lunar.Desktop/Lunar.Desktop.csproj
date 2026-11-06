@@ -22,6 +22,9 @@
     <InternalsVisibleTo Include="Lunar.Desktop.UITests" />
     <!-- Licence texts of every bundled third-party component, shipped next to the exe (BE-30); regenerate with scripts\Build-ThirdPartyNotices.ps1. -->
     <None Include="..\..\packaging\THIRD_PARTY_NOTICES.txt" Link="THIRD_PARTY_NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Lunar's own licence (Apache-2.0) and its NOTICE, which the licence asks redistributions to carry. -->
+    <None Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\NOTICE" Link="NOTICE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <!-- The user guide and the privacy notice, installed next to the exe so the user has them without the source repository. -->
     <None Include="..\..\docs\USER_GUIDE.md" Link="USER_GUIDE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\..\docs\PRIVACY.md" Link="PRIVACY.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

@@ -159,4 +159,8 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
 | Lunar does not start with Windows | Turn it on in Settings, and check **Task Manager → Startup apps** |
 | Something else | Turn on **Detailed diagnostics**, restart Lunar, reproduce the problem, and look in `%LocalAppData%\Lunar\Logs` |
 
-The program folder (`%LocalAppData%\Programs\Lunar`) also holds this guide (`USER_GUIDE.md`), the privacy notice (`PRIVACY.md`) and the licences of the third-party components Lunar includes (`THIRD_PARTY_NOTICES.txt`).
+Lunar is licensed under the Apache License, Version 2.0. The program folder (`%LocalAppData%\Programs\Lunar`) holds:
+- this guide (`USER_GUIDE.md`);
+- the privacy notice (`PRIVACY.md`);
+- Lunar's licence and notice (`LICENSE.txt`, `NOTICE.txt`);
+- the licences of the third-party components Lunar includes (`THIRD_PARTY_NOTICES.txt`).

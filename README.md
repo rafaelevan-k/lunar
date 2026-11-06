@@ -116,7 +116,9 @@ Logs are code-only events, never file names, document contents, Wi-Fi details or
 
 ## License
 
-No license has been chosen for Lunar's own code yet, so all rights are reserved by default. The installer ships the
-licence texts of every bundled third-party component in `THIRD_PARTY_NOTICES.txt`, generated into
-[packaging/THIRD_PARTY_NOTICES.txt](packaging/THIRD_PARTY_NOTICES.txt). The dependency inventory is
+Lunar is licensed under the [Apache License, Version 2.0](LICENSE). Copyright 2026 Rafael Evan Kristanto; see
+[NOTICE](NOTICE). The installer ships both, as `LICENSE.txt` and `NOTICE.txt`.
+
+Bundled third-party components keep their own licences. Their texts are shipped as `THIRD_PARTY_NOTICES.txt`,
+generated into [packaging/THIRD_PARTY_NOTICES.txt](packaging/THIRD_PARTY_NOTICES.txt). The dependency inventory is
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -30,7 +30,7 @@ $root = (Resolve-Path -LiteralPath $PayloadDirectory).Path
 
 $required = @('Lunar.Desktop.exe', 'Lunar.Desktop.dll', 'Lunar.Application.dll', 'Lunar.Domain.dll',
     'Lunar.Infrastructure.dll', 'Lunar.Windows.dll', 'Lunar.Conversion.dll', 'Lunar.Desktop.runtimeconfig.json',
-    'hostfxr.dll', 'coreclr.dll', 'THIRD_PARTY_NOTICES.txt', 'USER_GUIDE.md', 'PRIVACY.md')
+    'hostfxr.dll', 'coreclr.dll', 'THIRD_PARTY_NOTICES.txt', 'USER_GUIDE.md', 'PRIVACY.md', 'LICENSE.txt', 'NOTICE.txt')
 foreach ($culture in $SatelliteCultures) { $required += "$culture\Lunar.Desktop.resources.dll" }
 
 foreach ($relative in $required) {

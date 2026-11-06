@@ -128,8 +128,8 @@ try {
     Add-Result 'No developer files' ($dev.Count -eq 0) ($(if ($dev.Count) { $dev -join ', ' } else { 'none' }))
     $notices = @($names | Where-Object { $_ -eq 'THIRD_PARTY_NOTICES.txt' })
     Add-Result 'Third-party notices shipped' ($notices.Count -gt 0) ($(if ($notices.Count) { $notices -join ', ' } else { 'THIRD_PARTY_NOTICES.txt is not in the package' }))
-    $docs = @('USER_GUIDE.md', 'PRIVACY.md' | Where-Object { $names -notcontains $_ })
-    Add-Result 'User guide and privacy notice shipped' ($docs.Count -eq 0) ($(if ($docs.Count) { 'missing: ' + ($docs -join ', ') } else { 'USER_GUIDE.md, PRIVACY.md' }))
+    $docs = @('USER_GUIDE.md', 'PRIVACY.md', 'LICENSE.txt', 'NOTICE.txt' | Where-Object { $names -notcontains $_ })
+    Add-Result 'Guide, privacy, licence shipped' ($docs.Count -eq 0) ($(if ($docs.Count) { 'missing: ' + ($docs -join ', ') } else { 'USER_GUIDE.md, PRIVACY.md, LICENSE.txt, NOTICE.txt' }))
     # Satellite resources only for English and Indonesian: the Directory table names each language folder.
     $dirRows = Get-Rows 'SELECT `DefaultDir` FROM `Directory`' 1
     $folders = @(foreach ($row in $dirRows) { ($row[0] -split '\|')[-1] })
