@@ -1,39 +1,50 @@
 # Lunar
 
 Lunar is a floating "Dynamic Island" for Windows 11 (x64). A small always-on-top pill sits at the top centre of the
-screen, shows an animated pair of eyes while idle, and expands into quick controls for the system, media and file
-conversion. It is offline-first: no account, no telemetry, no network backend.
+screen and shows an animated pair of eyes while idle. Click it to open quick controls: the system, media, a file
+converter, and an optional Claude usage page. It runs locally, with no account, no telemetry and no update checker.
 
-> **Status: early development.** The application shell exists and runs, but the features below are planned, not
-> built. Today the app shows an empty pill, a tray icon (Open / Exit), single-instance handling, settings storage and
-> logging. It is not a finished product and has no installer yet.
+> **Status: release candidate (1.0.x).** All planned v1 features are built and tested, and a per-user installer
+> exists. The release itself still waits for the owner's Sprint 7 gate approval. Known limitations are listed below.
 
-## What it is meant to do
+## What it does
 
-| Area | Plan |
+| Area | Behaviour |
 |---|---|
-| Idle avatar | Vector eyes that blink and follow the pointer, with reduced-motion support |
-| System controls | Volume and mute, clock, Wi-Fi and Bluetooth status and actions (with Windows Settings fallbacks) |
-| Media | Discover and control Windows media sessions, with seeking where the app supports it |
-| File converter | Local PNG / JPG / PDF / DOCX conversions with honest fidelity labels; originals are never modified |
-| Quality | Multi-monitor and DPI aware, keyboard accessible, high-contrast themes, English first (Indonesian planned) |
+| Idle avatar | Vector eyes that blink and glance around, with reduced-motion support; click to open, Esc to close |
+| System | Clock in your regional format; volume and mute that follow outside changes; Wi-Fi and Bluetooth status and switches where Windows allows them, otherwise a link to Windows Settings |
+| Media | The playing app's title, artist and artwork; play/pause, previous and next only when the app supports them; seeking only on seekable timelines; switching between several apps |
+| File converter | Local conversions between PNG, JPG/JPEG and PDF, and pictures into Word (DOCX), with notes about what each route keeps or loses. Batch queue with cancel, retry and "show in folder". Originals are never changed |
+| Usage (opt-in) | Claude 5-hour and weekly limits, read with the Claude Code sign-in on this PC; off by default, and no network request before it is turned on |
+| Settings | Theme (Windows, dark, light), reduced motion, eye animation, display and position, Start with Windows, default output folder, English or Bahasa Indonesia, diagnostics |
+| Accessibility | Keyboard navigation, screen-reader names, High Contrast palette, Windows animation setting respected |
 
-Non-goals for v1: voice assistant, cloud features, OCR, automatic updates, PDF to editable DOCX reconstruction.
+Not in this version: Word (DOCX) to PDF or pictures (held until a layout engine is verified), PDF to editable Word,
+OCR, voice assistant, cloud features and automatic updates.
 
-## Built so far
+## Install
 
-- WPF shell: transparent, topmost, non-activating pill window; tray icon; single instance; top-centre placement that
-  follows display, taskbar and DPI changes; idle 160×44 and expanded layouts; presentation state model.
-- Design tokens (dark, light, high-contrast).
-- Settings in `%LocalAppData%\Lunar\settings.json` (atomic writes, backup, corruption recovery, schema versioning).
-- Bounded rolling diagnostic logs with redaction (diagnostics are opt-in).
-- Application ports for system and media services, and a typed `Result` / error model.
-- Build, test and package scripts and a Windows CI workflow.
+Build the installer with `scripts/package-installer.ps1` (see below), then run `Lunar.msi`. It installs for the current
+user only, to `%LocalAppData%\Programs\Lunar`, without administrator rights, and adds a Start menu shortcut.
+- **Upgrade:** a newer MSI replaces the program and keeps the settings and the Start with Windows choice.
+- **Uninstall:** Windows Settings → Apps. Lunar asks whether to delete its settings and logs too.
+- **Signing:** the installer is not signed, so expect a SmartScreen warning.
+
+## Known limitations
+
+- Windows 11 x64 only. Windows 10 is not supported: the bundled .NET 10 runtime does not support Windows 10 22H2.
+- Word (DOCX) can be made from pictures, but Word files cannot be converted yet.
+- Wi-Fi and Bluetooth switches depend on Windows and the device driver. Seeking depends on the media app.
+- The Usage page relies on an Anthropic address that is not officially documented, and it may stop working. Lunar is
+  not affiliated with Anthropic.
+- Tested on Windows 11 26H2 (build 26300) with one 125 % monitor. Not yet checked on a stable 24H2/25H2 build, with a
+  second monitor or mixed scaling, with Narrator, over fullscreen apps, or over Remote Desktop.
 
 ## Tech stack
 
-C# on .NET 10, WPF (MVVM), `Microsoft.Extensions.DependencyInjection`, Serilog, xUnit v3. Packages are pinned through
-central package management and lock files. The SDK is pinned to **10.0.402** in `global.json`.
+C# on .NET 10, WPF (MVVM), `Microsoft.Extensions.DependencyInjection`, Serilog, SkiaSharp, the Open XML SDK and the Windows
+PDF renderer, xUnit v3. The packager is the WiX Toolset 7 (per-user MSI). Packages are pinned through central package
+management and lock files, and the SDK is pinned to **10.0.402** in `global.json`.
 
 ## Architecture
 
@@ -43,65 +54,67 @@ A modular monolith with dependencies pointing inward:
 src/
   Lunar.Domain          pure business rules, no UI / OS / I/O
   Lunar.Application     use cases, models and ports (interfaces); depends only on Domain
-  Lunar.Windows         Windows API adapters (display, audio, network, media) implementing Application ports
-  Lunar.Conversion      file conversion adapters
-  Lunar.Infrastructure  settings, logging, single-instance coordination
+  Lunar.Windows         Windows API adapters (display, audio, network, Bluetooth, media, PDF) implementing Application ports
+  Lunar.Conversion      file conversion providers, planner, queue and output transaction
+  Lunar.Infrastructure  settings, logging, single instance, Start with Windows, usage source
   Lunar.Desktop         WPF views, view models, themes, composition root (the executable)
+packaging/              WiX installer project, third-party notices and licence texts
 tests/                  one test project per layer; architecture tests enforce the reference rules
-scripts/                build.ps1, test.ps1, package.ps1
+scripts/                build, test, package and release-check scripts
 ```
 
 The adapter projects (`Windows`, `Conversion`, `Infrastructure`) do not reference `Desktop` or each other. View models
-never call native, file or persistence APIs directly. These rules are checked by tests in every test project.
+never call native, file or persistence APIs directly. Tests in every test project check these rules.
 
-## Requirements
+## Requirements (to build)
 
-- Windows 11, x64 (Windows 10 is not supported: the bundled .NET 10 runtime does not support Windows 10 22H2)
+- Windows 11, x64
 - .NET SDK **10.0.402** with Windows Desktop support. `global.json` rejects other SDK versions. A portable copy
   placed in `.tools/dotnet` is picked up automatically by the scripts (that folder is git-ignored).
 - PowerShell 5.1 or later
 
-## Build, test and run
+## Build, test and package
 
 ```powershell
 ./scripts/build.ps1                          # locked restore, Release build (warnings are errors), format check
 ./scripts/test.ps1 -Suite Gate -NoBuild      # unit tests plus architecture checks of every project
-./scripts/test.ps1 -Suite Hardware -NoBuild  # Windows integration and WPF UI tests (need an interactive desktop)
-./scripts/package.ps1 -NoBuild               # unsigned archive of the build output (not an installer)
+./scripts/test.ps1 -Suite All -NoBuild       # every suite, including Windows integration and WPF UI tests (needs a desktop session)
 ```
 
-Run the app from the build output:
+Build the installer. The owner must first review and accept the WiX OSMF EULA; the version must be 1.0.x or later:
+
+```powershell
+./scripts/package-installer.ps1 -Version 1.0.2 -OutputDirectory artifacts/installer-1.0.2 -WixTermsReviewedByOwner -AcceptWixEula
+./scripts/Test-ReleasePackage.ps1 -MsiPath artifacts/installer-1.0.2/Lunar.msi -ExpectedVersion 1.0.2
+```
+
+After a dependency or runtime update, regenerate the notices with
+`./scripts/Build-ThirdPartyNotices.ps1 -PayloadDirectory <payload>`. After installing, compare the installed copy
+with its payload with `./scripts/Test-InstalledPayload.ps1 -PayloadDirectory <payload>`.
+
+Run the app from source:
 
 ```powershell
 dotnet run --project src/Lunar.Desktop -c Release
 ```
 
-Raw `dotnet restore / build / test Lunar.sln` also works. Use `--locked-mode` for restore to honour the lock files.
-
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on `windows-2022` and `windows-latest`. The `build-and-test` jobs
-are the pull-request gate (build, analyzers, format, unit and architecture tests, packaging). A separate non-blocking
+are the pull-request gate: build, analyzers, format, unit and architecture tests, and packaging. A separate non-blocking
 job runs the tests that need a Windows desktop session. See [docs/CI.md](docs/CI.md). Blocking merges on failure
 requires a branch protection rule in the repository settings.
 
 ## Privacy and security
 
-Everything runs locally. Lunar does not upload files, send telemetry or check for updates. Logs are code-only
-events, never file names, document contents, Wi-Fi details or listening history. See [docs/PRIVACY.md](docs/PRIVACY.md)
-and [docs/SECURITY.md](docs/SECURITY.md).
-
-## Roadmap
-
-1. Foundation: solution, shell, tray, settings, logging, CI (done)
-2. Eyes: animated vector eyes
-3. Island navigation: expand / collapse and swipeable pages
-4. System controls: volume, Wi-Fi, Bluetooth, clock
-5. Media sessions
-6. File conversion
-7. Accessibility, performance, installer and release
+Conversions and everything else run on your PC. Lunar does not upload files, send telemetry or check for updates. The
+one network use is the opt-in Usage page, which asks Anthropic for your limits over HTTPS only after you turn it on.
+Logs are code-only events, never file names, document contents, Wi-Fi details or listening history. See
+[docs/PRIVACY.md](docs/PRIVACY.md) and [docs/SECURITY.md](docs/SECURITY.md).
 
 ## License
 
-No license has been chosen yet, so all rights are reserved by default. Third-party components and their licenses are
-listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+No license has been chosen for Lunar's own code yet, so all rights are reserved by default. The installer ships the
+licence texts of every bundled third-party component in `THIRD_PARTY_NOTICES.txt`, generated into
+[packaging/THIRD_PARTY_NOTICES.txt](packaging/THIRD_PARTY_NOTICES.txt). The dependency inventory is
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
