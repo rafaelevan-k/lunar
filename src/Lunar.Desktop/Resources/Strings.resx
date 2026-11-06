@@ -220,6 +220,10 @@
   <data name="Tray.SettingsTip" xml:space="preserve"><value>Open the Settings window.</value></data>
   <data name="Tray.Startup" xml:space="preserve"><value>Start with &amp;Windows</value></data>
   <data name="Tray.StartupTip" xml:space="preserve"><value>Starting with Windows is not available yet.</value></data>
+  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Also delete your Lunar settings and logs?
+
+Choose No to keep them for a later reinstall.</value></data>
+  <data name="Uninstall.Title" xml:space="preserve"><value>Uninstall Lunar</value></data>
   <data name="Usage.CannotRead" xml:space="preserve"><value>The limits cannot be read right now.</value></data>
   <data name="Usage.Disclosure" xml:space="preserve"><value>Lunar reads the Claude Code sign-in on this PC (read-only) and asks Anthropic over HTTPS for your usage limits. Nothing else is sent.</value></data>
   <data name="Usage.FiveHourLimit" xml:space="preserve"><value>5-hour limit</value></data>

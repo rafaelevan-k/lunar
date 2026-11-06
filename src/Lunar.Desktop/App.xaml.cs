@@ -24,6 +24,7 @@ using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Desktop.Themes;
 using Lunar.Domain.Shared;
+using Lunar.Infrastructure.Startup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop;
@@ -69,6 +70,12 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (UninstallMode.From(e.Args) is { } uninstall)
+        {
+            RunUninstallCleanup(uninstall);
+            return;
+        }
+
         try
         {
             await StartAsync();
@@ -83,6 +90,32 @@ public partial class App : System.Windows.Application
                 Trace.TraceError("Startup failed before logging was available: " + ex.GetType().Name);
             Shutdown(ExitStartupFailed);
         }
+    }
+
+    // ADR-0018: run by the MSI on a full uninstall only. No island, tray, logger or single-instance role: the logger would recreate the
+    // data folder the user may be deleting. Always exits 0 so a problem here never blocks the uninstall.
+    private void RunUninstallCleanup(UninstallMode mode)
+    {
+        try
+        {
+            Strings.Use(Strings.FromWindows(System.Globalization.CultureInfo.CurrentUICulture));
+            var deleteData = mode.MayAsk && MessageBox.Show(
+                Strings.Get("Uninstall.DeleteDataQuestion"),
+                Strings.Get("Uninstall.Title"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No) == MessageBoxResult.Yes;
+            var result = new UninstallCleanup(new StartupRegistrationService(Environment.ProcessPath ?? string.Empty),
+                UninstallCleanup.DefaultDataFolder).Run(deleteData);
+            if (result.IsFailure)
+                Trace.TraceWarning("Uninstall cleanup incomplete: " + result.Error!.Code);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError("Uninstall cleanup failed: " + ex.GetType().Name);
+        }
+
+        Shutdown(0);
     }
 
     private async Task StartAsync()

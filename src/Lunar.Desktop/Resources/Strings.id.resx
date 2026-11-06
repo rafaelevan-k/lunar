@@ -220,6 +220,10 @@
   <data name="Tray.SettingsTip" xml:space="preserve"><value>Buka jendela Pengaturan.</value></data>
   <data name="Tray.Startup" xml:space="preserve"><value>Mulai bersama &amp;Windows</value></data>
   <data name="Tray.StartupTip" xml:space="preserve"><value>Mulai bersama Windows belum tersedia.</value></data>
+  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Hapus juga pengaturan dan log Lunar Anda?
+
+Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
+  <data name="Uninstall.Title" xml:space="preserve"><value>Copot Lunar</value></data>
   <data name="Usage.CannotRead" xml:space="preserve"><value>Batas belum dapat dibaca saat ini.</value></data>
   <data name="Usage.Disclosure" xml:space="preserve"><value>Lunar membaca sign-in Claude Code di PC ini (hanya-baca) dan meminta batas pemakaian Anda ke Anthropic lewat HTTPS. Tidak ada hal lain yang dikirim.</value></data>
   <data name="Usage.FiveHourLimit" xml:space="preserve"><value>Batas 5 jam</value></data>
