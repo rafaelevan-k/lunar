@@ -82,7 +82,8 @@ public sealed class UninstallCleanupTests : IDisposable
 
         var result = new UninstallCleanup(startup, _data).Run(deleteUserData: true);
 
-        Assert.Equal(ErrorCode.AccessDenied, result.Error!.Code);
+        Assert.Equal(ErrorCode.AccessDenied, result.Startup.Error!.Code);
+        Assert.True(result.Data.IsSuccess);
         Assert.False(Directory.Exists(_data));
     }
 
@@ -93,8 +94,9 @@ public sealed class UninstallCleanupTests : IDisposable
 
         var result = new UninstallCleanup(new FakeStartup(), _data).Run(deleteUserData: true);
 
-        Assert.Equal(ErrorCode.IoFailure, result.Error!.Code);
-        Assert.DoesNotContain(_parent, result.Error.SafeMessage);
+        Assert.True(result.Startup.IsSuccess);
+        Assert.Equal(ErrorCode.IoFailure, result.Data.Error!.Code);
+        Assert.DoesNotContain(_parent, result.Data.Error.SafeMessage);
     }
 
     [Theory]

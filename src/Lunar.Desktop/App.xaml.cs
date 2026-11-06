@@ -93,11 +93,20 @@ public partial class App : System.Windows.Application
     }
 
     // ADR-0018: run by the MSI on a full uninstall only. No island, tray, logger or single-instance role: the logger would recreate the
-    // data folder the user may be deleting. Always exits 0 so a problem here never blocks the uninstall.
+    // data folder the user may be deleting. The installer ignores the exit code but logs it (see UninstallMode for the values).
     private void RunUninstallCleanup(UninstallMode mode)
     {
+        int exitCode;
         try
         {
+            // Run as LocalSystem (not as the user) this process would see the wrong registry and profile, and a question would be shown
+            // where nobody can answer it. Do nothing then; the exit code records it in the installer log.
+            if (System.Security.Principal.WindowsIdentity.GetCurrent().IsSystem)
+            {
+                Shutdown(UninstallMode.ExitRunningAsSystem);
+                return;
+            }
+
             Strings.Use(Strings.FromWindows(System.Globalization.CultureInfo.CurrentUICulture));
             var deleteData = mode.MayAsk && MessageBox.Show(
                 Strings.Get("Uninstall.DeleteDataQuestion"),
@@ -107,15 +116,15 @@ public partial class App : System.Windows.Application
                 MessageBoxResult.No) == MessageBoxResult.Yes;
             var result = new UninstallCleanup(new StartupRegistrationService(Environment.ProcessPath ?? string.Empty),
                 UninstallCleanup.DefaultDataFolder).Run(deleteData);
-            if (result.IsFailure)
-                Trace.TraceWarning("Uninstall cleanup incomplete: " + result.Error!.Code);
+            exitCode = UninstallMode.ExitCodeFor(result);
         }
         catch (Exception ex)
         {
             Trace.TraceError("Uninstall cleanup failed: " + ex.GetType().Name);
+            exitCode = UninstallMode.ExitUnexpected;
         }
 
-        Shutdown(0);
+        Shutdown(exitCode);
     }
 
     private async Task StartAsync()

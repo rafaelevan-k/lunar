@@ -33,12 +33,12 @@ public sealed class UninstallCleanup
     public static string DefaultDataFolder { get; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunar");
 
-    /// <summary>Runs the cleanup; the first failure is returned after every step has been tried.</summary>
-    public Result Run(bool deleteUserData)
+    /// <summary>Runs the cleanup; both steps are always tried and reported separately.</summary>
+    public UninstallCleanupResult Run(bool deleteUserData)
     {
         var startup = _startup.Disable();
         var data = deleteUserData ? DeleteDataFolder() : Result.Success();
-        return startup.IsFailure ? startup : data;
+        return new UninstallCleanupResult(startup, data);
     }
 
     private Result DeleteDataFolder()
@@ -62,4 +62,10 @@ public sealed class UninstallCleanup
                 "Some Lunar settings or logs could not be deleted."));
         }
     }
+}
+
+/// <summary>What each cleanup step did. <see cref="Data"/> is a success when the data was kept.</summary>
+public sealed record UninstallCleanupResult(Result Startup, Result Data)
+{
+    public bool IsSuccess => Startup.IsSuccess && Data.IsSuccess;
 }

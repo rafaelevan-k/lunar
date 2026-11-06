@@ -1,4 +1,6 @@
 using Lunar.Desktop.Composition;
+using Lunar.Domain.Shared;
+using Lunar.Infrastructure.Startup;
 using Xunit;
 
 namespace Lunar.Desktop.UITests.Composition;
@@ -28,4 +30,16 @@ public sealed class UninstallModeTests
     [Fact]
     public void WithoutAUiLevelNobodyIsAsked() =>
         Assert.False(UninstallMode.From(["--UNINSTALL-CLEANUP"])!.MayAsk);
+
+    [Theory]
+    [InlineData(true, true, 0)]
+    [InlineData(false, true, 2)]
+    [InlineData(true, false, 3)]
+    [InlineData(false, false, 4)]
+    public void TheExitCodeTellsTheInstallerLogWhichStepFailed(bool startupOk, bool dataOk, int expected)
+    {
+        static Result Outcome(bool ok) => ok ? Result.Success() : Result.Failure(new OperationError(ErrorCode.IoFailure, "x"));
+
+        Assert.Equal(expected, UninstallMode.ExitCodeFor(new UninstallCleanupResult(Outcome(startupOk), Outcome(dataOk))));
+    }
 }
