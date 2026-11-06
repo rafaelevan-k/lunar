@@ -87,6 +87,7 @@ if (-not (Test-Path $msi)) { throw 'WiX finished without producing Lunar.msi.' }
 
 # The MSI must carry the version that was asked for (a stale MSI from an earlier build would not).
 $installer = New-Object -ComObject WindowsInstaller.Installer
+$database = $null; $view = $null; $record = $null; $built = $null   # strict mode: the finally block reads these
 try {
     $database = $installer.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $installer, @($msi, 0))
     $view = $database.GetType().InvokeMember('OpenView', 'InvokeMethod', $null, $database, @("SELECT Value FROM Property WHERE Property='ProductVersion'"))
