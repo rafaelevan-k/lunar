@@ -40,6 +40,12 @@ foreach ($file in Get-ChildItem -LiteralPath $payload -Recurse -File | Where-Obj
     }
 }
 
+# Files left from an older version (for example language folders that are no longer shipped) are reported too.
+foreach ($file in Get-ChildItem -LiteralPath $installed -Recurse -File) {
+    $relative = $file.FullName.Substring($installed.Length).TrimStart('\')
+    if (-not (Test-Path -LiteralPath (Join-Path $payload $relative) -PathType Leaf)) { $problems.Add("extra     $relative (not in this payload)") }
+}
+
 $exe = Get-Item -LiteralPath (Join-Path $installed 'Lunar.Desktop.exe')
 Write-Host "Installed Lunar.Desktop.exe: file version $($exe.VersionInfo.FileVersion), product version $($exe.VersionInfo.ProductVersion)"
 if ($problems.Count -gt 0) {
