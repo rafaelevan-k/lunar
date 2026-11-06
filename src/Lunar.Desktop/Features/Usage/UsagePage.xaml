@@ -131,16 +131,16 @@
     <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
       <StackPanel Margin="0,0,0,2">
 
-        <!-- The brandmark, unmodified, on its own white tile; Refresh sits at the right when there is something to refresh. -->
-        <Border x:Name="Header" Style="{StaticResource UsageCard}" Background="{DynamicResource Usage.Brush.Logo}" Padding="10,5">
+        <!-- The service's name in plain text, in Lunar's own font (no Claude logo or wordmark artwork, by the owner's decision for release,
+             2026-11-07); Refresh sits at the right when there is something to refresh. -->
+        <Border x:Name="Header" Style="{StaticResource UsageCard}" Padding="10,5">
           <DockPanel LastChildFill="False">
             <Button x:Name="RefreshButton" DockPanel.Dock="Right" Content="{res:Text X.Refresh}" Command="{Binding RefreshCommand}" Margin="6,0,0,0"
                     MinHeight="24" Padding="10,0" VerticalAlignment="Center"
                     Style="{StaticResource UsageQuietButton}" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}"
                     automation:AutomationProperties.Name="{res:Text X.ReadTheLimitsAgain}" />
-            <Image x:Name="Brandmark" DockPanel.Dock="Left" Height="18" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center"
-                   Source="/Lunar.Desktop;component/Resources/ClaudeBrandmark.jpg" RenderOptions.BitmapScalingMode="HighQuality"
-                   automation:AutomationProperties.Name="Claude" />
+            <TextBlock x:Name="ServiceName" DockPanel.Dock="Left" Text="Claude" Style="{StaticResource UsageText}" FontWeight="SemiBold"
+                       FontSize="{DynamicResource Lunar.Font.Size.Subtitle}" TextWrapping="NoWrap" VerticalAlignment="Center" />
           </DockPanel>
         </Border>
 

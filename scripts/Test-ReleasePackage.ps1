@@ -121,8 +121,8 @@ try {
     Add-Result 'Executable present' ($names -contains 'Lunar.Desktop.exe') "$($files.Count) files, $([math]::Round($payloadBytes / 1MB, 1)) MB unpacked"
     $dev = @($names | Where-Object { $_ -like '*.pdb' -or $_ -like '*.Tests.dll' -or $_ -like 'xunit*' })
     Add-Result 'No developer files' ($dev.Count -eq 0) ($(if ($dev.Count) { $dev -join ', ' } else { 'none' }))
-    $notices = @($names | Where-Object { $_ -match '(?i)notice|license' })
-    Add-Result 'Third-party notices shipped' ($notices.Count -gt 0) ($(if ($notices.Count) { $notices -join ', ' } else { 'no notice or licence file in the package' })) $false
+    $notices = @($names | Where-Object { $_ -eq 'THIRD_PARTY_NOTICES.txt' })
+    Add-Result 'Third-party notices shipped' ($notices.Count -gt 0) ($(if ($notices.Count) { $notices -join ', ' } else { 'THIRD_PARTY_NOTICES.txt is not in the package' }))
 }
 finally {
     for ($i = $com.Count - 1; $i -ge 0; $i--) { [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($com[$i]) }

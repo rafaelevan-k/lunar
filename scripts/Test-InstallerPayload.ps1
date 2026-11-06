@@ -30,7 +30,7 @@ $root = (Resolve-Path -LiteralPath $PayloadDirectory).Path
 
 $required = @('Lunar.Desktop.exe', 'Lunar.Desktop.dll', 'Lunar.Application.dll', 'Lunar.Domain.dll',
     'Lunar.Infrastructure.dll', 'Lunar.Windows.dll', 'Lunar.Conversion.dll', 'Lunar.Desktop.runtimeconfig.json',
-    'hostfxr.dll', 'coreclr.dll')
+    'hostfxr.dll', 'coreclr.dll', 'THIRD_PARTY_NOTICES.txt')
 foreach ($culture in $SatelliteCultures) { $required += "$culture\Lunar.Desktop.resources.dll" }
 
 foreach ($relative in $required) {
@@ -43,6 +43,15 @@ if (Test-Path -LiteralPath $config) {
     $runtime = (Get-Content -LiteralPath $config -Raw | ConvertFrom-Json).runtimeOptions
     if ($runtime.PSObject.Properties.Name -contains 'framework' -or $runtime.PSObject.Properties.Name -contains 'frameworks') {
         $problems.Add('Not self-contained: runtimeconfig.json names a shared framework (ADR-0004 requires self-contained).')
+    }
+}
+
+# The notices must name every bundled third-party binary's component (BE-30): an empty or stale file is not a notice.
+$notices = Join-Path $root 'THIRD_PARTY_NOTICES.txt'
+if (Test-Path -LiteralPath $notices) {
+    $text = Get-Content -LiteralPath $notices -Raw
+    foreach ($component in @('.NET Runtime', 'Windows Desktop Runtime', 'SkiaSharp', 'libSkiaSharp', 'Serilog', 'Open XML SDK', 'DependencyInjection', 'WinRT.Runtime', 'Apache License')) {
+        if ($text -notmatch [regex]::Escape($component)) { $problems.Add("THIRD_PARTY_NOTICES.txt does not mention '$component'.") }
     }
 }
 

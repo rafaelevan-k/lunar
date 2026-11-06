@@ -16,8 +16,8 @@ using Xunit;
 
 namespace Lunar.Desktop.UITests.Features;
 
-// FE-27, FE-29: the real Usage page, the real theme and control styles and the real brandmark, on an STA thread, bound to the real view model over
-// fakes of its ports. How it looks to a person (the logo on screen, the colors on a real island, Narrator, scaling, High Contrast) is a
+// FE-27, FE-29: the real Usage page, the real theme and control styles (the service named in plain text, no logo), on an STA thread, bound to the real view model over
+// fakes of its ports. How it looks to a person (the name on screen, the colors on a real island, Narrator, scaling, High Contrast) is a
 // manual check (NOT_RUN here).
 public sealed class UsagePageTests
 {
@@ -140,7 +140,7 @@ public sealed class UsagePageTests
         Result.Failure<UsageSnapshot>(new OperationError(ErrorCode.AccessDenied, message));
 
     [Fact]
-    public void TheLimitsShowWithPercentBarsResetTimesAndTheUnmodifiedBrandmark() => RunOnSta(() =>
+    public void TheLimitsShowWithPercentBarsResetTimesAndTheServiceNameAsPlainText() => RunOnSta(() =>
     {
         using var rig = new Rig(enabled: true);
         Pump(() => rig.Model.ShowLimits);
@@ -154,14 +154,11 @@ public sealed class UsagePageTests
         Assert.Equal([67d, 31d], Descendants<ProgressBar>(rig.Page).Select(b => b.Value));
         Assert.All(Descendants<ProgressBar>(rig.Page), bar => Assert.Equal(100, bar.Maximum));
 
-        var logo = Named<Image>(rig.Page, "Brandmark");
-        Assert.NotNull(logo.Source);
-        Assert.Equal(800, ((System.Windows.Media.Imaging.BitmapSource)logo.Source).PixelWidth);
-        Assert.Equal(172, ((System.Windows.Media.Imaging.BitmapSource)logo.Source).PixelHeight);
-        Assert.Equal("Claude", AutomationProperties.GetName(logo));
-        // Unmodified: shown at its own aspect ratio, never stretched.
-        Assert.Equal(Stretch.Uniform, logo.Stretch);
-        Assert.True(Math.Abs((logo.ActualWidth / logo.ActualHeight) - (800d / 172d)) < 0.1, "The logo keeps its proportions.");
+        // No logo or wordmark artwork (owner's decision, 2026-11-07): the service is named in plain text in Lunar's own font.
+        var name = Named<TextBlock>(rig.Page, "ServiceName");
+        Assert.Equal("Claude", name.Text);
+        Assert.Equal(rig.Page.FindResource("Lunar.Font.Family"), name.FontFamily);
+        Assert.Empty(Descendants<Image>(rig.Page));
 
         Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "OffCard").Visibility);
         Assert.Equal(Visibility.Collapsed, Named<Border>(rig.Page, "LoginCard").Visibility);
@@ -296,7 +293,7 @@ public sealed class UsagePageTests
         Pump(() => rig.Model.ShowLimits);
 
         var header = Named<Border>(rig.Page, "Header");
-        Assert.Equal(Color.FromRgb(0xFF, 0xFF, 0xFF), ((SolidColorBrush)header.Background).Color);
+        Assert.Equal(Color.FromRgb(0xFA, 0xF9, 0xF5), ((SolidColorBrush)header.Background).Color); // a card like the others (the white logo tile is gone)
         var limitCard = Descendants<Border>(rig.Page).First(b => AutomationProperties.GetName(b).StartsWith("5-hour", StringComparison.Ordinal));
         Assert.Equal(Color.FromRgb(0xFA, 0xF9, 0xF5), ((SolidColorBrush)limitCard.Background).Color);
         var fill = Descendants<Border>(Descendants<ProgressBar>(rig.Page).First()).First(b => b.Name == "PART_Indicator");

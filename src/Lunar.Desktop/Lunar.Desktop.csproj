@@ -16,9 +16,9 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <EmbeddedResource Include="Resources\Lunar.ico" LogicalName="Lunar.Desktop.Resources.Lunar.ico" />
-    <!-- The Claude brandmark, unmodified, for the Usage page (FE-27); see THIRD_PARTY_NOTICES.md. -->
-    <Resource Include="Resources\ClaudeBrandmark.jpg" />
     <InternalsVisibleTo Include="Lunar.Desktop.UITests" />
+    <!-- Licence texts of every bundled third-party component, shipped next to the exe (BE-30); regenerate with scripts\Build-ThirdPartyNotices.ps1. -->
+    <None Include="..\..\packaging\THIRD_PARTY_NOTICES.txt" Link="THIRD_PARTY_NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <!-- Sprint 0 discovery sources live in Spike/ and belong to Lunar.Desktop.Spike.csproj only. -->
