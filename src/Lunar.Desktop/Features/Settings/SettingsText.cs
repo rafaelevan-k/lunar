@@ -14,6 +14,12 @@ public static class SettingsText
 
     public static string StartupUnavailable => Strings.Get("Settings.StartupUnavailable");
 
+    public static string StartupFailed => Strings.Get("Settings.StartupFailed");
+
+    /// <summary>The line under "Start with Windows": unavailable, on, or off.</summary>
+    public static string Startup(bool available, bool on) =>
+        !available ? StartupUnavailable : Strings.Get(on ? "Settings.StartupOn" : "Settings.StartupOff");
+
     public static string DiagnosticsHelp => Strings.Get("Settings.DiagnosticsHelp");
 
     public static string DiagnosticsRestart => Strings.Get("Settings.DiagnosticsRestart");

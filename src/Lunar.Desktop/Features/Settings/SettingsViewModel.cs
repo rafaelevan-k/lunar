@@ -18,7 +18,8 @@ public sealed record SettingsChoice(string Label, bool IsSelected, ICommand Comm
 /// <summary>
 /// The Settings window's state (FE-23, ADR-0016). It shows what is saved, never what was clicked: every control asks through a command, the
 /// <see cref="SettingsService"/> saves, and the window changes only when the saved value does (so a failed save leaves everything as it was
-/// and says so). It follows changes made elsewhere (the Usage switch, a reset). It touches no file, registry or window API.
+/// and says so). It follows changes made elsewhere (the Usage switch, a reset). It touches no file, registry or window API: Start with
+/// Windows goes through the shared <see cref="StartupSwitch"/>, which uses the Application port.
 /// </summary>
 public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 {
@@ -31,6 +32,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private readonly Action<Action> _post;
     private readonly IDiagnosticLog? _log;
     private readonly bool _diagnosticsInUse;
+    private readonly StartupSwitch? _startup;
     private readonly CancellationTokenSource _lifetime = new();
 
     private IReadOnlyList<SettingsChoice> _themes = [];
@@ -43,13 +45,15 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private bool _disposed;
 
     /// <param name="diagnosticsInUse">Whether verbose diagnostics are on in this run; the saved choice applies from the next start.</param>
+    /// <param name="startup">The shared Start with Windows switch; null shows the row as unavailable.</param>
     public SettingsViewModel(
         SettingsService settings,
         IWindowEnvironment environment,
         IFolderPicker folders,
         Action<Action> post,
         bool diagnosticsInUse,
-        IDiagnosticLog? log = null)
+        IDiagnosticLog? log = null,
+        StartupSwitch? startup = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(environment);
@@ -61,6 +65,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         _post = post;
         _diagnosticsInUse = diagnosticsInUse;
         _log = log;
+        _startup = startup;
 
         var lifetime = _lifetime.Token;
         ToggleReduceMotionCommand = Save(s => s with { Appearance = s.Appearance with { ReduceMotion = !s.Appearance.ReduceMotion } }, lifetime);
@@ -92,8 +97,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
             _noticeDismissed = true;
             Changed();
         });
+        ToggleStartupCommand = new RelayCommand(ToggleStartup, () => StartupAvailable);
 
         _settings.Changed += OnSettingsChanged;
+        if (_startup is not null)
+            _startup.Changed += OnStartupChanged;
         Rebuild();
     }
 
@@ -124,6 +132,15 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>True when the saved diagnostics choice is not what this run is using yet.</summary>
     public bool DiagnosticsNeedsRestart => DiagnosticsEnabled != _diagnosticsInUse;
+
+    /// <summary>True when Lunar can register itself to start with Windows from where it runs.</summary>
+    public bool StartupAvailable => _startup?.IsAvailable == true;
+
+    /// <summary>True when Windows will start Lunar at sign-in (read from Windows, not from the settings file).</summary>
+    public bool StartupEnabled => _startup?.IsOn == true;
+
+    /// <summary>What the Start with Windows row says under its title.</summary>
+    public string StartupHint => SettingsText.Startup(StartupAvailable, StartupEnabled);
 
     public IReadOnlyList<SettingsChoice> Themes => _themes;
 
@@ -170,11 +187,17 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand DismissNoticeCommand { get; }
 
-    /// <summary>The displays may have changed (one plugged in, one removed); the list is read again. UI thread only.</summary>
+    public ICommand ToggleStartupCommand { get; }
+
+    /// <summary>
+    /// The displays may have changed (one plugged in, one removed) and Start with Windows may have been switched in Task Manager; both are
+    /// read again. UI thread only.
+    /// </summary>
     public void RefreshDisplays()
     {
         if (_disposed)
             return;
+        _startup?.Refresh();
         Rebuild();
         Changed();
     }
@@ -185,6 +208,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
             return;
         _disposed = true;
         _settings.Changed -= OnSettingsChanged;
+        if (_startup is not null)
+            _startup.Changed -= OnStartupChanged;
         _lifetime.Cancel();
         _lifetime.Dispose();
     }
@@ -227,6 +252,15 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         await SaveAsync(s => s with { Conversion = s.Conversion with { OutputDirectory = path } }, ct);
     }
 
+    private void ToggleStartup()
+    {
+        if (_startup is null)
+            return;
+        var result = _startup.Toggle(); // fast and synchronous: one registry value
+        _problem = result.IsFailure ? SettingsText.StartupFailed : null;
+        Changed();
+    }
+
     private async Task ResetAsync(CancellationToken ct)
     {
         _confirmingReset = false;
@@ -254,6 +288,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     }
 
     // ---- following the saved settings -------------------------------------------------------------------------------
+
+    // Raised on the UI thread by the shared switch (this window or the tray changed it, or it was read again).
+    private void OnStartupChanged(object? sender, EventArgs e)
+    {
+        if (!_disposed)
+            Changed();
+    }
 
     // Raised on whatever thread finished the save.
     private void OnSettingsChanged(object? sender, SettingsChangedEventArgs e) => _post(() =>
@@ -319,6 +360,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
             ((AsyncRelayCommand)command).NotifyCanExecuteChanged();
 
         ((RelayCommand)AskResetCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)ToggleStartupCommand).NotifyCanExecuteChanged();
     }
 
     private void OnFault(Exception ex)

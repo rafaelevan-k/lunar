@@ -123,6 +123,9 @@ public static class ServiceRegistration
         services.AddSingleton<IFolderPicker, WindowsFolderPicker>();
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
+        // Start with Windows (BE-29): the current user's Run entry for the running executable; nothing is registered until the user turns it on.
+        services.AddSingleton<IStartupRegistration>(sp => new StartupRegistrationService(
+            Environment.ProcessPath ?? string.Empty, sp.GetRequiredService<IDiagnosticLog>()));
 
         configure?.Invoke(services);
         return services.BuildServiceProvider(new ServiceProviderOptions

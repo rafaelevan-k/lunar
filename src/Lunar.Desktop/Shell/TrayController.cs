@@ -6,8 +6,8 @@ namespace Lunar.Desktop.Shell;
 
 /// <summary>
 /// Notification-area icon and its context menu. Owns exactly one icon, removes it when disposed, and only
-/// raises the callbacks it is given: it holds no application logic. "Settings" opens the Settings window (FE-23) and "Start with Windows" is
-/// shown disabled because that feature does not exist yet (BE-29); it is not faked.
+/// raises the callbacks it is given: it holds no application logic. "Settings" opens the Settings window (FE-23). "Start with Windows" shows
+/// and flips the shared <see cref="Features.Settings.StartupSwitch"/> (read again each time the menu opens); without one it is disabled.
 /// </summary>
 internal sealed class TrayController : IDisposable
 {
@@ -16,17 +16,21 @@ internal sealed class TrayController : IDisposable
     private readonly Action _open;
     private readonly Action _exit;
     private readonly Action? _openSettings;
+    private readonly Features.Settings.StartupSwitch? _startup;
     private readonly Icon _iconImage;
     private readonly Forms.ContextMenuStrip _menu;
     private readonly Forms.NotifyIcon _icon;
 
     /// <param name="visible">False only in tests, so no icon appears in the user's notification area.</param>
     /// <param name="openSettings">Opens the Settings window; when null the item stays disabled and says so.</param>
-    internal TrayController(Action open, Action exit, bool visible = true, Action? openSettings = null)
+    /// <param name="startup">The shared Start with Windows switch; when null the item stays disabled and says so.</param>
+    internal TrayController(Action open, Action exit, bool visible = true, Action? openSettings = null,
+        Features.Settings.StartupSwitch? startup = null)
     {
         _open = open;
         _exit = exit;
         _openSettings = openSettings;
+        _startup = startup;
 
         using var stream = typeof(TrayController).Assembly.GetManifestResourceStream(IconResource)
             ?? throw new InvalidOperationException("The tray icon resource is missing.");
@@ -38,19 +42,17 @@ internal sealed class TrayController : IDisposable
             Enabled = openSettings is not null,
             ToolTipText = Strings.Get(openSettings is null ? "Tray.SettingsMissingTip" : "Tray.SettingsTip")
         };
-        StartupItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Startup"))
-        {
-            Enabled = false,
-            Checked = false,
-            ToolTipText = Strings.Get("Tray.StartupTip")
-        };
+        StartupItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Startup"));
+        ShowStartup();
         ExitItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Exit"));
 
         OpenItem.Click += OnOpen;
         SettingsItem.Click += OnSettings;
+        StartupItem.Click += OnStartup;
         ExitItem.Click += OnExit;
 
         _menu = new Forms.ContextMenuStrip { ShowItemToolTips = true };
+        _menu.Opening += OnMenuOpening;
         _menu.Items.AddRange([OpenItem, SettingsItem, StartupItem, new Forms.ToolStripSeparator(), ExitItem]);
 
         _icon = new Forms.NotifyIcon { Icon = _iconImage, Text = "Lunar", ContextMenuStrip = _menu };
@@ -81,7 +83,9 @@ internal sealed class TrayController : IDisposable
         _icon.MouseClick -= OnIconClick;
         OpenItem.Click -= OnOpen;
         SettingsItem.Click -= OnSettings;
+        StartupItem.Click -= OnStartup;
         ExitItem.Click -= OnExit;
+        _menu.Opening -= OnMenuOpening;
         _icon.Dispose();
         _menu.Dispose();
         _iconImage.Dispose();
@@ -98,4 +102,27 @@ internal sealed class TrayController : IDisposable
     private void OnSettings(object? sender, EventArgs e) => _openSettings?.Invoke();
 
     private void OnExit(object? sender, EventArgs e) => _exit();
+
+    // Windows may have changed it meanwhile (Task Manager, or the Settings window): read it again before the menu shows.
+    private void OnMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        _startup?.Refresh();
+        ShowStartup();
+    }
+
+    private void OnStartup(object? sender, EventArgs e)
+    {
+        if (_startup is null)
+            return;
+        var result = _startup.Toggle();
+        ShowStartup(failed: result.IsFailure);
+    }
+
+    private void ShowStartup(bool failed = false)
+    {
+        var available = _startup?.IsAvailable == true;
+        StartupItem.Enabled = available;
+        StartupItem.Checked = available && _startup!.IsOn;
+        StartupItem.ToolTipText = Strings.Get(failed ? "Tray.StartupFailedTip" : available ? "Tray.StartupTip" : "Tray.StartupUnavailableTip");
+    }
 }

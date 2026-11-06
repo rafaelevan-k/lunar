@@ -83,6 +83,19 @@ public sealed class ServiceRegistrationTests
     }
 
     [Fact]
+    public void StartWithWindowsIsOneRegistrationForTheRunningExecutable()
+    {
+        using var provider = ServiceRegistration.BuildServiceProvider(
+            services => services.AddSingleton<IDiagnosticLog>(new NullLog()));
+
+        var startup = provider.GetRequiredService<Lunar.Application.Abstractions.System.IStartupRegistration>();
+
+        Assert.Same(startup, provider.GetRequiredService<Lunar.Application.Abstractions.System.IStartupRegistration>());
+        Assert.IsType<Lunar.Infrastructure.Startup.StartupRegistrationService>(startup);
+        // Resolving it registers nothing: the user's Run list is only written when the switch is turned on (not done here).
+    }
+
+    [Fact]
     public async Task VolumeServiceIsOneSingletonAndTheContainerCanDisposeIt()
     {
         var provider = ServiceRegistration.BuildServiceProvider(

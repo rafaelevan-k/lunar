@@ -89,6 +89,44 @@ public sealed class TrayControllerTests
     });
 
     [Fact]
+    public void StartWithWindowsIsCheckedLikeWindowsAndClickingItFlipsIt() => RunOnSta(() =>
+    {
+        var fake = new Lunar.Desktop.UITests.Features.StartupSwitchTests.FakeRegistration();
+        using var tray = new TrayController(() => { }, () => { }, visible: false,
+            startup: new Lunar.Desktop.Features.Settings.StartupSwitch(fake));
+
+        Assert.True(tray.StartupItem.Enabled);
+        Assert.False(tray.StartupItem.Checked);
+
+        tray.StartupItem.PerformClick();
+        Assert.True(fake.On);
+        Assert.True(tray.StartupItem.Checked);
+
+        tray.StartupItem.PerformClick();
+        Assert.False(fake.On);
+        Assert.False(tray.StartupItem.Checked);
+    });
+
+    [Fact]
+    public void OpeningTheMenuRereadsStartWithWindowsAndARefusedChangeIsExplained() => RunOnSta(() =>
+    {
+        var fake = new Lunar.Desktop.UITests.Features.StartupSwitchTests.FakeRegistration();
+        using var tray = new TrayController(() => { }, () => { }, visible: false,
+            startup: new Lunar.Desktop.Features.Settings.StartupSwitch(fake));
+        var normalTip = tray.StartupItem.ToolTipText;
+
+        fake.On = true; // turned on elsewhere (the Settings window)
+        typeof(Forms.ContextMenuStrip).GetMethod("OnOpening", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(tray.Menu, [new System.ComponentModel.CancelEventArgs()]);
+        Assert.True(tray.StartupItem.Checked);
+
+        fake.ChangeFails = Lunar.Domain.Shared.ErrorCode.AccessDenied;
+        tray.StartupItem.PerformClick();
+        Assert.True(tray.StartupItem.Checked);
+        Assert.NotEqual(normalTip, tray.StartupItem.ToolTipText);
+    });
+
+    [Fact]
     public void SettingsIsEnabledAndOpensTheWindowOnceWhenItHasSomewhereToGo() => RunOnSta(() =>
     {
         var opened = 0;

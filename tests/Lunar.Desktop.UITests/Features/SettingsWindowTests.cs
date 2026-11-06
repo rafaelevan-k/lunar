@@ -132,12 +132,13 @@ public sealed class SettingsWindowTests
 
         public SettingsWindow Window { get; private set; } = null!;
 
-        public Rig(Action<Repository>? configure = null, string palette = "Colors.Dark.xaml", double width = 480, double height = 680)
+        public Rig(Action<Repository>? configure = null, string palette = "Colors.Dark.xaml", double width = 480, double height = 680,
+            StartupSwitch? startup = null)
         {
             configure?.Invoke(Repository);
             Service = new SettingsService(Repository);
             Service.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
-            Model = new SettingsViewModel(Service, new Environment(), new Folders(), work => work(), false);
+            Model = new SettingsViewModel(Service, new Environment(), new Folders(), work => work(), false, null, startup);
             Window = new SettingsWindow { DataContext = Model };
             Window.Resources.MergedDictionaries.Add(Load("Themes", palette));
             Window.Resources.MergedDictionaries.Add(Load("Themes", "Typography.xaml"));
@@ -262,15 +263,80 @@ public sealed class SettingsWindowTests
     });
 
     [Fact]
-    public void StartWithWindowsIsShownSwitchedOffDisabledAndSaysWhy() => RunOnSta(() =>
+    public void WithoutARegistrationStartWithWindowsIsShownSwitchedOffDisabledAndSaysWhy() => RunOnSta(() =>
     {
         using var rig = new Rig();
         var startup = rig.Named<Button>("StartupSwitch");
 
         Assert.False(startup.IsEnabled);
         Assert.False(SwitchState.GetIsOn(startup));
-        Assert.Contains("not available", AutomationProperties.GetName(startup), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(Lunar.Desktop.Resources.Strings.Get("X.StartWithWindows"), AutomationProperties.GetName(startup));
+        Assert.Equal(SettingsText.StartupUnavailable, AutomationProperties.GetHelpText(startup));
         Assert.Equal(SettingsText.StartupUnavailable, rig.Named<TextBlock>("StartupHint").Text);
+    });
+
+    [Fact]
+    public void StartWithWindowsSwitchesOnAndOffAndTheRowSaysWhatWindowsWillDo() => RunOnSta(() =>
+    {
+        var fake = new StartupSwitchTests.FakeRegistration();
+        using var rig = new Rig(startup: new StartupSwitch(fake));
+        var button = rig.Named<Button>("StartupSwitch");
+
+        Assert.True(button.IsEnabled);
+        Assert.False(SwitchState.GetIsOn(button));
+        Assert.Equal(SettingsText.Startup(true, false), rig.Named<TextBlock>("StartupHint").Text);
+
+        button.Command.Execute(null);
+        Pump();
+        rig.Window.UpdateLayout();
+
+        Assert.True(fake.On);
+        Assert.True(SwitchState.GetIsOn(button));
+        Assert.Equal(SettingsText.Startup(true, true), rig.Named<TextBlock>("StartupHint").Text);
+        Assert.Equal(SettingsText.Startup(true, true), AutomationProperties.GetHelpText(button));
+
+        button.Command.Execute(null);
+        Pump();
+        Assert.False(fake.On);
+        Assert.False(SwitchState.GetIsOn(button));
+    });
+
+    [Fact]
+    public void ARefusedStartWithWindowsChangeKeepsTheSwitchAndSaysSo() => RunOnSta(() =>
+    {
+        var fake = new StartupSwitchTests.FakeRegistration { ChangeFails = ErrorCode.AccessDenied };
+        using var rig = new Rig(startup: new StartupSwitch(fake));
+        var button = rig.Named<Button>("StartupSwitch");
+
+        button.Command.Execute(null);
+        Pump();
+        rig.Window.UpdateLayout();
+
+        Assert.False(SwitchState.GetIsOn(button));
+        Assert.Equal(Visibility.Visible, rig.Named<Border>("ProblemCard").Visibility);
+        Assert.Equal(SettingsText.StartupFailed, rig.Named<TextBlock>("ProblemText").Text);
+    });
+
+    [Fact]
+    public void BringingTheWindowForwardRereadsStartWithWindowsAndClosingItLetsGoOfTheSwitch() => RunOnSta(() =>
+    {
+        var fake = new StartupSwitchTests.FakeRegistration { On = true };
+        var shared = new StartupSwitch(fake);
+        var baseline = Lunar.Desktop.UITests.Lifecycle.EventAudit.HandlerCount(shared, nameof(StartupSwitch.Changed));
+        var button = default(Button);
+        using (var rig = new Rig(startup: shared))
+        {
+            button = rig.Named<Button>("StartupSwitch");
+            Assert.True(SwitchState.GetIsOn(button));
+            Assert.Equal(baseline + 1, Lunar.Desktop.UITests.Lifecycle.EventAudit.HandlerCount(shared, nameof(StartupSwitch.Changed)));
+
+            fake.On = false; // switched off in Task Manager meanwhile
+            rig.Model.RefreshDisplays(); // what activating the window does
+            Pump();
+            Assert.False(SwitchState.GetIsOn(button));
+        }
+
+        Assert.Equal(baseline, Lunar.Desktop.UITests.Lifecycle.EventAudit.HandlerCount(shared, nameof(StartupSwitch.Changed)));
     });
 
     [Fact]

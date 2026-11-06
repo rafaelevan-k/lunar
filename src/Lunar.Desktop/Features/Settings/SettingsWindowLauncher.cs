@@ -18,6 +18,7 @@ internal sealed class SettingsWindowLauncher : IDisposable
     private readonly bool _diagnosticsInUse;
     private readonly IDiagnosticLog? _log;
     private readonly bool _interactive;
+    private readonly StartupSwitch? _startup;
     private SettingsWindow? _window;
     private SettingsViewModel? _model;
     private bool _disposed;
@@ -29,7 +30,8 @@ internal sealed class SettingsWindowLauncher : IDisposable
         Action<Action> post,
         bool diagnosticsInUse,
         IDiagnosticLog? log = null,
-        bool interactive = true)
+        bool interactive = true,
+        StartupSwitch? startup = null)
     {
         _settings = settings;
         _environment = environment;
@@ -38,6 +40,7 @@ internal sealed class SettingsWindowLauncher : IDisposable
         _diagnosticsInUse = diagnosticsInUse;
         _log = log;
         _interactive = interactive;
+        _startup = startup;
     }
 
     internal bool IsOpen => _window is not null;
@@ -58,7 +61,7 @@ internal sealed class SettingsWindowLauncher : IDisposable
             return;
         }
 
-        _model = new SettingsViewModel(_settings, _environment, _folders, _post, _diagnosticsInUse, _log);
+        _model = new SettingsViewModel(_settings, _environment, _folders, _post, _diagnosticsInUse, _log, _startup);
         _window = new SettingsWindow { DataContext = _model };
         _window.Closed += OnClosed;
         if (!_interactive)

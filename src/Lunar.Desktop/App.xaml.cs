@@ -65,6 +65,7 @@ public partial class App : System.Windows.Application
     private ThemeApplier? _theme;
     private SettingsApplier? _settingsApplier;
     private SettingsWindowLauncher? _settingsWindow;
+    private StartupSwitch? _startupSwitch;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -253,13 +254,16 @@ public partial class App : System.Windows.Application
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
         // Settings: its own window from the tray, and every saved change takes effect at once (ADR-0016). The same Apply runs now for the saved values.
+        // One Start with Windows switch shared by the Settings window and the tray, so both always show the same state (FE-26, BE-29).
+        _startupSwitch = new StartupSwitch(_services.GetRequiredService<IStartupRegistration>(), _log);
         _settingsWindow = new SettingsWindowLauncher(
             _settingsService,
             _services.GetRequiredService<IWindowEnvironment>(),
             _services.GetRequiredService<IFolderPicker>(),
             toUi,
             _services.GetRequiredService<DiagnosticsRun>().Enabled,
-            _log);
+            _log,
+            startup: _startupSwitch);
         _settingsApplier = new SettingsApplier(
             _settingsService,
             toUi,
@@ -279,7 +283,7 @@ public partial class App : System.Windows.Application
             },
             folder => _converter?.SetDefaultOutputFolder(folder));
         _settingsApplier.Apply(settings);
-        _tray = new TrayController(_window.OpenForKeyboard, Shutdown, openSettings: _settingsWindow.Show);
+        _tray = new TrayController(_window.OpenForKeyboard, Shutdown, openSettings: _settingsWindow.Show, startup: _startupSwitch);
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
@@ -333,6 +337,7 @@ public partial class App : System.Windows.Application
         _settingsApplier = null;
         _settingsWindow?.Dispose();
         _settingsWindow = null;
+        _startupSwitch = null;
         _tray?.Dispose();
         _tray = null;
         _transition?.Dispose();

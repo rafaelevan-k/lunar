@@ -100,7 +100,7 @@
         <TextBlock x:Name="ProblemText" Text="{Binding Problem}" Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" />
       </Border>
 
-      <!-- Start with Windows: shown, honestly not available until the installer exists (BE-29). -->
+      <!-- Start with Windows (BE-29 registration, wired in FE-26): what Windows has, read again whenever the window is brought forward. -->
       <Border Style="{StaticResource Card}">
         <Grid>
           <Grid.ColumnDefinitions>
@@ -109,10 +109,12 @@
           </Grid.ColumnDefinitions>
           <StackPanel>
             <TextBlock Text="{res:Text X.StartWithWindows}" Style="{StaticResource SectionTitle}" Margin="0" />
-            <TextBlock x:Name="StartupHint" Text="{res:Text X.NotAvailableYetItArrives}" Style="{StaticResource Hint}" />
+            <TextBlock x:Name="StartupHint" Text="{Binding StartupHint}" Style="{StaticResource Hint}" />
           </StackPanel>
-          <Button x:Name="StartupSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" IsEnabled="False" VerticalAlignment="Center"
-                  c:SwitchState.IsOn="False" automation:AutomationProperties.Name="{res:Text X.StartWithWindowsNotAvailable}" />
+          <Button x:Name="StartupSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
+                  c:SwitchState.IsOn="{Binding StartupEnabled}" Command="{Binding ToggleStartupCommand}"
+                  automation:AutomationProperties.Name="{res:Text X.StartWithWindows}"
+                  automation:AutomationProperties.HelpText="{Binding StartupHint}" />
         </Grid>
       </Border>
 

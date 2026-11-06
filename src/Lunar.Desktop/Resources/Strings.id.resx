@@ -165,7 +165,10 @@
   <data name="Settings.ResetQuestion" xml:space="preserve"><value>Atur ulang semua pengaturan ke bawaan? Ini juga mematikan halaman Pemakaian.</value></data>
   <data name="Settings.SaveFailed" xml:space="preserve"><value>Lunar tidak dapat menyimpan ini. Tidak ada yang diubah.</value></data>
   <data name="Settings.SavedOnThisPc" xml:space="preserve"><value>Pengaturan hanya disimpan di PC ini.</value></data>
-  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Belum tersedia. Akan hadir bersama penginstal.</value></data>
+  <data name="Settings.StartupFailed" xml:space="preserve"><value>Windows tidak menerima perubahan Mulai bersama Windows.</value></data>
+  <data name="Settings.StartupOff" xml:space="preserve"><value>Lunar hanya dimulai saat Anda membukanya.</value></data>
+  <data name="Settings.StartupOn" xml:space="preserve"><value>Lunar dimulai saat Anda masuk ke Windows.</value></data>
+  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Tidak tersedia di salinan Lunar ini.</value></data>
   <data name="Settings.ThemeDark" xml:space="preserve"><value>Gelap</value></data>
   <data name="Settings.ThemeLight" xml:space="preserve"><value>Terang</value></data>
   <data name="Settings.ThemeMatch" xml:space="preserve"><value>Ikuti Windows</value></data>
@@ -219,7 +222,9 @@
   <data name="Tray.SettingsMissingTip" xml:space="preserve"><value>Pengaturan belum tersedia.</value></data>
   <data name="Tray.SettingsTip" xml:space="preserve"><value>Buka jendela Pengaturan.</value></data>
   <data name="Tray.Startup" xml:space="preserve"><value>Mulai bersama &amp;Windows</value></data>
-  <data name="Tray.StartupTip" xml:space="preserve"><value>Mulai bersama Windows belum tersedia.</value></data>
+  <data name="Tray.StartupFailedTip" xml:space="preserve"><value>Windows tidak menerima perubahan.</value></data>
+  <data name="Tray.StartupTip" xml:space="preserve"><value>Mulai Lunar saat Anda masuk ke Windows.</value></data>
+  <data name="Tray.StartupUnavailableTip" xml:space="preserve"><value>Mulai bersama Windows tidak tersedia di salinan Lunar ini.</value></data>
   <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Hapus juga pengaturan dan log Lunar Anda?
 
 Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
@@ -296,7 +301,6 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="X.NextPage" xml:space="preserve"><value>Halaman berikutnya</value></data>
   <data name="X.NoFilesYetDropFiles" xml:space="preserve"><value>Belum ada berkas. Letakkan berkas di sini atau tekan Tambah berkas.</value></data>
   <data name="X.NoSlidesFadesOrConfetti" xml:space="preserve"><value>Tanpa geser, pudar, atau konfeti. Pengaturan animasi Windows selalu dihormati.</value></data>
-  <data name="X.NotAvailableYetItArrives" xml:space="preserve"><value>Belum tersedia. Akan hadir bersama penginstal.</value></data>
   <data name="X.OK" xml:space="preserve"><value>OK</value></data>
   <data name="X.OpenSettings" xml:space="preserve"><value>Buka Pengaturan</value></data>
   <data name="X.PDFPassword" xml:space="preserve"><value>Kata sandi PDF</value></data>
@@ -338,7 +342,6 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="X.ShowTheResultInIts" xml:space="preserve"><value>Tampilkan hasil di foldernya</value></data>
   <data name="X.StartOverWithNewFiles" xml:space="preserve"><value>Mulai lagi dengan berkas baru</value></data>
   <data name="X.StartWithWindows" xml:space="preserve"><value>Mulai bersama Windows</value></data>
-  <data name="X.StartWithWindowsNotAvailable" xml:space="preserve"><value>Mulai bersama Windows, belum tersedia</value></data>
   <data name="X.SystemControls" xml:space="preserve"><value>Kontrol sistem</value></data>
   <data name="X.TakesEffectTheNextTime" xml:space="preserve"><value>Berlaku saat Lunar dijalankan lagi.</value></data>
   <data name="X.TheEyesBlinkAndLook" xml:space="preserve"><value>Mata berkedip dan melihat sekeliling saat pulau tertutup.</value></data>

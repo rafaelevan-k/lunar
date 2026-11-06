@@ -165,7 +165,10 @@
   <data name="Settings.ResetQuestion" xml:space="preserve"><value>Reset every setting to its default? This also turns the Usage page off.</value></data>
   <data name="Settings.SaveFailed" xml:space="preserve"><value>Lunar could not save this. Nothing was changed.</value></data>
   <data name="Settings.SavedOnThisPc" xml:space="preserve"><value>Settings are saved only on this PC.</value></data>
-  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Not available yet. It arrives with the installer.</value></data>
+  <data name="Settings.StartupFailed" xml:space="preserve"><value>Windows did not accept the change to Start with Windows.</value></data>
+  <data name="Settings.StartupOff" xml:space="preserve"><value>Lunar starts only when you open it.</value></data>
+  <data name="Settings.StartupOn" xml:space="preserve"><value>Lunar starts when you sign in to Windows.</value></data>
+  <data name="Settings.StartupUnavailable" xml:space="preserve"><value>Not available in this copy of Lunar.</value></data>
   <data name="Settings.ThemeDark" xml:space="preserve"><value>Dark</value></data>
   <data name="Settings.ThemeLight" xml:space="preserve"><value>Light</value></data>
   <data name="Settings.ThemeMatch" xml:space="preserve"><value>Match Windows</value></data>
@@ -219,7 +222,9 @@
   <data name="Tray.SettingsMissingTip" xml:space="preserve"><value>Settings are not available yet.</value></data>
   <data name="Tray.SettingsTip" xml:space="preserve"><value>Open the Settings window.</value></data>
   <data name="Tray.Startup" xml:space="preserve"><value>Start with &amp;Windows</value></data>
-  <data name="Tray.StartupTip" xml:space="preserve"><value>Starting with Windows is not available yet.</value></data>
+  <data name="Tray.StartupFailedTip" xml:space="preserve"><value>Windows did not accept the change.</value></data>
+  <data name="Tray.StartupTip" xml:space="preserve"><value>Start Lunar when you sign in to Windows.</value></data>
+  <data name="Tray.StartupUnavailableTip" xml:space="preserve"><value>Start with Windows is not available in this copy of Lunar.</value></data>
   <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Also delete your Lunar settings and logs?
 
 Choose No to keep them for a later reinstall.</value></data>
@@ -296,7 +301,6 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="X.NextPage" xml:space="preserve"><value>Next page</value></data>
   <data name="X.NoFilesYetDropFiles" xml:space="preserve"><value>No files yet. Drop files here or press Add files.</value></data>
   <data name="X.NoSlidesFadesOrConfetti" xml:space="preserve"><value>No slides, fades or confetti. Windows' own animation setting is always respected.</value></data>
-  <data name="X.NotAvailableYetItArrives" xml:space="preserve"><value>Not available yet. It arrives with the installer.</value></data>
   <data name="X.OK" xml:space="preserve"><value>OK</value></data>
   <data name="X.OpenSettings" xml:space="preserve"><value>Open Settings</value></data>
   <data name="X.PDFPassword" xml:space="preserve"><value>PDF password</value></data>
@@ -338,7 +342,6 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="X.ShowTheResultInIts" xml:space="preserve"><value>Show the result in its folder</value></data>
   <data name="X.StartOverWithNewFiles" xml:space="preserve"><value>Start over with new files</value></data>
   <data name="X.StartWithWindows" xml:space="preserve"><value>Start with Windows</value></data>
-  <data name="X.StartWithWindowsNotAvailable" xml:space="preserve"><value>Start with Windows, not available yet</value></data>
   <data name="X.SystemControls" xml:space="preserve"><value>System controls</value></data>
   <data name="X.TakesEffectTheNextTime" xml:space="preserve"><value>Takes effect the next time Lunar starts.</value></data>
   <data name="X.TheEyesBlinkAndLook" xml:space="preserve"><value>The eyes blink and look around while the island is closed.</value></data>
