@@ -116,6 +116,11 @@ try {
     Add-Result 'Start with Windows stays opt-in' ($run -eq 0) "$run Run-key rows written by the installer"
 
     $files = Get-Rows 'SELECT `FileName`, `FileSize` FROM `File`' 2
+    # Upgrades replace a versioned file only when its version is higher: Lunar's own assemblies must carry this product's version.
+    $own = Get-Rows 'SELECT `FileName`, `Version` FROM `File`' 2
+    $ownLunar = @($own | Where-Object { (($_[0] -split '\|')[-1]) -match '^Lunar\..*\.(dll|exe)$' })
+    $wrong = @($ownLunar | Where-Object { $_[1] -ne "$version.0" } | ForEach-Object { "$((($_[0] -split '\|')[-1]))=$($_[1])" })
+    Add-Result 'Lunar files carry the product version' ($ownLunar.Count -gt 0 -and $wrong.Count -eq 0) ($(if ($wrong.Count) { 'expected ' + "$version.0" + ': ' + ($wrong -join ', ') } else { "$($ownLunar.Count) Lunar files at $version.0" }))
     $names = @($files | ForEach-Object { ($_[0] -split '\|')[-1] })
     $payloadBytes = ($files | ForEach-Object { [long]$_[1] } | Measure-Object -Sum).Sum
     Add-Result 'Executable present' ($names -contains 'Lunar.Desktop.exe') "$($files.Count) files, $([math]::Round($payloadBytes / 1MB, 1)) MB unpacked"

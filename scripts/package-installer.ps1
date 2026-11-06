@@ -61,7 +61,10 @@ foreach ($file in $lockFiles) { $savedLocks[$file.FullName] = [System.IO.File]::
 try {
     Invoke-Dotnet 'Publish Lunar.Desktop (self-contained win-x64)' @(
         'publish', 'src\Lunar.Desktop\Lunar.Desktop.csproj', '-c', $Configuration, '-r', 'win-x64', '--self-contained', 'true',
-        '-p:PublishTrimmed=false', '-p:PublishSingleFile=false', '-p:DebugType=None', '-p:DebugSymbols=false', '-o', $payload)
+        '-p:PublishTrimmed=false', '-p:PublishSingleFile=false', '-p:DebugType=None', '-p:DebugSymbols=false',
+        # Every Lunar assembly carries the product version (FileVersion and AssemblyVersion $Version.0). Windows Installer replaces a
+        # versioned file during an upgrade only when the new file version is higher; with a fixed 1.0.0.0 an upgrade kept the old code.
+        "-p:Version=$Version", "-p:FileVersion=$Version.0", "-p:AssemblyVersion=$Version.0", '-o', $payload)
 }
 finally {
     foreach ($path in $savedLocks.Keys) { [System.IO.File]::WriteAllBytes($path, $savedLocks[$path]) }
