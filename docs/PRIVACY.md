@@ -1,6 +1,6 @@
 # Lunar privacy and diagnostics
 
-Status: reflects BE-07 (ADR-0009, accepted 2026-11-03). This is a development-time description of what the app does today, not the final end-user privacy notice (that is a Sprint 7 deliverable, PRD §9).
+This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page).
 
 ## Summary
 
@@ -50,11 +50,13 @@ The Settings window itself stores only the choices listed above, in the same fil
 
 Lunar never uploads logs. A way to export logs for support would need its own review and an explicit, reviewable user action.
 
-## Known gaps
+## Uninstalling
 
-- Logging of conversion, media and system features does not exist yet because those features do not exist yet; each will define its own fixed event IDs and be checked against this page.
-- Uninstall behavior for the Logs folder (keep or delete, with a prompt) belongs to the installer task (BE-29).
-- Crash dumps and Windows Error Reporting are controlled by Windows, not by Lunar.
+When you uninstall Lunar from Windows Settings, it asks whether to delete your settings and logs too (`%LocalAppData%\Lunar`). If you choose **No**, or uninstall silently, they are kept for a later reinstall, and you can delete the folder yourself at any time. Uninstalling always removes Lunar from Start with Windows.
+
+## Not controlled by Lunar
+
+Crash dumps and Windows Error Reporting are controlled by Windows, not by Lunar.
 
 ## Temporary conversion files
 

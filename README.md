@@ -29,6 +29,8 @@ user only, to `%LocalAppData%\Programs\Lunar`, without administrator rights, and
 - **Upgrade:** a newer MSI replaces the program and keeps the settings and the Start with Windows choice.
 - **Uninstall:** Windows Settings → Apps. Lunar asks whether to delete its settings and logs too.
 - **Signing:** the installer is not signed, so expect a SmartScreen warning.
+- **Docs:** the [user guide](docs/USER_GUIDE.md) and the [privacy notice](docs/PRIVACY.md) are installed next to the
+  app, together with the third-party licence texts.
 
 ## Known limitations
 

@@ -30,7 +30,7 @@ $root = (Resolve-Path -LiteralPath $PayloadDirectory).Path
 
 $required = @('Lunar.Desktop.exe', 'Lunar.Desktop.dll', 'Lunar.Application.dll', 'Lunar.Domain.dll',
     'Lunar.Infrastructure.dll', 'Lunar.Windows.dll', 'Lunar.Conversion.dll', 'Lunar.Desktop.runtimeconfig.json',
-    'hostfxr.dll', 'coreclr.dll', 'THIRD_PARTY_NOTICES.txt')
+    'hostfxr.dll', 'coreclr.dll', 'THIRD_PARTY_NOTICES.txt', 'USER_GUIDE.md', 'PRIVACY.md')
 foreach ($culture in $SatelliteCultures) { $required += "$culture\Lunar.Desktop.resources.dll" }
 
 foreach ($relative in $required) {
@@ -43,6 +43,14 @@ if (Test-Path -LiteralPath $config) {
     $runtime = (Get-Content -LiteralPath $config -Raw | ConvertFrom-Json).runtimeOptions
     if ($runtime.PSObject.Properties.Name -contains 'framework' -or $runtime.PSObject.Properties.Name -contains 'frameworks') {
         $problems.Add('Not self-contained: runtimeconfig.json names a shared framework (ADR-0004 requires self-contained).')
+    }
+}
+
+# Only the languages Lunar offers ship translations (SatelliteResourceLanguages): any other folder of *.resources.dll is dead weight.
+$allowedCultures = @('en') + $SatelliteCultures
+foreach ($folder in Get-ChildItem -LiteralPath $root -Directory) {
+    if (@(Get-ChildItem -LiteralPath $folder.FullName -Filter '*.resources.dll' -File).Count -gt 0 -and $allowedCultures -notcontains $folder.Name) {
+        $problems.Add("Unused language folder ships: $($folder.Name)\")
     }
 }
 

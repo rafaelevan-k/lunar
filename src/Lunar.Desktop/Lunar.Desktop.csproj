@@ -10,6 +10,9 @@
          so WinForms' ApplicationConfiguration bootstrap warning does not apply. -->
     <UseWindowsForms>true</UseWindowsForms>
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <!-- Lunar is in English and Bahasa Indonesia (ADR-0017): only those satellite resources are published, including the
+         WPF and Windows Forms runtime's own translations (the other 12 languages were never shown and only added size). -->
+    <SatelliteResourceLanguages>en;id</SatelliteResourceLanguages>
   </PropertyGroup>
   <ItemGroup>
     <!-- Keep WPF type names unambiguous: no implicit WinForms/Drawing imports. -->
@@ -19,6 +22,9 @@
     <InternalsVisibleTo Include="Lunar.Desktop.UITests" />
     <!-- Licence texts of every bundled third-party component, shipped next to the exe (BE-30); regenerate with scripts\Build-ThirdPartyNotices.ps1. -->
     <None Include="..\..\packaging\THIRD_PARTY_NOTICES.txt" Link="THIRD_PARTY_NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- The user guide and the privacy notice, installed next to the exe so the user has them without the source repository. -->
+    <None Include="..\..\docs\USER_GUIDE.md" Link="USER_GUIDE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\docs\PRIVACY.md" Link="PRIVACY.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <!-- Sprint 0 discovery sources live in Spike/ and belong to Lunar.Desktop.Spike.csproj only. -->

@@ -128,6 +128,13 @@ try {
     Add-Result 'No developer files' ($dev.Count -eq 0) ($(if ($dev.Count) { $dev -join ', ' } else { 'none' }))
     $notices = @($names | Where-Object { $_ -eq 'THIRD_PARTY_NOTICES.txt' })
     Add-Result 'Third-party notices shipped' ($notices.Count -gt 0) ($(if ($notices.Count) { $notices -join ', ' } else { 'THIRD_PARTY_NOTICES.txt is not in the package' }))
+    $docs = @('USER_GUIDE.md', 'PRIVACY.md' | Where-Object { $names -notcontains $_ })
+    Add-Result 'User guide and privacy notice shipped' ($docs.Count -eq 0) ($(if ($docs.Count) { 'missing: ' + ($docs -join ', ') } else { 'USER_GUIDE.md, PRIVACY.md' }))
+    # Satellite resources only for English and Indonesian: the Directory table names each language folder.
+    $dirRows = Get-Rows 'SELECT `DefaultDir` FROM `Directory`' 1
+    $folders = @(foreach ($row in $dirRows) { ($row[0] -split '\|')[-1] })
+    $extra = @($folders | Where-Object { $_ -match '^[a-z]{2}(-[A-Za-z]{2,4})?$' -and $_ -notin @('en', 'id') })
+    Add-Result 'Only English and Indonesian translations' ($extra.Count -eq 0) ($(if ($extra.Count) { 'unused language folders: ' + ($extra -join ', ') } else { 'no other language folders' }))
 }
 finally {
     for ($i = $com.Count - 1; $i -ge 0; $i--) { [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($com[$i]) }
