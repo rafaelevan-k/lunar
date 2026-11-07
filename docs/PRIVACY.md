@@ -1,12 +1,14 @@
 # Lunar privacy and diagnostics
 
-This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page).
+This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page), ADR-0019 (screen sharing), ADR-0020 (notes) and ADR-0021 (brightness).
 
 ## Summary
 
 - Lunar has **no telemetry**, no update check and no upload of your files. Nothing leaves your computer, with one opt-in exception: the Usage page (off by default, see below) contacts Anthropic, and only after you turn it on.
 - Lunar writes a small local log of **what happened**, never **what you were doing**.
 - Diagnostics (extra detail) are **off** unless you turn them on.
+- Your **notes** stay in one file on this PC and are never logged or sent anywhere.
+- Every Lunar window is **kept out of screen sharing, screenshots and recordings**, always.
 
 ## What is logged
 
@@ -25,7 +27,7 @@ There is **no free-text message field and no parameter field** in the logging AP
 
 ## What is never logged
 
-File names and paths, document or image contents, PDF passwords, Wi-Fi network names (SSIDs) or passwords, Bluetooth device names, media titles, artists or listening history, clipboard content, exception messages or stack traces, user names, and window titles of other applications.
+File names and paths, document or image contents, note text, PDF passwords, Wi-Fi network names (SSIDs) or passwords, Bluetooth device names, media titles, artists or listening history, clipboard content, exception messages or stack traces, user names, and window titles of other applications.
 
 ## Where and for how long
 
@@ -42,6 +44,23 @@ A file can exceed its size limit by at most one log line (the size is checked be
 
 Preferences are stored in `%LocalAppData%\Lunar\settings.json` (with `settings.json.bak`, the previous good copy, and `settings.corrupt.json`, the last unusable file, kept so nothing is lost silently). They hold only choices you make: startup, island position, theme and motion, language, a preferred media app id, a conversion output folder and the diagnostics switch. They never hold passwords, Wi-Fi names, document content or media titles or history, and the settings store writes no values or paths to the logs. Deleting the folder resets Lunar to defaults.
 
+## Notes
+
+The Notes page (ADR-0020) stores your notes in `%LocalAppData%\Lunar\notes.json`, separate from the settings, with `notes.json.bak` (the previous good copy) and, if the file is ever damaged, `notes.corrupt.json` (the damaged file, kept whole so nothing is lost silently). Each note holds its text and when it was created and changed; nothing else.
+
+- **Plain text, not encrypted.** The file is protected by your Windows account's file permissions, like the settings. Anyone who can read your account's files (for example another administrator, or a backup of your profile) can read your notes. Do not keep passwords in them.
+- **Never sent or logged.** Note text is never sent anywhere and never written to the log: log events about notes carry only fixed names and an error category (for example `notes.save.failed`). Notes are not shown in the tray or in notifications.
+- **Limits** keep the file bounded: 100,000 characters per note, 10,000 notes and 20 MB for the file.
+- Deleting a note removes it from the file at its next save; **Undo** is offered for a few seconds before that is final in the app.
+
+## Hidden from screen sharing
+
+Lunar asks Windows to leave every one of its windows out of screen capture (ADR-0019): the island, the Settings window, the reset notice, tooltips, the tray menu and Lunar's dialogs. You still see them; screen sharing, screenshots and recordings that use Windows' capture features do not. This is always on. It is a privacy convenience, not a security boundary: a phone camera, or software built to ignore this Windows setting, can still see Lunar, and the tray icon (part of the Windows taskbar) stays visible. If Windows refuses, **Settings → Privacy** says that Lunar may be visible, and the log records only an error code.
+
+## Display brightness
+
+The brightness row (ADR-0021) reads and sets the brightness of the display the island is on, through Windows for a built-in screen and through DDC/CI for an external monitor. It reads no other information from the display, stores nothing and sends nothing; the log records only error codes.
+
 ## Diagnostics (opt-in)
 
 Diagnostics add `Debug` events and the larger size limit; they add no new kinds of data. They are off by default. You turn them on in **Settings, Privacy, Detailed diagnostics** (the tray icon's Settings item). The choice is saved with your other preferences and applies from the **next time Lunar starts**, because the log is set up before anything else; the Settings window says so while the saved choice is not yet in use. The environment variable `LUNAR_DIAGNOSTICS=1` (only the exact value `1`) still turns diagnostics on for a run, whatever is saved. At start-up Lunar looks once, read-only, at the saved diagnostics choice in `settings.json` (a file of at most 64 KB; any problem means off); it never repairs or rewrites the file for this.
@@ -52,7 +71,7 @@ Lunar never uploads logs. A way to export logs for support would need its own re
 
 ## Uninstalling
 
-When you uninstall Lunar from Windows Settings, it asks whether to delete your settings and logs too (`%LocalAppData%\Lunar`). If you choose **No**, or uninstall silently, they are kept for a later reinstall, and you can delete the folder yourself at any time. Uninstalling always removes Lunar from Start with Windows.
+When you uninstall Lunar from Windows Settings, it asks whether to delete your settings, notes and logs too (`%LocalAppData%\Lunar`). If you choose **No**, or uninstall silently, they are kept for a later reinstall, and you can delete the folder yourself at any time. Uninstalling always removes Lunar from Start with Windows.
 
 ## Not controlled by Lunar
 
@@ -64,7 +83,7 @@ While a file is being converted, Lunar works in a private temporary folder under
 
 ## Usage page (opt-in, FE-27/FE-29, ADR-0014 and ADR-0015)
 
-The fourth page shows your Claude 5-hour and weekly limits. It is **off until you turn it on** with the switch on that page, which says what it does first.
+The Usage page (the last page) shows your Claude 5-hour and weekly limits. It is **off until you turn it on** with the switch on that page, which says what it does first.
 
 - **What Lunar reads:** the sign-in that Claude Code keeps on this PC, `%USERPROFILE%\.claude\.credentials.json`, **read-only**. Lunar takes only three fields from it (the access token, when it expires and its permissions), never the refresh token, and it never writes, renames or locks the file, so Claude Code is not disturbed. The token is held in memory for one request and wiped; it is never stored by Lunar, shown, logged or put in settings. Lunar never signs in for you, never renews the token and never contacts Claude's sign-in service. If Claude Code is not signed in, or the sign-in has expired or lacks the permission to read usage, the page says so in plain words and makes **no network request**.
 - **What is sent, and where:** once on, Lunar asks Anthropic's usage address (`api.anthropic.com`) over HTTPS for your limits, with that token. A request goes out about every 5 minutes while the island is open and about every 15 minutes while it is closed, with a longer wait after errors; the island opening, or the Refresh button, tries again after a sign-in problem (at most once every 30 seconds). Nothing else is sent: no file, no device or Lunar information beyond what an HTTPS request carries. The address is not documented by Anthropic and may change or refuse a login at any time; the page then says it cannot read the limits.

@@ -250,6 +250,8 @@ public sealed class EverythingUnavailableTests
             s.AddSingleton<ILocaleClock>(new FixedClock());
             s.AddSingleton<IStartupRegistration>(startupEntry);
             s.AddSingleton<INotesRepository>(new Lunar.Desktop.UITests.Features.FakeNotesRepository { FailLoadWith = ErrorCode.IoFailure });
+            s.AddSingleton<IBrightnessService>(new Lunar.Desktop.UITests.Features.FakeBrightnessService { FailReadWith = ErrorCode.IoFailure });
+            s.AddSingleton<ICaptureExclusion>(new Lunar.Desktop.UITests.Shell.CaptureExclusionGuardTests.FakeExclusion { Refuse = true, RefuseWatch = true });
         });
 
         var settingsService = services.GetRequiredService<SettingsService>();
@@ -260,9 +262,19 @@ public sealed class EverythingUnavailableTests
         var viewModel = services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
         var navigation = new PageNavigationViewModel(["System", "Media", "Converter", "Notes", "Usage"]);
+        // Sprint 8 (BE-38): screen-sharing exclusion refused by Windows, brightness unreadable, notes unreadable.
+        using var capture = new CaptureExclusionGuard(services.GetRequiredService<ICaptureExclusion>());
+        capture.StartWatching();
+        var brightnessService = services.GetRequiredService<IBrightnessService>();
+        using var brightnessWriter = new Lunar.Application.System.UseCases.BrightnessWriter(brightnessService);
+        using var brightness = new BrightnessCardViewModel(brightnessService, brightnessWriter, () => null,
+            services.GetRequiredService<ISystemSettingsLauncher>(), toUi, new DispatcherOneShotTimer(), log: log);
         var system = new SystemPageViewModel(
             services.GetRequiredService<IVolumeService>(), services.GetRequiredService<IWifiService>(), services.GetRequiredService<IBluetoothService>(),
-            services.GetRequiredService<ILocaleClock>(), services.GetRequiredService<ISystemSettingsLauncher>(), toUi, log);
+            services.GetRequiredService<ILocaleClock>(), services.GetRequiredService<ISystemSettingsLauncher>(), toUi, log)
+        {
+            Brightness = brightness
+        };
         var media = new MediaPageViewModel(
             services.GetRequiredService<MediaSessionTracker>(), services.GetRequiredService<MediaTransport>(), services.GetRequiredService<SeekMedia>(), toUi, log);
         var queue = new ConverterQueueViewModel(
@@ -282,6 +294,7 @@ public sealed class EverythingUnavailableTests
         swiper.Initialize(navigation, pages, reduceMotion);
         var shell = new IslandShellView(eyesView, swiper, viewModel, reduceMotion);
         var window = new IslandWindow { DataContext = viewModel, ViewContent = shell };
+        capture.Attach(window);
         foreach (var dictionary in new[] { palette, "Typography.xaml", "Spacing.xaml", "Components.xaml" })
             window.Resources.MergedDictionaries.Add(Load("Themes", dictionary));
         window.Resources.MergedDictionaries.Add(Load("Controls", "ControlStyles.xaml"));
@@ -297,9 +310,10 @@ public sealed class EverythingUnavailableTests
             using var mediaLifetime = new MediaLifetime(viewModel, media);
             using var usageLifetime = new UsageLifetime(viewModel, usagePage);
             using var notesLifetime = new NotesLifetime(viewModel, notes);
+            using var brightnessLifetime = new BrightnessLifetime(viewModel, navigation, brightness);
             using var guards = new ConverterGuardLink(viewModel, converter);
             using var busy = new ConverterBusyLink(viewModel, queue);
-            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync(), notes.InitializeAsync()));
+            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync(), notes.InitializeAsync(), brightness.InitializeAsync()));
             Wait(converter.WhenCheckedAsync());
 
             // Open the island and visit every page, as a keyboard user would with the page arrows.
@@ -333,6 +347,11 @@ public sealed class EverythingUnavailableTests
             Assert.Equal(0, usage.Calls); // Usage is off by default: nothing is requested, whatever else is down
             Assert.True(notes.HasProblem); // an unreadable notes file is said in words, and nothing can be written over it
             Assert.False(notes.NewNoteCommand.CanExecute(null));
+            Pump(() => brightness.IsLoaded, 3000);
+            Assert.False(brightness.IsAvailable); // brightness that cannot be read: a reason and Display settings, no slider
+            Assert.True(brightness.ShowSettingsLink);
+            Assert.Equal("The brightness couldn't be read.", brightness.Note);
+            Assert.True(capture.IsRefused); // Windows refused to hide Lunar: the Settings window says so, and the island still works
 
             Assert.True(viewModel.Collapse());
             Pump(() => viewModel.State == IslandVisualState.Idle, 3000);
