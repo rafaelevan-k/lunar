@@ -17,7 +17,7 @@ Version 1.0.x · Windows 11 x64.
 
 ## 1. Install, start and remove
 
-**Install.** Run `Lunar.msi`. It installs for your Windows account only and does not ask for administrator rights. The program goes to `%LocalAppData%\Programs\Lunar`, and a **Lunar** shortcut is added to the Start menu.
+**Install.** Run `Lunar.msi`. It installs for your Windows account only and does not ask for administrator rights. The program goes to `%LocalAppData%\Programs\Lunar`, and a **Lunar** shortcut is added to the Start menu. The installer has no wizard: it shows a short progress bar and closes by itself when it is done. That is the installation finishing, not a failure.
 
 > The installer is not signed yet. Windows SmartScreen may show "Windows protected your PC". Choose **More info**, then **Run anyway**, if you got the file from a source you trust.
 
@@ -25,7 +25,7 @@ Version 1.0.x · Windows 11 x64.
 
 **Start with Windows.** This is off by default. Turn it on in **Settings** or from the tray menu (**Start with Windows**). Windows' own **Task Manager → Startup apps** can switch it off as well; Lunar shows whatever Windows has.
 
-**Update.** Run the newer `Lunar.msi`. It replaces the old version. Your settings, your notes and your Start with Windows choice are kept.
+**Update.** Exit Lunar, then run the newer `Lunar.msi` (there is no need to remove the old version first). It replaces the old version. Your settings, your notes and your Start with Windows choice are kept.
 
 **Remove.** Go to **Windows Settings → Apps → Installed apps → Lunar → Uninstall**. Lunar asks whether to also delete your settings, notes and logs. Choose **No** to keep them for a later reinstall. Lunar also removes itself from Start with Windows.
 
