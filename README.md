@@ -5,9 +5,9 @@ screen and shows an animated pair of eyes while idle. Click it to open quick con
 converter, notes, and an optional Claude usage page. It runs locally, with no account, no telemetry and no update
 checker, and it stays out of screen sharing and screenshots.
 
-> **Status: release candidate (1.0.x).** All planned v1 features are built and tested, and a per-user installer
-> exists. Sprint 8 added notes, brightness and hiding from screen sharing; the release waits for the owner's Sprint 8
-> gate approval. Known limitations are listed below.
+> **Status: 1.0.5 released** ([download](https://github.com/rafaelevan-k/lunar/releases/latest)). All planned features
+> are built and tested, including notes, brightness and hiding from screen sharing (Sprint 8). Known limitations are
+> listed below.
 
 ## What it does
 
@@ -28,8 +28,10 @@ OCR, voice assistant, cloud features and automatic updates.
 
 ## Install
 
-Build the installer with `scripts/package-installer.ps1` (see below), then run `Lunar.msi`. It installs for the current
-user only, to `%LocalAppData%\Programs\Lunar`, without administrator rights, and adds a Start menu shortcut.
+Download `Lunar.msi` from the [latest release](https://github.com/rafaelevan-k/lunar/releases/latest) and run it
+(or build it yourself with `scripts/package-installer.ps1`, or `scripts\package-installer.cmd` from Command Prompt). It
+installs for the current user only, to `%LocalAppData%\Programs\Lunar`, without administrator rights, and adds a Start
+menu shortcut. The installer shows a short progress bar and closes by itself when it is done.
 - **Upgrade:** a newer MSI replaces the program and keeps the settings, the notes and the Start with Windows choice.
 - **Uninstall:** Windows Settings → Apps. Lunar asks whether to delete its settings, notes and logs too.
 - **Signing:** the installer is not signed, so expect a SmartScreen warning.
