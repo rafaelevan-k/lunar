@@ -67,6 +67,22 @@ public sealed class UninstallCleanupTests : IDisposable
         Assert.True(Directory.Exists(neighbour));
     }
 
+    // BE-36, ADR-0020: the notes live in the same folder, so "No" keeps them and "Yes" deletes them with the settings and logs.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void NotesFollowTheUsersAnswer(bool deleteUserData)
+    {
+        foreach (var name in new[] { "notes.json", "notes.json.bak", "notes.corrupt.json" })
+            File.WriteAllText(Path.Combine(_data, name), "{}");
+
+        Assert.True(new UninstallCleanup(new FakeStartup(), _data).Run(deleteUserData).IsSuccess);
+
+        Assert.Equal(!deleteUserData, File.Exists(Path.Combine(_data, "notes.json")));
+        Assert.Equal(!deleteUserData, File.Exists(Path.Combine(_data, "notes.json.bak")));
+        Assert.Equal(!deleteUserData, File.Exists(Path.Combine(_data, "notes.corrupt.json")));
+    }
+
     [Fact]
     public void AMissingFolderIsFine()
     {

@@ -227,7 +227,7 @@
   <data name="Tray.StartupFailedTip" xml:space="preserve"><value>Windows did not accept the change.</value></data>
   <data name="Tray.StartupTip" xml:space="preserve"><value>Start Lunar when you sign in to Windows.</value></data>
   <data name="Tray.StartupUnavailableTip" xml:space="preserve"><value>Start with Windows is not available in this copy of Lunar.</value></data>
-  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Also delete your Lunar settings and logs?
+  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Also delete your Lunar settings, notes and logs?
 
 Choose No to keep them for a later reinstall.</value></data>
   <data name="Uninstall.Title" xml:space="preserve"><value>Uninstall Lunar</value></data>

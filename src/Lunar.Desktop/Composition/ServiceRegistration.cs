@@ -1,12 +1,14 @@
 using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Media;
+using Lunar.Application.Abstractions.Notes;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
+using Lunar.Application.Notes;
 using Lunar.Application.Settings;
 using Lunar.Application.Shell.UseCases;
 using Lunar.Application.Usage;
@@ -17,6 +19,7 @@ using Lunar.Conversion.Providers;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
+using Lunar.Infrastructure.Notes;
 using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
 using Lunar.Infrastructure.Usage;
@@ -82,6 +85,9 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
         // The one writer of the settings and the announcer of changes (ADR-0016); the theme source tells when Windows changes light or dark.
         services.AddSingleton<SettingsService>(sp => new SettingsService(sp.GetRequiredService<ISettingsRepository>()));
+        // Notes (ADR-0020, BE-36): notes.json beside the settings, and the one writer of it. Nothing is read until the Notes page asks.
+        services.AddSingleton<INotesRepository>(sp => new JsonNotesRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<NotesService>(sp => new NotesService(sp.GetRequiredService<INotesRepository>(), TimeProvider.System, sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemThemeSource>(sp => new WindowsThemeSource(sp.GetRequiredService<IDiagnosticLog>()));
 
         services.AddSingleton<IVolumeService>(sp => new CoreAudioVolumeService(sp.GetRequiredService<IDiagnosticLog>()));

@@ -20,6 +20,14 @@ public sealed class LocalizationTests
 
     private static string[] PlaceholdersOf(string text) => Placeholder.Matches(text).Select(m => m.Groups[1].Value).Distinct().Order().ToArray();
 
+    // BE-36, ADR-0020: the uninstall question names the notes, because a Yes deletes them.
+    [Fact]
+    public void TheUninstallQuestionSaysTheNotesAreDeletedToo()
+    {
+        Assert.StartsWith("Also delete your Lunar settings, notes and logs?", Strings.All("en")["Uninstall.DeleteDataQuestion"], StringComparison.Ordinal);
+        Assert.StartsWith("Hapus juga pengaturan, catatan, dan log Lunar Anda?", Strings.All("id")["Uninstall.DeleteDataQuestion"], StringComparison.Ordinal);
+    }
+
     [Fact]
     public void EnglishAndIndonesianHaveTheSameKeys()
     {

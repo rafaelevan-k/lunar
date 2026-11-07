@@ -227,7 +227,7 @@
   <data name="Tray.StartupFailedTip" xml:space="preserve"><value>Windows tidak menerima perubahan.</value></data>
   <data name="Tray.StartupTip" xml:space="preserve"><value>Mulai Lunar saat Anda masuk ke Windows.</value></data>
   <data name="Tray.StartupUnavailableTip" xml:space="preserve"><value>Mulai bersama Windows tidak tersedia di salinan Lunar ini.</value></data>
-  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Hapus juga pengaturan dan log Lunar Anda?
+  <data name="Uninstall.DeleteDataQuestion" xml:space="preserve"><value>Hapus juga pengaturan, catatan, dan log Lunar Anda?
 
 Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Uninstall.Title" xml:space="preserve"><value>Copot Lunar</value></data>
