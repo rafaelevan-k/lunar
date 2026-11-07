@@ -6,6 +6,14 @@
     <!-- Production entry point (FE-02). Single-instance and lifecycle policy follow in BE-05. -->
     <OutputType>WinExe</OutputType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The exe's own icon and name: the Start menu shortcut, Windows Search, the taskbar and Task Manager take them from the file. Without
+         them Windows showed a blank icon and the file name "Lunar.Desktop". The file keeps its name, which the Start with Windows entry and
+         the installer's uninstall step already point to. -->
+    <ApplicationIcon>Resources\Lunar.ico</ApplicationIcon>
+    <AssemblyTitle>Lunar</AssemblyTitle>
+    <Product>Lunar</Product>
+    <Company>Lunar</Company>
+    <Copyright>Copyright 2026 Rafael Evan Kristanto</Copyright>
     <!-- WinForms is used only for NotifyIcon (the tray). WPF owns startup and DPI through app.manifest,
          so WinForms' ApplicationConfiguration bootstrap warning does not apply. -->
     <UseWindowsForms>true</UseWindowsForms>

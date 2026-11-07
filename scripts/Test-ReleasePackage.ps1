@@ -75,6 +75,10 @@ try {
     if ($ExpectedVersion) { Add-Result 'Version' ($version -eq $ExpectedVersion) "MSI says '$version', expected '$ExpectedVersion'" }
     else { Add-Result 'Version' ([bool]$version) "MSI says '$version'" }
     Add-Result 'Product name' ($properties['ProductName'] -eq 'Lunar') "ProductName='$($properties['ProductName'])'"
+    # Lunar's icon in Settings > Apps and on its Start menu shortcut (so in Windows Search); without it both were blank (Sprint 8).
+    $icons = @(Get-Rows 'SELECT `Name` FROM `Icon`' 1 | ForEach-Object { $_[0] })
+    $shortcutIcons = @(Get-Rows 'SELECT `Shortcut`, `Icon_` FROM `Shortcut`' 2 | Where-Object { $_[1] })
+    Add-Result 'Lunar icon for Apps and Start' ($properties['ARPPRODUCTICON'] -and $icons -contains $properties['ARPPRODUCTICON'] -and $shortcutIcons.Count -gt 0) "ARPPRODUCTICON='$($properties['ARPPRODUCTICON'])', icons: $($icons -join ', '), shortcuts with an icon: $($shortcutIcons.Count)"
 
     $allUsers = $properties['ALLUSERS']
     Add-Result 'Per-user install' (-not $allUsers -or $allUsers -eq '2') "ALLUSERS='$allUsers', MSIINSTALLPERUSER='$($properties['MSIINSTALLPERUSER'])'"

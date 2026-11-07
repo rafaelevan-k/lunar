@@ -32,6 +32,10 @@
     <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of Lunar is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- Lunar's icon for its Start menu shortcut (and so Windows Search) and for Settings > Apps > Installed apps. -->
+    <Icon Id="LunarIcon.ico" SourceFile="..\..\src\Lunar.Desktop\Resources\Lunar.ico" />
+    <Property Id="ARPPRODUCTICON" Value="LunarIcon.ico" />
+
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="ProgramsFolder" Name="Programs">
         <Directory Id="INSTALLFOLDER" Name="Lunar" />
@@ -47,7 +51,7 @@
 
     <StandardDirectory Id="ProgramMenuFolder">
       <Component Id="StartMenuShortcut" Guid="b3a2f6c4-8d1e-4f27-8c55-0a9e7d3b2f61">
-        <Shortcut Id="LunarShortcut" Name="Lunar" Target="[INSTALLFOLDER]Lunar.Desktop.exe" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="LunarShortcut" Name="Lunar" Description="Lunar" Target="[INSTALLFOLDER]Lunar.Desktop.exe" WorkingDirectory="INSTALLFOLDER" Icon="LunarIcon.ico" />
         <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\Lunar\Installer" Name="ShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
         <RemoveRegistryKey Root="HKCU" Key="Software\Lunar\Installer" Action="removeOnUninstall" />

@@ -37,6 +37,16 @@ foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $root $relative) -PathType Leaf)) { $problems.Add("Missing: $relative") }
 }
 
+# The exe carries Lunar's icon and name: the Start menu shortcut, Windows Search, the taskbar and Task Manager take them from the file
+# (without them Windows showed a blank icon and "Lunar.Desktop", Sprint 8).
+$exePath = Join-Path $root 'Lunar.Desktop.exe'
+if (Test-Path -LiteralPath $exePath) {
+    $description = (Get-Item -LiteralPath $exePath).VersionInfo.FileDescription
+    if ($description -ne 'Lunar') { $problems.Add("Lunar.Desktop.exe describes itself as '$description', not 'Lunar'.") }
+    Add-Type -Namespace LunarPayload -Name Shell32 -MemberDefinition '[DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern uint ExtractIconEx(string file, int index, System.IntPtr[] large, System.IntPtr[] small, uint count);'
+    if ([LunarPayload.Shell32]::ExtractIconEx($exePath, -1, $null, $null, 0) -lt 1) { $problems.Add('Lunar.Desktop.exe has no icon of its own.') }
+}
+
 # The runtime must be bundled: a self-contained build has no dependency on an installed .NET.
 $config = Join-Path $root 'Lunar.Desktop.runtimeconfig.json'
 if (Test-Path -LiteralPath $config) {
