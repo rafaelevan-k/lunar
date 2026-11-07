@@ -25,6 +25,7 @@ using Lunar.Infrastructure.Startup;
 using Lunar.Infrastructure.Usage;
 using Lunar.Windows.Audio;
 using Lunar.Windows.Bluetooth;
+using Lunar.Windows.Display;
 using Lunar.Windows.Environment;
 using Lunar.Windows.Media;
 using Lunar.Windows.Network;
@@ -132,6 +133,8 @@ public static class ServiceRegistration
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
         // Every Lunar window is hidden from screen sharing, screenshots and recordings, always (ADR-0019, BE-35, FE-30).
         services.AddSingleton<ICaptureExclusion>(sp => new WindowsCaptureExclusion(sp.GetRequiredService<IDiagnosticLog>()));
+        // Display brightness (ADR-0021, BE-37): built-in panels through WMI, external monitors through DDC/CI. Idle until a screen asks.
+        services.AddSingleton<IBrightnessService>(sp => new WindowsBrightnessService(sp.GetRequiredService<IDiagnosticLog>()));
         // Start with Windows (BE-29): the current user's Run entry for the running executable; nothing is registered until the user turns it on.
         services.AddSingleton<IStartupRegistration>(sp => new StartupRegistrationService(
             Environment.ProcessPath ?? string.Empty, sp.GetRequiredService<IDiagnosticLog>()));
