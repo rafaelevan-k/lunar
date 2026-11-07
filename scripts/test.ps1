@@ -62,6 +62,28 @@ if (-not $NoBuild) {
 }
 New-Item -ItemType Directory -Force $ResultsDirectory | Out-Null
 
+# On GitHub Actions, each failed test becomes an error annotation (name and first lines of its message). Annotations are
+# shown on the run page to anyone who can see the repository, while step logs need sign-in. Test messages hold no user data.
+function Write-FailedTestAnnotations([string]$TrxPath) {
+    if ($env:GITHUB_ACTIONS -ne 'true' -or -not (Test-Path $TrxPath)) { return }
+    try {
+        [xml]$trxXml = Get-Content -Raw -Encoding UTF8 $TrxPath
+        $results = @($trxXml.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -eq 'Failed' })
+        foreach ($result in ($results | Select-Object -First 10)) {
+            $message = [string]$result.Output.ErrorInfo.Message
+            $message = (($message -split "`r?`n") | Select-Object -First 6) -join "`n"
+            if ($message.Length -gt 600) { $message = $message.Substring(0, 600) }
+            $escaped = $message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            $title = ([string]$result.testName).Replace('%', '%25').Replace(':', '%3A').Replace(',', '%2C')
+            Write-Host "::error title=Failed test $title::$escaped"
+        }
+        if ($results.Count -gt 10) { Write-Host "::error title=More failed tests::$($results.Count - 10) more in $(Split-Path -Leaf $TrxPath)" }
+    }
+    catch {
+        Write-Host "Could not read $TrxPath for annotations: $($_.Exception.GetType().Name)"
+    }
+}
+
 $failed = @()
 foreach ($project in $projects) {
     $label = $project.Name
@@ -79,6 +101,7 @@ foreach ($project in $projects) {
     catch {
         Write-Host "FAILED: $label" -ForegroundColor Red
         $failed += $label
+        Write-FailedTestAnnotations -TrxPath (Join-Path $ResultsDirectory $trx)
     }
 }
 
