@@ -4,3 +4,7 @@
 # Binary assets
 *.png binary
 *.ico binary
+
+# Command Prompt scripts need Windows line endings.
+*.cmd text eol=crlf
+*.bat text eol=crlf
