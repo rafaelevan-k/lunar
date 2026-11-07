@@ -8,6 +8,7 @@ using Lunar.Application.Abstractions.Media;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Abstractions.Notes;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.Models;
@@ -17,6 +18,7 @@ using Lunar.Application.Settings.Models;
 using Lunar.Application.Shell.Models;
 using Lunar.Application.System.Models;
 using Lunar.Application.Tests.Fakes;
+using Lunar.Application.Notes;
 using Lunar.Application.Usage;
 using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Converter;
@@ -24,6 +26,7 @@ using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Features.MediaControls;
 using Lunar.Desktop.Features.Settings;
 using Lunar.Desktop.Features.SystemControls;
+using Lunar.Desktop.Features.Notes;
 using Lunar.Desktop.Features.Usage;
 using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
@@ -246,6 +249,7 @@ public sealed class EverythingUnavailableTests
             s.AddSingleton<ISystemSettingsLauncher>(new NoSettingsApp());
             s.AddSingleton<ILocaleClock>(new FixedClock());
             s.AddSingleton<IStartupRegistration>(startupEntry);
+            s.AddSingleton<INotesRepository>(new Lunar.Desktop.UITests.Features.FakeNotesRepository { FailLoadWith = ErrorCode.IoFailure });
         });
 
         var settingsService = services.GetRequiredService<SettingsService>();
@@ -255,7 +259,7 @@ public sealed class EverythingUnavailableTests
         // Composed in the order and with the parts App.OnStartup uses (no tray, single-instance or diagnostics files here).
         var viewModel = services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
-        var navigation = new PageNavigationViewModel(["System", "Media", "Converter", "Usage"]);
+        var navigation = new PageNavigationViewModel(["System", "Media", "Converter", "Notes", "Usage"]);
         var system = new SystemPageViewModel(
             services.GetRequiredService<IVolumeService>(), services.GetRequiredService<IWifiService>(), services.GetRequiredService<IBluetoothService>(),
             services.GetRequiredService<ILocaleClock>(), services.GetRequiredService<ISystemSettingsLauncher>(), toUi, log);
@@ -271,7 +275,9 @@ public sealed class EverythingUnavailableTests
         pages[0] = new SystemPage { DataContext = system };
         pages[1] = new MediaPage { DataContext = media };
         pages[2] = new ConverterPage { DataContext = converter };
-        pages[3] = new UsagePage { DataContext = usagePage };
+        using var notes = new NotesPageViewModel(services.GetRequiredService<NotesService>(), toUi, new DispatcherOneShotTimer(), new DispatcherOneShotTimer(), log: log);
+        pages[3] = new NotesPage { DataContext = notes };
+        pages[4] = new UsagePage { DataContext = usagePage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, reduceMotion);
         var shell = new IslandShellView(eyesView, swiper, viewModel, reduceMotion);
@@ -290,9 +296,10 @@ public sealed class EverythingUnavailableTests
             using var clockLifetime = new ClockLifetime(viewModel, system);
             using var mediaLifetime = new MediaLifetime(viewModel, media);
             using var usageLifetime = new UsageLifetime(viewModel, usagePage);
+            using var notesLifetime = new NotesLifetime(viewModel, notes);
             using var guards = new ConverterGuardLink(viewModel, converter);
             using var busy = new ConverterBusyLink(viewModel, queue);
-            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync()));
+            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync(), notes.InitializeAsync()));
             Wait(converter.WhenCheckedAsync());
 
             // Open the island and visit every page, as a keyboard user would with the page arrows.
@@ -324,6 +331,8 @@ public sealed class EverythingUnavailableTests
             Assert.False(startup.Toggle().IsSuccess);
             Assert.Equal(0, startupEntry.Changes);
             Assert.Equal(0, usage.Calls); // Usage is off by default: nothing is requested, whatever else is down
+            Assert.True(notes.HasProblem); // an unreadable notes file is said in words, and nothing can be written over it
+            Assert.False(notes.NewNoteCommand.CanExecute(null));
 
             Assert.True(viewModel.Collapse());
             Pump(() => viewModel.State == IslandVisualState.Idle, 3000);

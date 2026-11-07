@@ -358,4 +358,38 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="X.WhereConvertedFilesGo" xml:space="preserve"><value>Tempat berkas hasil konversi</value></data>
   <data name="X.WritesMoreDetailToLunar" xml:space="preserve"><value>Menulis lebih banyak detail ke berkas log Lunar di PC ini. Log tidak pernah berisi nama berkas, isi berkas, kata sandi, atau apa yang Anda putar.</value></data>
   <data name="Nav.PageChanged" xml:space="preserve"><value>{0}, halaman {1} dari {2}</value></data>
+  <data name="Nav.Notes" xml:space="preserve"><value>Catatan</value></data>
+  <data name="Notes.NewNote" xml:space="preserve"><value>Catatan baru</value></data>
+  <data name="Notes.NewNoteName" xml:space="preserve"><value>Tulis catatan baru</value></data>
+  <data name="Notes.Done" xml:space="preserve"><value>Selesai</value></data>
+  <data name="Notes.DoneName" xml:space="preserve"><value>Simpan dan tutup catatan ini</value></data>
+  <data name="Notes.Delete" xml:space="preserve"><value>Hapus</value></data>
+  <data name="Notes.DeleteName" xml:space="preserve"><value>Hapus catatan ini</value></data>
+  <data name="Notes.DeleteItemName" xml:space="preserve"><value>Hapus {0}</value></data>
+  <data name="Notes.EditorName" xml:space="preserve"><value>Isi catatan</value></data>
+  <data name="Notes.Empty" xml:space="preserve"><value>Belum ada catatan. Pilih Catatan baru untuk menulis.</value></data>
+  <data name="Notes.Loading" xml:space="preserve"><value>Memuat catatan…</value></data>
+  <data name="Notes.Saving" xml:space="preserve"><value>Menyimpan…</value></data>
+  <data name="Notes.Saved" xml:space="preserve"><value>Tersimpan</value></data>
+  <data name="Notes.NotSaved" xml:space="preserve"><value>Belum tersimpan</value></data>
+  <data name="Notes.EmptyNote" xml:space="preserve"><value>Catatan kosong</value></data>
+  <data name="Notes.ItemName" xml:space="preserve"><value>{0}, diubah {1}</value></data>
+  <data name="Notes.Deleted" xml:space="preserve"><value>Catatan dihapus.</value></data>
+  <data name="Notes.Undo" xml:space="preserve"><value>Urungkan</value></data>
+  <data name="Notes.UndoName" xml:space="preserve"><value>Kembalikan catatan yang dihapus</value></data>
+  <data name="Notes.CannotRead" xml:space="preserve"><value>Lunar tidak bisa membaca catatan Anda. Catatan tidak diubah.</value></data>
+  <data name="Notes.TryAgain" xml:space="preserve"><value>Coba lagi</value></data>
+  <data name="Notes.SaveFailed" xml:space="preserve"><value>{0} Catatan tetap terbuka agar tidak ada yang hilang.</value></data>
+  <data name="Notes.RestoredFromBackup" xml:space="preserve"><value>File catatan Anda rusak, jadi Lunar membuka salinan terakhir yang masih baik. File yang rusak disimpan sebagai notes.corrupt.json.</value></data>
+  <data name="Notes.DamagedNoBackup" xml:space="preserve"><value>File catatan Anda rusak dan tidak ada salinan yang baik. File yang rusak disimpan sebagai notes.corrupt.json di folder data Lunar.</value></data>
+  <data name="Notes.NewerVersion" xml:space="preserve"><value>Catatan ini disimpan oleh versi Lunar yang lebih baru. Anda bisa membacanya di sini, tetapi tidak bisa mengubahnya.</value></data>
+  <data name="Notes.Dismiss" xml:space="preserve"><value>OK</value></data>
+  <data name="Notes.DismissName" xml:space="preserve"><value>Sembunyikan pesan ini</value></data>
+  <data name="Notes.Unexpected" xml:space="preserve"><value>Terjadi masalah pada catatan Anda. Tidak ada yang dihapus.</value></data>
+  <data name="Notes.TooMany" xml:space="preserve"><value>Lunar bisa menyimpan hingga 10.000 catatan. Hapus sebuah catatan untuk memberi ruang.</value></data>
+  <data name="Notes.TooLong" xml:space="preserve"><value>Satu catatan bisa berisi hingga 100.000 karakter.</value></data>
+  <data name="Notes.TooLarge" xml:space="preserve"><value>Catatan Anda terlalu besar untuk disimpan bersama. Persingkat atau hapus sebuah catatan.</value></data>
+  <data name="Notes.Missing" xml:space="preserve"><value>Catatan itu sudah tidak ada.</value></data>
+  <data name="Notes.AccessDenied" xml:space="preserve"><value>Windows menolak akses ke file catatan Anda.</value></data>
+  <data name="Notes.DiskFailed" xml:space="preserve"><value>File catatan Anda tidak bisa ditulis.</value></data>
 </root>

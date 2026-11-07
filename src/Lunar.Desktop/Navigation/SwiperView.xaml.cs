@@ -10,7 +10,7 @@ using System.Windows.Media.Animation;
 namespace Lunar.Desktop.Navigation;
 
 /// <summary>
-/// The four-page swiper (FE-11): pages side by side that follow a mouse or touch drag, with arrow buttons, page dots,
+/// The five-page swiper (FE-11, FE-31): pages side by side that follow a mouse or touch drag, with arrow buttons, page dots,
 /// arrow keys and a touchpad's horizontal swipe. The decisions (how far to move, which page to land on) are in
 /// <see cref="SwipeRules"/> and <see cref="SwiperController"/>; this class turns pointer and key events into them and
 /// draws the result.
@@ -275,6 +275,9 @@ public partial class SwiperView : UserControl
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         if (_navigation is null || e.Handled || Keyboard.Modifiers != ModifierKeys.None)
+            return;
+        // Typing in a text box (a note, FE-31) never changes the page, even at the end of the text where the box ignores the key.
+        if (e.OriginalSource is TextBoxBase)
             return;
 
         // Left and Right follow the reading direction; a child (slider, text box, radio button) that used the key marked it handled.

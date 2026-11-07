@@ -358,4 +358,38 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="X.WhereConvertedFilesGo" xml:space="preserve"><value>Where converted files go</value></data>
   <data name="X.WritesMoreDetailToLunar" xml:space="preserve"><value>Writes more detail to Lunar's log files on this PC. Logs never contain file names, file contents, passwords or what you play.</value></data>
   <data name="Nav.PageChanged" xml:space="preserve"><value>{0}, page {1} of {2}</value></data>
+  <data name="Nav.Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Notes.NewNote" xml:space="preserve"><value>New note</value></data>
+  <data name="Notes.NewNoteName" xml:space="preserve"><value>Write a new note</value></data>
+  <data name="Notes.Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Notes.DoneName" xml:space="preserve"><value>Save and close this note</value></data>
+  <data name="Notes.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Notes.DeleteName" xml:space="preserve"><value>Delete this note</value></data>
+  <data name="Notes.DeleteItemName" xml:space="preserve"><value>Delete {0}</value></data>
+  <data name="Notes.EditorName" xml:space="preserve"><value>Note text</value></data>
+  <data name="Notes.Empty" xml:space="preserve"><value>No notes yet. Choose New note to write one.</value></data>
+  <data name="Notes.Loading" xml:space="preserve"><value>Loading notes…</value></data>
+  <data name="Notes.Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="Notes.Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="Notes.NotSaved" xml:space="preserve"><value>Not saved</value></data>
+  <data name="Notes.EmptyNote" xml:space="preserve"><value>Empty note</value></data>
+  <data name="Notes.ItemName" xml:space="preserve"><value>{0}, changed {1}</value></data>
+  <data name="Notes.Deleted" xml:space="preserve"><value>Note deleted.</value></data>
+  <data name="Notes.Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Notes.UndoName" xml:space="preserve"><value>Bring back the deleted note</value></data>
+  <data name="Notes.CannotRead" xml:space="preserve"><value>Lunar couldn't read your notes. They have not been changed.</value></data>
+  <data name="Notes.TryAgain" xml:space="preserve"><value>Try again</value></data>
+  <data name="Notes.SaveFailed" xml:space="preserve"><value>{0} The note stays open so nothing is lost.</value></data>
+  <data name="Notes.RestoredFromBackup" xml:space="preserve"><value>Your notes file was damaged, so Lunar opened the last good copy. The damaged file is kept as notes.corrupt.json.</value></data>
+  <data name="Notes.DamagedNoBackup" xml:space="preserve"><value>Your notes file was damaged and no good copy was found. The damaged file is kept as notes.corrupt.json in the Lunar data folder.</value></data>
+  <data name="Notes.NewerVersion" xml:space="preserve"><value>These notes were saved by a newer version of Lunar. You can read them here but not change them.</value></data>
+  <data name="Notes.Dismiss" xml:space="preserve"><value>OK</value></data>
+  <data name="Notes.DismissName" xml:space="preserve"><value>Hide this message</value></data>
+  <data name="Notes.Unexpected" xml:space="preserve"><value>Something went wrong with your notes. Nothing was deleted.</value></data>
+  <data name="Notes.TooMany" xml:space="preserve"><value>Lunar can keep up to 10,000 notes. Delete a note to make room.</value></data>
+  <data name="Notes.TooLong" xml:space="preserve"><value>A note can hold up to 100,000 characters.</value></data>
+  <data name="Notes.TooLarge" xml:space="preserve"><value>Your notes are too large to save together. Shorten or delete a note.</value></data>
+  <data name="Notes.Missing" xml:space="preserve"><value>That note no longer exists.</value></data>
+  <data name="Notes.AccessDenied" xml:space="preserve"><value>Windows denied access to your notes file.</value></data>
+  <data name="Notes.DiskFailed" xml:space="preserve"><value>Your notes file couldn't be written.</value></data>
 </root>

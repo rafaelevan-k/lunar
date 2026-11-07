@@ -8,6 +8,7 @@ using Lunar.Application.Abstractions.System;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
+using Lunar.Application.Notes;
 using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Usage;
@@ -16,6 +17,7 @@ using Lunar.Desktop.Composition;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Features.Eyes;
 using Lunar.Desktop.Features.MediaControls;
+using Lunar.Desktop.Features.Notes;
 using Lunar.Desktop.Features.Settings;
 using Lunar.Desktop.Features.SystemControls;
 using Lunar.Desktop.Features.Usage;
@@ -57,6 +59,8 @@ public partial class App : System.Windows.Application
     private ConverterGuardLink? _converterGuards;
     private ConverterQueueViewModel? _converterQueue;
     private ConverterBusyLink? _converterBusy;
+    private NotesPageViewModel? _notes;
+    private NotesLifetime? _notesLifetime;
     private UsagePageViewModel? _usage;
     private UsageLifetime? _usageLifetime;
     private UsageResetNotifier? _resetToasts;
@@ -195,8 +199,8 @@ public partial class App : System.Windows.Application
         _eyes.Start();
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
-        var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Usage")]);
-        // All four pages are real now (the Converter page so far chooses files and a format).
+        var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Notes"), Strings.Get("Nav.Usage")]);
+        // Five pages; Notes sits between Converter and Usage (ADR-0020).
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -234,7 +238,15 @@ public partial class App : System.Windows.Application
             _settingsService,
             toUi,
             _log);
-        pages[3] = new UsagePage { DataContext = _usage };
+        _notes = new NotesPageViewModel(
+            _services.GetRequiredService<NotesService>(),
+            toUi,
+            new DispatcherOneShotTimer(),
+            new DispatcherOneShotTimer(),
+            TimeProvider.System,
+            _log);
+        pages[3] = new NotesPage { DataContext = _notes };
+        pages[4] = new UsagePage { DataContext = _usage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
@@ -252,6 +264,7 @@ public partial class App : System.Windows.Application
         _clockLifetime = new ClockLifetime(viewModel, _system);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
         _usageLifetime = new UsageLifetime(viewModel, _usage);
+        _notesLifetime = new NotesLifetime(viewModel, _notes); // the open note is saved when the island collapses
         // A limit that resets gets a small pop-up at the bottom right; Escape in the island closes it (it never takes focus itself).
         _resetToasts = new UsageResetNotifier(
             _services.GetRequiredService<UsageMonitor>(),
@@ -303,6 +316,7 @@ public partial class App : System.Windows.Application
             _system.InitializeAsync(_lifetime.Token),
             _media.InitializeAsync(_lifetime.Token),
             _usage.InitializeAsync(_lifetime.Token),
+            _notes.InitializeAsync(_lifetime.Token),
             RemoveLegacyUsageTokenAsync(),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
     }
@@ -340,6 +354,18 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // The open note is saved before anything is torn down. The save never comes back to this thread (the service and repository use
+        // the thread pool), so waiting here cannot deadlock; it is bounded so a stuck disk never keeps Lunar from closing.
+        try
+        {
+            _notes?.FlushForExitAsync().Wait(TimeSpan.FromSeconds(3));
+        }
+        catch (AggregateException ex)
+        {
+            _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "notes.exit.flush.failed", "App", "Exit", ErrorCode.Unexpected,
+                ExceptionType: ex.InnerException?.GetType()));
+        }
+
         _lifetime.Cancel();
         if (_instance is not null)
             _instance.ActivationRequested -= OnActivationRequested;
@@ -362,6 +388,10 @@ public partial class App : System.Windows.Application
         _usageLifetime = null;
         _usage?.Dispose();
         _usage = null;
+        _notesLifetime?.Dispose();
+        _notesLifetime = null;
+        _notes?.Dispose();
+        _notes = null;
         _media?.Dispose();
         _media = null;
         _converterBusy?.Dispose();
