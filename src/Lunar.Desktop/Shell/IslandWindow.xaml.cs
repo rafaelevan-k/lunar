@@ -159,6 +159,27 @@ public partial class IslandWindow : Window
         Focus();
     }
 
+    /// <summary>
+    /// The pointer is over a place where the user may type (the Notes page, FE-31): the island may be activated by the next click, so the
+    /// click itself brings the keyboard here. Activation by a click is always allowed by Windows, whereas activating the window from code
+    /// after a click on a non-activating window can be refused (the keys then kept going to the other app). Call
+    /// <see cref="EndTypingHover"/> when the pointer leaves.
+    /// </summary>
+    internal void BeginTypingHover()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle != IntPtr.Zero)
+            NonActivatingWindowStyle.Remove(handle);
+    }
+
+    /// <summary>The pointer left without the island being activated: it goes back to never taking activation (ADR-0007).</summary>
+    internal void EndTypingHover()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle != IntPtr.Zero && !IsActive)
+            NonActivatingWindowStyle.Apply(handle);
+    }
+
     private void OnSourceInitialized(object? sender, EventArgs e) =>
         NonActivatingWindowStyle.Apply(new WindowInteropHelper(this).Handle);
 

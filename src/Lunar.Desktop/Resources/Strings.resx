@@ -392,4 +392,6 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Notes.Missing" xml:space="preserve"><value>That note no longer exists.</value></data>
   <data name="Notes.AccessDenied" xml:space="preserve"><value>Windows denied access to your notes file.</value></data>
   <data name="Notes.DiskFailed" xml:space="preserve"><value>Your notes file couldn't be written.</value></data>
+  <data name="Notes.CountOne" xml:space="preserve"><value>1 note</value></data>
+  <data name="Notes.Count" xml:space="preserve"><value>{0} notes</value></data>
 </root>

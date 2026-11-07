@@ -8,13 +8,47 @@
              Focusable="False" IsTabStop="False" Background="Transparent"
              automation:AutomationProperties.Name="{res:Text Nav.Notes}">
   <!--
-    FE-31, ADR-0020: the Notes page. It only binds to NotesPageViewModel. Built for the island's page height: one header row, one row for a
-    notice, a problem or Undo, and the rest for the list (virtualized, it scrolls; there is no limit) or the open note. The code-behind only
-    lets the island take the keyboard while a note is typed in (ADR-0007) and closes the note on Escape.
+    FE-31, ADR-0020: the Notes page. It only binds to NotesPageViewModel. Like the other pages it keeps 40 DIP clear on both sides for the
+    swiper's arrow buttons. One compact header row, one row for a notice, a problem or Undo, and the rest for the list (one line per note,
+    virtualized, it scrolls; there is no limit) or the open note. The code-behind only lets the island take the keyboard while a note is
+    typed in (ADR-0007) and closes the note on Escape.
   -->
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
+    <!-- A compact pill button for the header and the message rows. -->
+    <Style x:Key="NotesButton" TargetType="Button">
+      <Setter Property="c:Squish.Enabled" Value="True" />
+      <Setter Property="Focusable" Value="True" />
+      <Setter Property="IsTabStop" Value="True" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="10,1" />
+      <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+      <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
+      <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Caption}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Face" CornerRadius="12" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
+                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Face" Property="Opacity" Value="0.4" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- One note in the list: a single line with the title and, at the right, when it changed. -->
     <Style x:Key="NoteRow" TargetType="Button">
       <Setter Property="Focusable" Value="True" />
       <Setter Property="IsTabStop" Value="True" />
@@ -24,13 +58,13 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Surface}" CornerRadius="10" Padding="10,5"
-                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="0">
+            <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Surface}" CornerRadius="8" Padding="10,5"
+                    BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="0">
               <ContentPresenter />
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="Face" Property="BorderThickness" Value="{DynamicResource Lunar.Thickness.Outline}" />
+                <Setter TargetName="Face" Property="BorderThickness" Value="1" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -39,24 +73,25 @@
     </Style>
   </UserControl.Resources>
 
-  <Grid Margin="2,0,2,0">
+  <Grid Margin="40,2,40,2">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- Header: the list has New note; an open note has Done, Delete and whether it is saved. -->
-    <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,6">
-      <TextBlock DockPanel.Dock="Left" Text="{res:Text Nav.Notes}" Style="{DynamicResource Lunar.Text.Subtitle}" VerticalAlignment="Center" />
-      <Button x:Name="NewNoteButton" DockPanel.Dock="Right" Content="{res:Text Notes.NewNote}" Command="{Binding NewNoteCommand}"
-              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text Notes.NewNoteName}"
-              Visibility="{Binding IsListShown, Converter={StaticResource BoolToVisible}}" />
-      <Button x:Name="DoneButton" DockPanel.Dock="Right" Content="{res:Text Notes.Done}" Command="{Binding CloseEditorCommand}"
-              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text Notes.DoneName}"
+    <!-- Header: the list has New note; an open note has Done at the left and Delete with whether it is saved at the right. -->
+    <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,6" MinHeight="24">
+      <Button x:Name="DoneButton" DockPanel.Dock="Left" Content="{res:Text Notes.Done}" Command="{Binding CloseEditorCommand}"
+              Style="{StaticResource NotesButton}" automation:AutomationProperties.Name="{res:Text Notes.DoneName}"
               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisible}}" />
-      <Button x:Name="DeleteButton" DockPanel.Dock="Right" Content="{res:Text Notes.Delete}" Command="{Binding DeleteCurrentCommand}" Margin="0,0,6,0"
-              Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text Notes.DeleteName}"
+      <TextBlock x:Name="CountText" DockPanel.Dock="Left" Text="{Binding CountText}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center"
+                 Visibility="{Binding IsListShown, Converter={StaticResource BoolToVisible}}" />
+      <Button x:Name="NewNoteButton" DockPanel.Dock="Right" Content="{res:Text Notes.NewNote}" Command="{Binding NewNoteCommand}"
+              Style="{StaticResource NotesButton}" automation:AutomationProperties.Name="{res:Text Notes.NewNoteName}"
+              Visibility="{Binding IsListShown, Converter={StaticResource BoolToVisible}}" />
+      <Button x:Name="DeleteButton" DockPanel.Dock="Right" Content="{res:Text Notes.Delete}" Command="{Binding DeleteCurrentCommand}"
+              Style="{StaticResource NotesButton}" automation:AutomationProperties.Name="{res:Text Notes.DeleteName}"
               Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisible}}" />
       <TextBlock x:Name="SaveStatusText" DockPanel.Dock="Right" Text="{Binding SaveStatus}" Style="{DynamicResource Lunar.Text.Caption}"
                  VerticalAlignment="Center" Margin="0,0,8,0" automation:AutomationProperties.LiveSetting="Polite" />
@@ -64,21 +99,21 @@
 
     <!-- One line for what the user must know: a recovery notice, a problem, or Undo after a delete. -->
     <StackPanel Grid.Row="1">
-      <DockPanel x:Name="NoticeRow" LastChildFill="True" Margin="0,0,0,4" Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisible}}">
+      <DockPanel x:Name="NoticeRow" LastChildFill="True" Margin="0,0,0,6" Visibility="{Binding HasNotice, Converter={StaticResource BoolToVisible}}">
         <Button x:Name="DismissNoticeButton" DockPanel.Dock="Right" Content="{res:Text Notes.Dismiss}" Command="{Binding DismissNoticeCommand}"
-                Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text Notes.DismissName}" VerticalAlignment="Top" />
+                Style="{StaticResource NotesButton}" automation:AutomationProperties.Name="{res:Text Notes.DismissName}" VerticalAlignment="Top" />
         <TextBlock x:Name="NoticeText" Text="{Binding Notice}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="0,0,8,0" />
       </DockPanel>
-      <DockPanel x:Name="ProblemRow" LastChildFill="True" Margin="0,0,0,4" Visibility="{Binding HasProblem, Converter={StaticResource BoolToVisible}}">
+      <DockPanel x:Name="ProblemRow" LastChildFill="True" Margin="0,0,0,6" Visibility="{Binding HasProblem, Converter={StaticResource BoolToVisible}}">
         <Button x:Name="RetryButton" DockPanel.Dock="Right" Content="{res:Text Notes.TryAgain}" Command="{Binding RetryCommand}"
-                Style="{DynamicResource Lunar.Style.ActionButton}" VerticalAlignment="Top"
+                Style="{StaticResource NotesButton}" VerticalAlignment="Top"
                 Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisible}}" />
-        <TextBlock x:Name="ProblemText" Text="{Binding Problem}" Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" Margin="0,0,8,0"
-                   automation:AutomationProperties.LiveSetting="Assertive" />
+        <TextBlock x:Name="ProblemText" Text="{Binding Problem}" Style="{DynamicResource Lunar.Text.Error}" FontSize="{DynamicResource Lunar.Font.Size.Caption}"
+                   TextWrapping="Wrap" Margin="0,0,8,0" automation:AutomationProperties.LiveSetting="Assertive" />
       </DockPanel>
-      <DockPanel x:Name="UndoRow" LastChildFill="True" Margin="0,0,0,4" Visibility="{Binding CanUndo, Converter={StaticResource BoolToVisible}}">
+      <DockPanel x:Name="UndoRow" LastChildFill="True" Margin="0,0,0,6" Visibility="{Binding CanUndo, Converter={StaticResource BoolToVisible}}">
         <Button x:Name="UndoButton" DockPanel.Dock="Right" Content="{res:Text Notes.Undo}" Command="{Binding UndoCommand}"
-                Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text Notes.UndoName}" />
+                Style="{StaticResource NotesButton}" automation:AutomationProperties.Name="{res:Text Notes.UndoName}" />
         <TextBlock x:Name="DeletedText" Text="{res:Text Notes.Deleted}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center"
                    automation:AutomationProperties.LiveSetting="Polite" />
       </DockPanel>
@@ -108,7 +143,7 @@
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
         <DataTemplate>
-          <Grid Margin="0,0,0,4">
+          <Grid Margin="0,0,4,4">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
@@ -117,12 +152,14 @@
               <Button.InputBindings>
                 <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
               </Button.InputBindings>
-              <StackPanel>
-                <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-                <TextBlock Text="{Binding ChangedText}" Style="{DynamicResource Lunar.Text.Caption}" />
-              </StackPanel>
+              <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ChangedText}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center"
+                           Margin="8,0,0,0" />
+                <TextBlock Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                           VerticalAlignment="Center" />
+              </DockPanel>
             </Button>
-            <c:IconButton Grid.Column="1" Glyph="&#xE74D;" Label="{Binding DeleteName}" Command="{Binding DeleteCommand}" Width="28" Height="28"
+            <c:IconButton Grid.Column="1" Glyph="&#xE74D;" Label="{Binding DeleteName}" Command="{Binding DeleteCommand}" Width="26" Height="26"
                           Margin="4,0,0,0" VerticalAlignment="Center" />
           </Grid>
         </DataTemplate>
@@ -135,9 +172,23 @@
              IsReadOnly="{Binding IsReadOnly, Mode=OneWay}" nav:SwiperView.BlocksSwipe="True"
              Background="{DynamicResource Lunar.Brush.Surface}" Foreground="{DynamicResource Lunar.Brush.TextPrimary}"
              CaretBrush="{DynamicResource Lunar.Brush.TextPrimary}" SelectionBrush="{DynamicResource Lunar.Brush.Accent}"
-             BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}" Padding="8,6"
+             BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1" Padding="6,4"
              FontFamily="{DynamicResource Lunar.Font.Family}" FontSize="{DynamicResource Lunar.Font.Size.Body}"
              FocusVisualStyle="{x:Null}" automation:AutomationProperties.Name="{res:Text Notes.EditorName}"
-             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisible}}" />
+             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisible}}">
+      <TextBox.Template>
+        <ControlTemplate TargetType="TextBox">
+          <Border x:Name="Frame" CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+            <ScrollViewer x:Name="PART_ContentHost" Focusable="False" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </TextBox.Template>
+    </TextBox>
   </Grid>
 </UserControl>

@@ -252,6 +252,37 @@ public sealed class NotesPageTests
         Assert.True(SwiperView.GetBlocksSwipe(editor));
     });
 
+    // The fix for keys going to the other app: over the Notes page the island may be activated by the click itself (which Windows always
+    // allows), and it goes back to non-activating when the pointer leaves without a click.
+    [Fact]
+    public void OverTheNotesPageAClickMayActivateTheIslandAndLeavingRestoresNonActivating() => RunOnSta(() =>
+    {
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+        using var service = new NotesService(new FakeNotesRepository());
+        using var model = new NotesPageViewModel(service, work => work(), new ManualTimer(), new ManualTimer());
+        var page = new NotesPage { DataContext = model };
+        var island = new Lunar.Desktop.Shell.IslandWindow { ViewContent = page, Left = -20000, Top = -20000 };
+        foreach (var dictionary in new[] { "Colors.Dark.xaml", "Typography.xaml", "Spacing.xaml", "Components.xaml" })
+            island.Resources.MergedDictionaries.Add(Load("Themes", dictionary));
+        island.Resources.MergedDictionaries.Add(Load("Controls", "ControlStyles.xaml"));
+        island.Show();
+        Pump();
+        var handle = new System.Windows.Interop.WindowInteropHelper(island).Handle;
+        Assert.True(NonActivating(handle));
+
+        page.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.MouseEnterEvent });
+        Assert.False(NonActivating(handle));
+
+        page.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.MouseLeaveEvent });
+        Assert.True(NonActivating(handle));
+        island.Close();
+    });
+
+    private static bool NonActivating(IntPtr handle) => (GetWindowLongPtr(handle, -20).ToInt64() & 0x08000000L) != 0;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+
     [Fact]
     public void ASaveFailureAndAnUnreadableFileAreShownInWords() => RunOnSta(() =>
     {

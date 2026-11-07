@@ -95,6 +95,14 @@ public sealed class NotesPageViewModel : INotifyPropertyChanged, IDisposable
 
     public bool HasItems => IsListShown && _items.Count > 0;
 
+    /// <summary>"1 note", "12 notes"; empty while there are none (the empty words say it).</summary>
+    public string CountText => _items.Count switch
+    {
+        0 => string.Empty,
+        1 => Strings.Get("Notes.CountOne"),
+        var n => Strings.Format("Notes.Count", n.ToString("N0", Strings.Culture))
+    };
+
     public bool IsEditing => _editing is not null;
 
     /// <summary>The notes come from a newer Lunar: they can be read, not changed.</summary>

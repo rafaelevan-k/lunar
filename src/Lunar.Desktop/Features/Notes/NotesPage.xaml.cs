@@ -8,9 +8,9 @@ using Lunar.Desktop.Shell;
 namespace Lunar.Desktop.Features.Notes;
 
 /// <summary>
-/// The Notes page (FE-31). Presentation only: the island never takes the keyboard by itself (ADR-0007), so a click in the note, or opening a
-/// note, asks the island window for the keyboard, and the note gets focus. Escape in the note closes it (saving it) instead of collapsing the
-/// island. No logic and no Windows API here.
+/// The Notes page (FE-31). Presentation only: the island never takes the keyboard by itself (ADR-0007). While the pointer is over this page a
+/// click may activate the island, so clicking New note, a note or the text gives the island the keyboard; the note then gets focus.
+/// Escape in the note closes it (saving it) instead of collapsing the island. No logic and no Windows API here.
 /// </summary>
 public partial class NotesPage : UserControl
 {
@@ -20,6 +20,8 @@ public partial class NotesPage : UserControl
     {
         InitializeComponent();
         Editor.PreviewMouseLeftButtonDown += OnEditorMouseDown;
+        MouseEnter += (_, _) => Island?.BeginTypingHover();
+        MouseLeave += (_, _) => Island?.EndTypingHover();
         Editor.PreviewKeyDown += OnEditorKeyDown;
         DataContextChanged += OnDataContextChanged;
         Unloaded += (_, _) => Watch(null);
@@ -75,10 +77,15 @@ public partial class NotesPage : UserControl
             close.Execute(null);
     }
 
-    /// <summary>Typing needs the keyboard; the island lets go of it again as soon as the user clicks elsewhere.</summary>
+    private IslandWindow? Island => Window.GetWindow(this) as IslandWindow;
+
+    /// <summary>
+    /// Typing needs the keyboard. Over this page a click already activates the island (see <see cref="IslandWindow.BeginTypingHover"/>); this
+    /// covers a note opened from the keyboard. The island lets go of the keyboard again as soon as the user clicks elsewhere.
+    /// </summary>
     private void RequestKeyboard()
     {
-        if (Window.GetWindow(this) is IslandWindow { IsActive: false } island)
+        if (Island is { IsActive: false } island)
             island.OpenForKeyboard();
     }
 }
