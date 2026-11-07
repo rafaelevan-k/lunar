@@ -102,8 +102,15 @@ public sealed class NotesPageTests
             Page = new NotesPage { DataContext = Model };
             Window = new Window
             {
-                Width = PageWidth, Height = PageHeight, Content = host ?? Page, WindowStyle = WindowStyle.None,
-                ShowActivated = false, ShowInTaskbar = false, Left = -20000, Top = -20000, WindowStartupLocation = WindowStartupLocation.Manual
+                Width = PageWidth,
+                Height = PageHeight,
+                Content = host ?? Page,
+                WindowStyle = WindowStyle.None,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+                Left = -20000,
+                Top = -20000,
+                WindowStartupLocation = WindowStartupLocation.Manual
             };
             foreach (var dictionary in new[] { "Colors.Dark.xaml", "Typography.xaml", "Spacing.xaml", "Components.xaml" })
                 Window.Resources.MergedDictionaries.Add(Load("Themes", dictionary));
