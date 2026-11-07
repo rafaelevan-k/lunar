@@ -76,8 +76,11 @@ try {
     else { Add-Result 'Version' ([bool]$version) "MSI says '$version'" }
     Add-Result 'Product name' ($properties['ProductName'] -eq 'Lunar') "ProductName='$($properties['ProductName'])'"
     # Lunar's icon in Settings > Apps and on its Start menu shortcut (so in Windows Search); without it both were blank (Sprint 8).
-    $icons = @(Get-Rows 'SELECT `Name` FROM `Icon`' 1 | ForEach-Object { $_[0] })
-    $shortcutIcons = @(Get-Rows 'SELECT `Shortcut`, `Icon_` FROM `Shortcut`' 2 | Where-Object { $_[1] })
+    # Get-Rows returns its rows as one array; assign it, never pipe it (piping unwraps the rows).
+    $iconRows = Get-Rows 'SELECT `Name` FROM `Icon`' 1
+    $icons = @(foreach ($row in $iconRows) { $row[0] })
+    $shortcutRows = Get-Rows 'SELECT `Shortcut`, `Icon_` FROM `Shortcut`' 2
+    $shortcutIcons = @(foreach ($row in $shortcutRows) { if ($row[1]) { $row[0] } })
     Add-Result 'Lunar icon for Apps and Start' ($properties['ARPPRODUCTICON'] -and $icons -contains $properties['ARPPRODUCTICON'] -and $shortcutIcons.Count -gt 0) "ARPPRODUCTICON='$($properties['ARPPRODUCTICON'])', icons: $($icons -join ', '), shortcuts with an icon: $($shortcutIcons.Count)"
 
     $allUsers = $properties['ALLUSERS']
