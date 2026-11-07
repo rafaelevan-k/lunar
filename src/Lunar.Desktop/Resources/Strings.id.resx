@@ -152,6 +152,8 @@
   <data name="Settings.LanguageHeading" xml:space="preserve"><value>Bahasa</value></data>
   <data name="Settings.LanguageId" xml:space="preserve"><value>Bahasa Indonesia</value></data>
   <data name="Settings.LanguageMatch" xml:space="preserve"><value>Ikuti Windows</value></data>
+  <data name="Settings.CaptureHidden" xml:space="preserve"><value>Lunar disembunyikan dari share screen, screenshot, dan rekaman layar. Ini selalu aktif.</value></data>
+  <data name="Settings.CaptureRefused" xml:space="preserve"><value>Windows tidak mengizinkan Lunar bersembunyi dari share screen, jadi Lunar mungkin terlihat saat share screen, screenshot, dan rekaman layar.</value></data>
   <data name="Settings.LanguageRestart" xml:space="preserve"><value>Berlaku saat Lunar dijalankan lagi.</value></data>
   <data name="Settings.MainDisplay" xml:space="preserve"><value>Layar utama</value></data>
   <data name="Settings.MissingDisplay" xml:space="preserve"><value>Layar tersimpan (tidak terhubung)</value></data>

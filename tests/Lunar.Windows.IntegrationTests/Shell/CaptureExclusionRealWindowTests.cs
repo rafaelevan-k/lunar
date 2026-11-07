@@ -166,6 +166,152 @@ public sealed class CaptureExclusionRealWindowTests
         }
     });
 
+    // ---- the process-wide watcher (FE-30) ---------------------------------------------------------------------
+
+    [Fact]
+    public void UnderTheWatcherAWindowNobodyExcludedIsExcludedOnceShown() => RunSta(() =>
+    {
+        var exclusion = new WindowsCaptureExclusion();
+        using var watch = exclusion.ExcludeEveryNewWindow().Value;
+        var window = IslandLike(Brushes.Transparent);
+        window.Show();
+        try
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            Assert.True(WaitFor(() => ReadAffinity(hwnd) == WdaExcludeFromCapture), "The watcher did not exclude the window.");
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
+    public void UnderTheWatcherAPopupLikeATooltipIsExcludedAndNeverSeenInAScreenCopy() => RunSta(() =>
+    {
+        var exclusion = new WindowsCaptureExclusion();
+        using var watch = exclusion.ExcludeEveryNewWindow().Value;
+        var popup = new System.Windows.Controls.Primitives.Popup
+        {
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute,
+            HorizontalOffset = 140,
+            VerticalOffset = 460,
+            AllowsTransparency = true,
+            Child = new System.Windows.Controls.Border { Width = 160, Height = 60, Background = new SolidColorBrush(Color.FromRgb(255, 0, 255)) },
+        };
+        popup.IsOpen = true;
+        try
+        {
+            var source = (HwndSource)System.Windows.PresentationSource.FromVisual(popup.Child);
+            var hwnd = source.Handle;
+            Assert.True(GetWindowRect(hwnd, out var rect));
+            var x = (rect.Left + rect.Right) / 2;
+            var y = (rect.Top + rect.Bottom) / 2;
+            var seen = 0;
+            for (var sample = 0; sample < 20; sample++)
+            {
+                if (IsMagenta(CapturePixel(x, y)))
+                    seen++;
+                Pump(TimeSpan.FromMilliseconds(25));
+            }
+
+            Assert.Equal(0, seen);
+            Assert.Equal(WdaExcludeFromCapture, ReadAffinity(hwnd));
+        }
+        finally
+        {
+            popup.IsOpen = false;
+        }
+    });
+
+    [Fact]
+    public void UnderTheWatcherAMessageBoxIsExcluded() => RunSta(() =>
+    {
+        var exclusion = new WindowsCaptureExclusion();
+        using var watch = exclusion.ExcludeEveryNewWindow().Value;
+        uint? affinity = null;
+        var threadId = GetCurrentThreadId();
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        timer.Tick += (_, _) =>
+        {
+            var box = FindDialog(threadId);
+            if (box == 0)
+                return;
+            timer.Stop();
+            affinity = GetWindowDisplayAffinity(box, out var value) ? value : null;
+            PostMessage(box, WmClose, 0, 0);
+        };
+        timer.Start();
+
+        System.Windows.MessageBox.Show("Lunar capture test", "Lunar test", System.Windows.MessageBoxButton.OK);
+
+        Assert.Equal(WdaExcludeFromCapture, affinity);
+    });
+
+    [Fact]
+    public void UnderTheWatcherTheWindowsFilePickerIsExcluded() => RunSta(() =>
+    {
+        var exclusion = new WindowsCaptureExclusion();
+        using var watch = exclusion.ExcludeEveryNewWindow().Value;
+        uint? affinity = null;
+        var threadId = GetCurrentThreadId();
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        var ticks = 0;
+        timer.Tick += (_, _) =>
+        {
+            var picker = FindDialog(threadId);
+            if (picker == 0 && ++ticks < 50)
+                return;
+            timer.Stop();
+            if (picker != 0)
+            {
+                affinity = GetWindowDisplayAffinity(picker, out var value) ? value : null;
+                PostMessage(picker, WmClose, 0, 0);
+            }
+        };
+        timer.Start();
+
+        new Microsoft.Win32.OpenFileDialog { Title = "Lunar capture test" }.ShowDialog();
+
+        Assert.Equal(WdaExcludeFromCapture, affinity);
+    });
+
+    private const uint WmClose = 0x0010;
+
+    private static nint FindDialog(uint threadId)
+    {
+        nint found = 0;
+        EnumThreadWindows(threadId, (hwnd, _) =>
+        {
+            var name = new System.Text.StringBuilder(16);
+            _ = GetClassName(hwnd, name, name.Capacity);
+            if (name.ToString() == "#32770" && IsWindowVisible(hwnd))
+            {
+                found = hwnd;
+                return false;
+            }
+
+            return true;
+        }, 0);
+        return found;
+    }
+
+    private delegate bool EnumThreadProc(nint hwnd, nint parameter);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumThreadWindows(uint threadId, EnumThreadProc callback, nint parameter);
+
+    [DllImport("user32.dll", EntryPoint = "GetClassNameW", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(nint hwnd, System.Text.StringBuilder name, int capacity);
+
+    [DllImport("user32.dll", EntryPoint = "PostMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostMessage(nint hwnd, uint message, nint wParam, nint lParam);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+
     private static WpfWindow IslandLike(Brush background) => new()
     {
         Width = 240,

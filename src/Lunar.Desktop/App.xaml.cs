@@ -66,6 +66,7 @@ public partial class App : System.Windows.Application
     private SettingsApplier? _settingsApplier;
     private SettingsWindowLauncher? _settingsWindow;
     private StartupSwitch? _startupSwitch;
+    private CaptureExclusionGuard? _capture;
 
     // async void is limited to this framework override and every path is guarded.
     protected override async void OnStartup(StartupEventArgs e)
@@ -109,6 +110,9 @@ public partial class App : System.Windows.Application
             }
 
             Strings.Use(Strings.FromWindows(System.Globalization.CultureInfo.CurrentUICulture));
+            // The question is a Lunar window too, so it is hidden from screen sharing like the others (ADR-0019).
+            using var capture = new CaptureExclusionGuard(new Lunar.Windows.Shell.WindowsCaptureExclusion());
+            capture.StartWatching();
             var deleteData = mode.MayAsk && MessageBox.Show(
                 Strings.Get("Uninstall.DeleteDataQuestion"),
                 Strings.Get("Uninstall.Title"),
@@ -174,6 +178,10 @@ public partial class App : System.Windows.Application
             toUi);
         _theme.Apply(settings.Appearance.Theme);
 
+        // Before any window exists: every Lunar window, tooltip, menu, picker and message box is hidden from screen sharing (ADR-0019).
+        _capture = new CaptureExclusionGuard(_services.GetRequiredService<ICaptureExclusion>());
+        _capture.StartWatching();
+
         var viewModel = _services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
         // Interface motion (slides, fades, confetti) is off when the Lunar setting says so or Windows has "Show animations" off; the eyes
@@ -233,6 +241,7 @@ public partial class App : System.Windows.Application
         // A finished conversion makes the eyes smile and, while the island is open, throws a little confetti.
         _converterQueue.JobSucceeded += (_, _) => _shell?.Celebrate();
         _window = new IslandWindow { DataContext = viewModel, ViewContent = _shell };
+        _capture.Attach(_window); // excluded when its handle is created, before it is first shown
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
         _transition = new IslandTransitionController(_window, viewModel, motionOff);
@@ -246,7 +255,7 @@ public partial class App : System.Windows.Application
         // A limit that resets gets a small pop-up at the bottom right; Escape in the island closes it (it never takes focus itself).
         _resetToasts = new UsageResetNotifier(
             _services.GetRequiredService<UsageMonitor>(),
-            _toastPresenter = new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log),
+            _toastPresenter = new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log, _capture),
             new DispatcherOneShotTimer(),
             new DispatcherOneShotTimer(),
             toUi);
@@ -263,7 +272,8 @@ public partial class App : System.Windows.Application
             toUi,
             _services.GetRequiredService<DiagnosticsRun>().Enabled,
             _log,
-            startup: _startupSwitch);
+            startup: _startupSwitch,
+            capture: _capture);
         _settingsApplier = new SettingsApplier(
             _settingsService,
             toUi,
@@ -376,6 +386,8 @@ public partial class App : System.Windows.Application
             Duration: _uptime.Elapsed));
         _theme?.Dispose();
         _theme = null;
+        _capture?.Dispose(); // last: windows closing above stay hidden until they are gone
+        _capture = null;
         _toastPresenter = null;
         _settingsService = null;
         _services?.Dispose();

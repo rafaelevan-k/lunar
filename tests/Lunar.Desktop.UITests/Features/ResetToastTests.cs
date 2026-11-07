@@ -362,6 +362,31 @@ public sealed class ResetToastTests
 
     // ---- the real window --------------------------------------------------------------------------------------------
 
+    // FE-30: every pop-up window is hidden from screen sharing before it is shown, once per window.
+    [Fact]
+    public void EveryPopUpIsHiddenFromScreenSharingBeforeItIsShown() => RunOnSta(() =>
+    {
+        var dpi = WindowDpi();
+        var display = new DisplayInfo("m", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1040), dpi, dpi);
+        var exclusion = new Shell.CaptureExclusionGuardTests.FakeExclusion();
+        using var guard = new Lunar.Desktop.Shell.CaptureExclusionGuard(exclusion);
+        using var presenter = new ResetToastPresenter(new FakeEnvironment(display), new IslandSettings(), reduceMotion: true, log: null, capture: guard);
+
+        presenter.Show(ResetToastContent.For([Reset(UsageWindowKind.FiveHour)]));
+        presenter.Show(ResetToastContent.For([Reset(UsageWindowKind.Weekly, 100)])); // same window, new words
+        Pump();
+        var first = new System.Windows.Interop.WindowInteropHelper(presenter.Window!).Handle;
+        presenter.Hide();
+        Pump();
+        presenter.Show(ResetToastContent.For([Reset(UsageWindowKind.FiveHour)]));
+        Pump();
+        var second = new System.Windows.Interop.WindowInteropHelper(presenter.Window!).Handle;
+
+        Assert.Equal([first, second], exclusion.Excluded.Select(e => e.Handle));
+        Assert.All(exclusion.Excluded, e => Assert.False(e.WasVisible));
+        presenter.Hide();
+    });
+
     private sealed class FakeEnvironment(DisplayInfo display) : IWindowEnvironment
     {
         public event Action? DisplaysChanged

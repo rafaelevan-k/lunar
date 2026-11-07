@@ -247,6 +247,19 @@
           <TextBlock x:Name="DiagnosticsRestart" Text="{res:Text X.TakesEffectTheNextTime}" Style="{StaticResource Hint}"
                      Visibility="{Binding DiagnosticsNeedsRestart, Converter={StaticResource BoolToVisible}}" />
           <TextBlock Text="{res:Text X.SettingsAreSavedOnlyOn}" Style="{StaticResource Hint}" Margin="0,10,0,0" />
+          <!-- ADR-0019: always on, so this is a statement, not a switch. A refusal is shown as a warning. -->
+          <TextBlock x:Name="ScreenSharingLine" Text="{Binding ScreenSharingText}" TextWrapping="Wrap" Margin="0,6,0,0"
+                     Visibility="{Binding HasScreenSharingLine, Converter={StaticResource BoolToVisible}}">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock" BasedOn="{StaticResource Hint}">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding ScreenSharingRefused}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.Error}" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
         </StackPanel>
       </Border>
 

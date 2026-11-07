@@ -24,10 +24,13 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
     private IslandSettings _preference;
     private bool _reduceMotion;
     private readonly IDiagnosticLog? _log;
+    private readonly CaptureExclusionGuard? _capture;
     private ResetToastWindow? _window;
     private bool _disposed;
 
-    public ResetToastPresenter(IWindowEnvironment environment, IslandSettings preference, bool reduceMotion, IDiagnosticLog? log = null)
+    /// <param name="capture">Hides each pop-up from screen sharing before it is shown (ADR-0019); null only in tests.</param>
+    public ResetToastPresenter(IWindowEnvironment environment, IslandSettings preference, bool reduceMotion, IDiagnosticLog? log = null,
+        CaptureExclusionGuard? capture = null)
     {
         ArgumentNullException.ThrowIfNull(environment);
         ArgumentNullException.ThrowIfNull(preference);
@@ -35,6 +38,7 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
         _preference = preference;
         _reduceMotion = reduceMotion;
         _log = log;
+        _capture = capture;
     }
 
     /// <summary>The user changed the display or the motion setting (ADR-0016); the next pop-up uses them. UI thread only.</summary>
@@ -69,6 +73,7 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
             window.PointerEntered += OnPointerEntered;
             window.PointerLeft += OnPointerLeft;
             window.DpiChanged += OnDpiChanged;
+            _capture?.Attach(window);
             _window = window;
         }
 

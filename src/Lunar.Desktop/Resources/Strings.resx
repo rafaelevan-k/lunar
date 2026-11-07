@@ -152,6 +152,8 @@
   <data name="Settings.LanguageHeading" xml:space="preserve"><value>Language</value></data>
   <data name="Settings.LanguageId" xml:space="preserve"><value>Bahasa Indonesia</value></data>
   <data name="Settings.LanguageMatch" xml:space="preserve"><value>Match Windows</value></data>
+  <data name="Settings.CaptureHidden" xml:space="preserve"><value>Lunar is hidden from screen sharing, screenshots and recordings. This is always on.</value></data>
+  <data name="Settings.CaptureRefused" xml:space="preserve"><value>Windows didn't allow Lunar to hide from screen sharing, so Lunar may be visible in screen sharing, screenshots and recordings.</value></data>
   <data name="Settings.LanguageRestart" xml:space="preserve"><value>Takes effect the next time Lunar starts.</value></data>
   <data name="Settings.MainDisplay" xml:space="preserve"><value>Main display</value></data>
   <data name="Settings.MissingDisplay" xml:space="preserve"><value>Saved display (not connected)</value></data>

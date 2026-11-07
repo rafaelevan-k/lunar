@@ -27,6 +27,7 @@ using Lunar.Windows.Media;
 using Lunar.Windows.Network;
 using Lunar.Windows.Pdf;
 using Lunar.Windows.Security;
+using Lunar.Windows.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop.Composition;
@@ -123,6 +124,8 @@ public static class ServiceRegistration
         services.AddSingleton<IFolderPicker, WindowsFolderPicker>();
         services.AddSingleton<IWindowEnvironment>(sp => new MonitorInfoProvider(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<ISystemSettingsLauncher>(sp => new WindowsSettingsLauncher(sp.GetRequiredService<IDiagnosticLog>()));
+        // Every Lunar window is hidden from screen sharing, screenshots and recordings, always (ADR-0019, BE-35, FE-30).
+        services.AddSingleton<ICaptureExclusion>(sp => new WindowsCaptureExclusion(sp.GetRequiredService<IDiagnosticLog>()));
         // Start with Windows (BE-29): the current user's Run entry for the running executable; nothing is registered until the user turns it on.
         services.AddSingleton<IStartupRegistration>(sp => new StartupRegistrationService(
             Environment.ProcessPath ?? string.Empty, sp.GetRequiredService<IDiagnosticLog>()));

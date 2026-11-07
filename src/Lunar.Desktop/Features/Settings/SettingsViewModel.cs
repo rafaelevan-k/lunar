@@ -33,6 +33,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private readonly IDiagnosticLog? _log;
     private readonly bool _diagnosticsInUse;
     private readonly StartupSwitch? _startup;
+    private readonly CaptureExclusionGuard? _capture;
     private readonly CancellationTokenSource _lifetime = new();
 
     private IReadOnlyList<SettingsChoice> _themes = [];
@@ -46,6 +47,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     /// <param name="diagnosticsInUse">Whether verbose diagnostics are on in this run; the saved choice applies from the next start.</param>
     /// <param name="startup">The shared Start with Windows switch; null shows the row as unavailable.</param>
+    /// <param name="capture">Whether Lunar is hidden from screen sharing (ADR-0019); null hides the line (tests only).</param>
     public SettingsViewModel(
         SettingsService settings,
         IWindowEnvironment environment,
@@ -53,7 +55,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         Action<Action> post,
         bool diagnosticsInUse,
         IDiagnosticLog? log = null,
-        StartupSwitch? startup = null)
+        StartupSwitch? startup = null,
+        CaptureExclusionGuard? capture = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(environment);
@@ -66,6 +69,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         _diagnosticsInUse = diagnosticsInUse;
         _log = log;
         _startup = startup;
+        _capture = capture;
 
         var lifetime = _lifetime.Token;
         ToggleReduceMotionCommand = Save(s => s with { Appearance = s.Appearance with { ReduceMotion = !s.Appearance.ReduceMotion } }, lifetime);
@@ -102,6 +106,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         _settings.Changed += OnSettingsChanged;
         if (_startup is not null)
             _startup.Changed += OnStartupChanged;
+        if (_capture is not null)
+            _capture.Changed += OnCaptureChanged;
         Rebuild();
     }
 
@@ -141,6 +147,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>What the Start with Windows row says under its title.</summary>
     public string StartupHint => SettingsText.Startup(StartupAvailable, StartupEnabled);
+
+    /// <summary>
+    /// The read-only screen-sharing line (ADR-0019): Lunar is hidden, or Windows refused and Lunar may be visible. There is no switch; null
+    /// when no guard was given.
+    /// </summary>
+    public string? ScreenSharingText => _capture is null
+        ? null
+        : Strings.Get(_capture.IsRefused ? "Settings.CaptureRefused" : "Settings.CaptureHidden");
+
+    /// <summary>True when Windows refused to hide a Lunar window; the line is then shown as a warning.</summary>
+    public bool ScreenSharingRefused => _capture?.IsRefused == true;
+
+    public bool HasScreenSharingLine => _capture is not null;
 
     public IReadOnlyList<SettingsChoice> Themes => _themes;
 
@@ -210,6 +229,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         _settings.Changed -= OnSettingsChanged;
         if (_startup is not null)
             _startup.Changed -= OnStartupChanged;
+        if (_capture is not null)
+            _capture.Changed -= OnCaptureChanged;
         _lifetime.Cancel();
         _lifetime.Dispose();
     }
@@ -291,6 +312,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     // Raised on the UI thread by the shared switch (this window or the tray changed it, or it was read again).
     private void OnStartupChanged(object? sender, EventArgs e)
+    {
+        if (!_disposed)
+            Changed();
+    }
+
+    // The guard lives on the UI thread, like this view model.
+    private void OnCaptureChanged()
     {
         if (!_disposed)
             Changed();

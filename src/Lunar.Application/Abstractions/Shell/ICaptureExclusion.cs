@@ -22,4 +22,14 @@ public interface ICaptureExclusion
     /// </list>
     /// </summary>
     Result Exclude(nint windowHandle);
+
+    /// <summary>
+    /// From now on, excludes every top-level window this process creates or shows, including the ones Lunar does
+    /// not build itself: tooltips, menus, Windows' file and folder pickers and message boxes (FE-30). Lunar's own
+    /// windows still call <see cref="Exclude"/> as soon as they have a handle, because this watcher learns of a
+    /// window only through a queued notification. Call on the UI thread, which must keep pumping messages; dispose
+    /// the result on the same thread to stop. Fails with <see cref="ErrorCode.Unsupported"/> on a build that cannot
+    /// exclude windows, and with <see cref="ErrorCode.InvalidInput"/> when a watcher is already running.
+    /// </summary>
+    Result<IDisposable> ExcludeEveryNewWindow();
 }

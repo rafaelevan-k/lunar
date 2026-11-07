@@ -133,12 +133,12 @@ public sealed class SettingsWindowTests
         public SettingsWindow Window { get; private set; } = null!;
 
         public Rig(Action<Repository>? configure = null, string palette = "Colors.Dark.xaml", double width = 480, double height = 680,
-            StartupSwitch? startup = null)
+            StartupSwitch? startup = null, Lunar.Desktop.Shell.CaptureExclusionGuard? capture = null)
         {
             configure?.Invoke(Repository);
             Service = new SettingsService(Repository);
             Service.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
-            Model = new SettingsViewModel(Service, new Environment(), new Folders(), work => work(), false, null, startup);
+            Model = new SettingsViewModel(Service, new Environment(), new Folders(), work => work(), false, null, startup, capture);
             Window = new SettingsWindow { DataContext = Model };
             Window.Resources.MergedDictionaries.Add(Load("Themes", palette));
             Window.Resources.MergedDictionaries.Add(Load("Themes", "Typography.xaml"));
@@ -576,6 +576,72 @@ public sealed class SettingsWindowTests
         service.UpdateAsync(s => s with { LaunchAtStartup = true }, CancellationToken.None).GetAwaiter().GetResult();
 
         Assert.Equal(0, raised);
+    });
+
+    // ---- FE-30: hidden from screen sharing --------------------------------------------------------------------
+
+    [Fact]
+    public void TheScreenSharingLineSaysLunarIsHiddenAndThereIsNoSwitchForIt() => RunOnSta(() =>
+    {
+        using var guard = new Lunar.Desktop.Shell.CaptureExclusionGuard(new Shell.CaptureExclusionGuardTests.FakeExclusion());
+        using var rig = new Rig(capture: guard);
+
+        var line = rig.Named<TextBlock>("ScreenSharingLine");
+        Assert.True(Shown(line));
+        Assert.Equal("Lunar is hidden from screen sharing, screenshots and recordings. This is always on.", line.Text);
+        Assert.False(rig.Model.ScreenSharingRefused);
+        Assert.DoesNotContain(Descendants<ButtonBase>(rig.Window), b =>
+            NameOf(b).Contains("screen", StringComparison.OrdinalIgnoreCase) || NameOf(b).Contains("capture", StringComparison.OrdinalIgnoreCase));
+    });
+
+    [Fact]
+    public void ARefusalIsShownAsAWarningAsSoonAsItHappens() => RunOnSta(() =>
+    {
+        var exclusion = new Shell.CaptureExclusionGuardTests.FakeExclusion { Refuse = true };
+        using var guard = new Lunar.Desktop.Shell.CaptureExclusionGuard(exclusion);
+        using var rig = new Rig(capture: guard);
+        var line = rig.Named<TextBlock>("ScreenSharingLine");
+        var hidden = line.Foreground;
+
+        var other = new Window { ShowActivated = false, ShowInTaskbar = false };
+        guard.Attach(other);
+        _ = new System.Windows.Interop.WindowInteropHelper(other).EnsureHandle();
+        rig.Window.UpdateLayout();
+
+        Assert.True(rig.Model.ScreenSharingRefused);
+        Assert.StartsWith("Windows didn't allow Lunar to hide from screen sharing", line.Text, StringComparison.Ordinal);
+        Assert.NotEqual(hidden, line.Foreground);
+        other.Close();
+    });
+
+    [Fact]
+    public void WithoutAGuardTheLineIsNotShown() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+
+        Assert.False(Shown(rig.Named<TextBlock>("ScreenSharingLine")));
+    });
+
+    [Fact]
+    public void TheLauncherHidesTheSettingsWindowBeforeItIsShownOncePerWindow() => RunOnSta(() =>
+    {
+        var exclusion = new Shell.CaptureExclusionGuardTests.FakeExclusion();
+        using var guard = new Lunar.Desktop.Shell.CaptureExclusionGuard(exclusion);
+        using var service = new SettingsService(new Repository());
+        using var launcher = new SettingsWindowLauncher(service, new Environment(), new Folders(), work => work(), diagnosticsInUse: false,
+            log: null, interactive: false, capture: guard);
+
+        launcher.Show();
+        launcher.Show(); // brings the same window forward
+        var first = new System.Windows.Interop.WindowInteropHelper(launcher.Window!).Handle;
+        launcher.Window!.Close();
+        launcher.Show();
+        var second = new System.Windows.Interop.WindowInteropHelper(launcher.Window!).Handle;
+
+        Assert.Equal([first, second], exclusion.Excluded.Select(e => e.Handle));
+        Assert.All(exclusion.Excluded, e => Assert.False(e.WasVisible));
+        Assert.Equal(guard.IsRefused, ((SettingsViewModel)launcher.Window!.DataContext).ScreenSharingRefused);
+        Assert.NotNull(((SettingsViewModel)launcher.Window!.DataContext).ScreenSharingText);
     });
 
     // FE-25: no subscription survives a closed window, however many times it is opened.
