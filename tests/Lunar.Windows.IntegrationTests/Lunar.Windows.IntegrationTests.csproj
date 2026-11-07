@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <IsTestProject>true</IsTestProject>
     <PlatformTarget>x64</PlatformTarget>
+    <!-- BE-35 drives real WPF windows (the island is a transparent layered WPF window). Lunar.Windows itself stays WPF-free. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" PrivateAssets="all" />
@@ -12,5 +14,7 @@
     <ProjectReference Include="..\..\src\Lunar.Windows\Lunar.Windows.csproj" />
     <Compile Include="..\LayerBoundaryTests.cs" Link="Architecture\LayerBoundaryTests.cs" />
     <AssemblyMetadata Include="LayerUnderTest" Value="Lunar.Windows" />
+    <!-- UseWPF leaves System.IO out of the implicit usings; the other tests rely on it. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>
