@@ -11,6 +11,7 @@ using Lunar.Application.Media.UseCases;
 using Lunar.Application.Notes;
 using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
+using Lunar.Application.System.UseCases;
 using Lunar.Application.Usage;
 using Lunar.Conversion.Pipeline;
 using Lunar.Desktop.Composition;
@@ -52,6 +53,9 @@ public partial class App : System.Windows.Application
     private IslandTransitionController? _transition;
     private IslandShellView? _shell;
     private SystemPageViewModel? _system;
+    private BrightnessWriter? _brightnessWriter;
+    private BrightnessCardViewModel? _brightness;
+    private BrightnessLifetime? _brightnessLifetime;
     private ClockLifetime? _clockLifetime;
     private MediaPageViewModel? _media;
     private MediaLifetime? _mediaLifetime;
@@ -201,6 +205,18 @@ public partial class App : System.Windows.Application
         eyesView.ClickCommand = viewModel.ToggleCommand;
         var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Notes"), Strings.Get("Nav.Usage")]);
         // Five pages; Notes sits between Converter and Usage (ADR-0020).
+        // Brightness of the display the island is on (FE-32, ADR-0021); the display is the one the position controller placed the island on.
+        var brightnessService = _services.GetRequiredService<IBrightnessService>();
+        _brightnessWriter = new BrightnessWriter(brightnessService);
+        _brightness = new BrightnessCardViewModel(
+            brightnessService,
+            _brightnessWriter,
+            () => _position?.CurrentDisplayId,
+            _services.GetRequiredService<ISystemSettingsLauncher>(),
+            toUi,
+            new DispatcherOneShotTimer(),
+            TimeProvider.System,
+            _log);
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -208,7 +224,10 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<ILocaleClock>(),
             _services.GetRequiredService<ISystemSettingsLauncher>(),
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
-            _log);
+            _log)
+        {
+            Brightness = _brightness
+        };
         _media = new MediaPageViewModel(
             _services.GetRequiredService<MediaSessionTracker>(),
             _services.GetRequiredService<MediaTransport>(),
@@ -262,6 +281,7 @@ public partial class App : System.Windows.Application
 
         // The clock starts and stops with the island.
         _clockLifetime = new ClockLifetime(viewModel, _system);
+        _brightnessLifetime = new BrightnessLifetime(viewModel, navigation, _brightness);
         _mediaLifetime = new MediaLifetime(viewModel, _media);
         _usageLifetime = new UsageLifetime(viewModel, _usage);
         _notesLifetime = new NotesLifetime(viewModel, _notes); // the open note is saved when the island collapses
@@ -314,6 +334,7 @@ public partial class App : System.Windows.Application
         // Working folders that a killed run left behind are removed now, off the UI thread, before any conversion of this run starts.
         await Task.WhenAll(
             _system.InitializeAsync(_lifetime.Token),
+            _brightness.InitializeAsync(_lifetime.Token),
             _media.InitializeAsync(_lifetime.Token),
             _usage.InitializeAsync(_lifetime.Token),
             _notes.InitializeAsync(_lifetime.Token),
@@ -404,6 +425,12 @@ public partial class App : System.Windows.Application
         _converter = null;
         _system?.Dispose();
         _system = null;
+        _brightnessLifetime?.Dispose();
+        _brightnessLifetime = null;
+        _brightness?.Dispose();
+        _brightness = null;
+        _brightnessWriter?.Dispose();
+        _brightnessWriter = null;
         _shell?.Dispose();
         _shell = null;
         _eyes?.Dispose();

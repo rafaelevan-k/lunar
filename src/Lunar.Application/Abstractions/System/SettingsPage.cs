@@ -5,5 +5,8 @@ public enum SettingsPage
 {
     Wifi,
     Bluetooth,
-    DateAndTime
+    DateAndTime,
+
+    /// <summary>Windows Settings &gt; Display, the fallback when a display's brightness cannot be changed from Lunar (ADR-0021).</summary>
+    Display
 }

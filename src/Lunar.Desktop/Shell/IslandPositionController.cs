@@ -96,6 +96,7 @@ public sealed class IslandPositionController : IDisposable
             return;
 
         var display = ChooseDisplay();
+        CurrentDisplayId = ReferenceEquals(display, DisplayInfo.Fallback) ? null : display.Id;
         var limits = IslandLayout.LimitsFor(_viewModel.IsExpandedLayout, display, _preference.TopOffsetDip);
         var content = _window.MeasureContent(new System.Windows.Size(limits.MaxWidth, limits.MaxHeight));
         var (width, height) = IslandLayout.Fit(limits, content.Width, content.Height);
@@ -138,6 +139,9 @@ public sealed class IslandPositionController : IDisposable
         _window.ViewContentChanged -= OnLayoutInputChanged;
         _viewModel.PropertyChanged -= OnViewModelChanged;
     }
+
+    /// <summary>The id of the display the island was last placed on (DisplayInfo.Id); null before the first placement or on the fallback.</summary>
+    internal string? CurrentDisplayId { get; private set; }
 
     private DisplayInfo ChooseDisplay()
     {

@@ -84,7 +84,10 @@
     </DataTemplate>
   </UserControl.Resources>
 
-  <Grid Margin="38,0,38,0">
+  <!-- FE-32: the page fits the island in normal use and in every single worst case; only when several long reasons and an error show at
+       once does a scroll bar appear (as on the Converter and Usage pages), so nothing is ever cut off. -->
+  <ScrollViewer x:Name="PageScroll" Margin="38,0,38,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+  <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -101,7 +104,7 @@
       <TextBlock x:Name="Date" Text="{Binding DateText}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Bottom" Margin="10,0,0,3" />
     </StackPanel>
 
-    <!-- Volume and mute. -->
+    <!-- Volume and mute, and under it the brightness of the display the island is on (FE-32), in one card as Windows pairs them. -->
     <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,4" automation:AutomationProperties.Name="{res:Text X.Volume}">
       <StackPanel>
         <Grid>
@@ -157,6 +160,62 @@
                      Style="{DynamicResource Lunar.Text.Body}"
                      Visibility="{Binding IsVolumeAvailable, Converter={StaticResource BoolToVisible}}" />
         </Grid>
+
+        <!-- FE-32, ADR-0021: brightness, built like the volume row. When it cannot be changed, a one-line reason (the full sentence is its
+             tooltip and screen-reader help) and Settings take the slider's place on the same row, so the page never grows. -->
+        <StackPanel x:Name="BrightnessRow" Margin="0,4,0,0" DataContext="{Binding Brightness}"
+                    Visibility="{Binding DataContext.HasBrightness, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisible}}">
+          <Grid MinHeight="32">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" MinWidth="44" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="{DynamicResource Lunar.Brush.Accent}" VerticalAlignment="Center">
+              <TextBlock Text="&#xE706;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"
+                         VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.OnAccent}" />
+            </Border>
+
+            <Grid x:Name="BrightnessPlaceholder" Grid.Column="1" Margin="8,0" VerticalAlignment="Center">
+              <Grid.Style>
+                <Style TargetType="Grid">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsLoaded}" Value="False">
+                      <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Grid.Style>
+              <c:SkeletonBlock Height="16" />
+            </Grid>
+
+            <Slider x:Name="BrightnessSlider" Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"
+                    Style="{DynamicResource Lunar.Style.Slider}"
+                    behaviors:SliderInteraction.IsTracking="True"
+                    behaviors:SliderInteraction.WheelStep="2"
+                    behaviors:SliderInteraction.IsAdjusting="{Binding IsAdjusting, Mode=OneWayToSource}"
+                    Value="{Binding Percent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisible}}"
+                    automation:AutomationProperties.Name="{res:Text System.Brightness}" />
+
+            <TextBlock x:Name="BrightnessValue" Grid.Column="2" Text="{Binding PercentText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Style="{DynamicResource Lunar.Text.Body}" Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisible}}" />
+
+            <TextBlock x:Name="BrightnessNote" Grid.Column="1" Text="{Binding ShortNote}" ToolTip="{Binding Note}" Margin="8,0" VerticalAlignment="Center"
+                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Style="{DynamicResource Lunar.Text.Secondary}"
+                       automation:AutomationProperties.HelpText="{Binding Note}"
+                       Visibility="{Binding Note, Converter={x:Static c:NullToVisibilityConverter.Instance}}" />
+            <Button x:Name="DisplaySettingsButton" Grid.Column="2" Content="{res:Text X.Settings}" Command="{Binding OpenSettingsCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" MinHeight="22" Padding="8,1" VerticalAlignment="Center"
+                    Visibility="{Binding ShowSettingsLink, Converter={StaticResource BoolToVisible}}"
+                    automation:AutomationProperties.Name="{res:Text System.OpenDisplaySettings}" />
+          </Grid>
+          <TextBlock x:Name="BrightnessError" Text="{Binding Error}" Margin="40,2,0,0" TextWrapping="Wrap" Style="{DynamicResource Lunar.Text.Error}"
+                     FontSize="{DynamicResource Lunar.Font.Size.Caption}" automation:AutomationProperties.LiveSetting="Assertive"
+                     Visibility="{Binding Error, Converter={x:Static c:NullToVisibilityConverter.Instance}}" />
+        </StackPanel>
       </StackPanel>
     </Border>
 
@@ -174,4 +233,5 @@
     <!-- One shared error line for the page: errors take no room while there is none, and never push the cards. -->
     <c:InlineError x:Name="PageError" Grid.Row="3" Margin="0,4,0,0" MaxHeight="44" ClipToBounds="True" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
   </Grid>
+  </ScrollViewer>
 </UserControl>

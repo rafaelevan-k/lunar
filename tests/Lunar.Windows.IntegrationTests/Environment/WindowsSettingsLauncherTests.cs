@@ -13,6 +13,7 @@ public sealed class WindowsSettingsLauncherTests
     [InlineData(SettingsPage.Wifi, "ms-settings:network-wifi")]
     [InlineData(SettingsPage.Bluetooth, "ms-settings:bluetooth")]
     [InlineData(SettingsPage.DateAndTime, "ms-settings:dateandtime")]
+    [InlineData(SettingsPage.Display, "ms-settings:display")]
     public async Task EachWhitelistedPageOpensItsFixedUri(SettingsPage page, string expectedUri)
     {
         var started = new List<string>();

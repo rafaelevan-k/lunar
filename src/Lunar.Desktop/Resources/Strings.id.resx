@@ -394,4 +394,17 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Notes.DiskFailed" xml:space="preserve"><value>File catatan Anda tidak bisa ditulis.</value></data>
   <data name="Notes.CountOne" xml:space="preserve"><value>1 catatan</value></data>
   <data name="Notes.Count" xml:space="preserve"><value>{0} catatan</value></data>
+  <data name="System.Brightness" xml:space="preserve"><value>Kecerahan</value></data>
+  <data name="System.BrightnessUnsupported" xml:space="preserve"><value>Kecerahan layar ini tidak bisa diatur dari sini.</value></data>
+  <data name="System.BrightnessNoDisplay" xml:space="preserve"><value>Tidak ada layar yang ditemukan untuk kecerahan.</value></data>
+  <data name="System.BrightnessDenied" xml:space="preserve"><value>Windows tidak mengizinkan Lunar membaca kecerahan.</value></data>
+  <data name="System.BrightnessReadFailed" xml:space="preserve"><value>Kecerahan tidak bisa dibaca.</value></data>
+  <data name="System.BrightnessChangeFailed" xml:space="preserve"><value>Kecerahan tidak bisa diubah.</value></data>
+  <data name="System.BrightnessChangeDenied" xml:space="preserve"><value>Windows tidak mengizinkan Lunar mengubah kecerahan.</value></data>
+  <data name="System.OpenDisplaySettings" xml:space="preserve"><value>Buka pengaturan layar Windows</value></data>
+  <data name="System.OpenSettingsFailed" xml:space="preserve"><value>Pengaturan Windows tidak bisa dibuka.</value></data>
+  <data name="System.BrightnessShortUnsupported" xml:space="preserve"><value>Tidak bisa diatur di sini</value></data>
+  <data name="System.BrightnessShortNoDisplay" xml:space="preserve"><value>Layar tidak ditemukan</value></data>
+  <data name="System.BrightnessShortDenied" xml:space="preserve"><value>Tidak diizinkan Windows</value></data>
+  <data name="System.BrightnessShortReadFailed" xml:space="preserve"><value>Tidak bisa dibaca</value></data>
 </root>

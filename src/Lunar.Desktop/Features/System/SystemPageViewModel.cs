@@ -131,6 +131,11 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
 
     public RadioCardViewModel Bluetooth { get; }
 
+    /// <summary>The brightness card below the volume card (FE-32); null hides the card. Its owner starts and disposes it.</summary>
+    public BrightnessCardViewModel? Brightness { get; init; }
+
+    public bool HasBrightness => Brightness is not null;
+
     // ---- volume -----------------------------------------------------------------------------------------------------
 
     /// <summary>False until the first reading arrives; the page shows a placeholder meanwhile.</summary>

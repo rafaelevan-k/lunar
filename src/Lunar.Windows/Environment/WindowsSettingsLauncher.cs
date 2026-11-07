@@ -7,7 +7,7 @@ using Lunar.Domain.Shared;
 namespace Lunar.Windows.Environment;
 
 /// <summary>
-/// Opens one of the three whitelisted Windows Settings pages (ADR-0002). Callers pass an enum, never a URI, and a
+/// Opens one of the four whitelisted Windows Settings pages (ADR-0002; Display added for ADR-0021). Callers pass an enum, never a URI, and a
 /// launch failure is a failed <see cref="Result"/> instead of an exception.
 /// </summary>
 public sealed class WindowsSettingsLauncher : ISystemSettingsLauncher
@@ -31,6 +31,7 @@ public sealed class WindowsSettingsLauncher : ISystemSettingsLauncher
         SettingsPage.Wifi => "ms-settings:network-wifi",
         SettingsPage.Bluetooth => "ms-settings:bluetooth",
         SettingsPage.DateAndTime => "ms-settings:dateandtime",
+        SettingsPage.Display => "ms-settings:display",
         _ => null
     };
 

@@ -394,4 +394,17 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Notes.DiskFailed" xml:space="preserve"><value>Your notes file couldn't be written.</value></data>
   <data name="Notes.CountOne" xml:space="preserve"><value>1 note</value></data>
   <data name="Notes.Count" xml:space="preserve"><value>{0} notes</value></data>
+  <data name="System.Brightness" xml:space="preserve"><value>Brightness</value></data>
+  <data name="System.BrightnessUnsupported" xml:space="preserve"><value>Brightness can't be changed here for this display.</value></data>
+  <data name="System.BrightnessNoDisplay" xml:space="preserve"><value>No display was found for brightness.</value></data>
+  <data name="System.BrightnessDenied" xml:space="preserve"><value>Windows didn't allow Lunar to read the brightness.</value></data>
+  <data name="System.BrightnessReadFailed" xml:space="preserve"><value>The brightness couldn't be read.</value></data>
+  <data name="System.BrightnessChangeFailed" xml:space="preserve"><value>The brightness couldn't be changed.</value></data>
+  <data name="System.BrightnessChangeDenied" xml:space="preserve"><value>Windows didn't allow Lunar to change the brightness.</value></data>
+  <data name="System.OpenDisplaySettings" xml:space="preserve"><value>Open Windows display settings</value></data>
+  <data name="System.OpenSettingsFailed" xml:space="preserve"><value>Windows Settings couldn't be opened.</value></data>
+  <data name="System.BrightnessShortUnsupported" xml:space="preserve"><value>Can't be changed here</value></data>
+  <data name="System.BrightnessShortNoDisplay" xml:space="preserve"><value>No display found</value></data>
+  <data name="System.BrightnessShortDenied" xml:space="preserve"><value>Not allowed by Windows</value></data>
+  <data name="System.BrightnessShortReadFailed" xml:space="preserve"><value>Couldn't be read</value></data>
 </root>

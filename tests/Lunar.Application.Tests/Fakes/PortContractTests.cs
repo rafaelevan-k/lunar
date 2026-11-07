@@ -133,7 +133,8 @@ public sealed class PortContractTests
         launcher.Fail = true;
         Assert.True((await launcher.OpenAsync(SettingsPage.Wifi, CancellationToken.None)).IsFailure);
         Assert.Equal(new[] { SettingsPage.Bluetooth }, launcher.Opened);
-        Assert.Equal(3, Enum.GetValues<SettingsPage>().Length);
+        // The whitelist grows only by decision: Display was added for brightness (ADR-0021, FE-32).
+        Assert.Equal([SettingsPage.Wifi, SettingsPage.Bluetooth, SettingsPage.DateAndTime, SettingsPage.Display], Enum.GetValues<SettingsPage>());
     }
 
     [Fact]

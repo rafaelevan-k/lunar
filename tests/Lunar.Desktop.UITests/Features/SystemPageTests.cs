@@ -60,8 +60,11 @@ public sealed class SystemPageTests
 
         public FakeBluetoothService Bluetooth { get; } = bluetooth;
 
+        public FakeBrightnessService? Brightness { get; init; }
+
         public void Dispose()
         {
+            Model.Brightness?.Dispose();
             Model.Dispose();
             Window.Close();
         }
@@ -76,7 +79,9 @@ public sealed class SystemPageTests
         return (ResourceDictionary)XamlReader.Parse(text);
     }
 
-    private static Rig Create(string colors = "Colors.Dark.xaml", bool start = true, Action<FakeVolumeService, FakeWifiService, FakeBluetoothService>? arrange = null)
+    // The brightness card is part of the page as in the app (FE-32), so every layout test here covers it; null leaves it out.
+    private static Rig Create(string colors = "Colors.Dark.xaml", bool start = true, Action<FakeVolumeService, FakeWifiService, FakeBluetoothService>? arrange = null,
+        Lunar.Application.System.Models.BrightnessState? brightness = null, bool withBrightness = true)
     {
         var volume = new FakeVolumeService();
         var wifi = new FakeWifiService();
@@ -84,8 +89,19 @@ public sealed class SystemPageTests
         arrange?.Invoke(volume, wifi, bluetooth);
 
         var dispatcher = Dispatcher.CurrentDispatcher;
-        var model = new SystemPageViewModel(volume, wifi, bluetooth, new Clock(), new Launcher(),
-            work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); });
+        Action<Action> post = work => { if (dispatcher.CheckAccess()) work(); else dispatcher.BeginInvoke(work); };
+        FakeBrightnessService? brightnessService = null;
+        BrightnessCardViewModel? card = null;
+        if (withBrightness)
+        {
+            brightnessService = new FakeBrightnessService();
+            if (brightness is not null)
+                brightnessService.State = brightness;
+            card = new BrightnessCardViewModel(brightnessService, new Lunar.Application.System.UseCases.BrightnessWriter(brightnessService),
+                () => "DISPLAY1", new Launcher(), post, new ManualTimer());
+        }
+
+        var model = new SystemPageViewModel(volume, wifi, bluetooth, new Clock(), new Launcher(), post) { Brightness = card };
         var page = new SystemPage { DataContext = model };
         var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
         window.Resources.MergedDictionaries.Add(Load("Themes", colors));
@@ -96,9 +112,11 @@ public sealed class SystemPageTests
         window.Show();
         window.UpdateLayout();
 
-        var rig = new Rig(window, page, model, volume, wifi, bluetooth);
+        var rig = new Rig(window, page, model, volume, wifi, bluetooth) { Brightness = brightnessService };
         if (start)
         {
+            if (card is not null)
+                Pump(card.InitializeAsync());
             Pump(model.InitializeAsync());
             model.RefreshClock();
             Settle(window);
@@ -757,6 +775,67 @@ public sealed class SystemPageTests
         Assert.All(hints, h => Assert.False(h.IsVisible));
     });
 
+    // ---- brightness card (FE-32) ----------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheBrightnessCardSitsBelowTheVolumeCardWithASliderAndItsValue() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var card = Named<StackPanel>(rig, "BrightnessRow");
+        var volume = Named<Slider>(rig, "VolumeSlider");
+        var slider = Named<Slider>(rig, "BrightnessSlider");
+
+        Assert.True(card.IsVisible);
+        Assert.True(slider.IsVisible);
+        Assert.Equal(40, slider.Value);
+        Assert.Equal("40%", Named<TextBlock>(rig, "BrightnessValue").Text);
+        Assert.Equal("Brightness", AutomationProperties.GetName(slider));
+        Assert.True(volume.TranslatePoint(new Point(0, 0), rig.Page).Y < slider.TranslatePoint(new Point(0, 0), rig.Page).Y);
+        Assert.False(Named<Button>(rig, "DisplaySettingsButton").IsVisible);
+    });
+
+    [Fact]
+    public void MovingTheBrightnessSliderWritesThroughTheCard() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var slider = Named<Slider>(rig, "BrightnessSlider");
+
+        slider.Value = 70;
+        var end = DateTime.UtcNow.AddSeconds(3);
+        while (rig.Brightness!.Writes.Count == 0 && DateTime.UtcNow < end)
+        {
+            Settle(rig.Window);
+            Thread.Sleep(5);
+        }
+
+        Assert.Equal([("DISPLAY1", 70)], rig.Brightness.Writes);
+        Assert.Equal("70%", Named<TextBlock>(rig, "BrightnessValue").Text);
+    });
+
+    [Fact]
+    public void ADisplayThatCannotBeChangedShowsAReasonAndDisplaySettingsInsteadOfASlider() => RunOnSta(() =>
+    {
+        using var rig = Create(brightness: BrightnessState.Unsupported);
+
+        Assert.False(Named<Slider>(rig, "BrightnessSlider").IsVisible);
+        var note = Named<TextBlock>(rig, "BrightnessNote");
+        Assert.Equal("Can't be changed here", note.Text);
+        Assert.Equal("Brightness can't be changed here for this display.", note.ToolTip);
+        Assert.Equal("Brightness can't be changed here for this display.", AutomationProperties.GetHelpText(note));
+        var settings = Named<Button>(rig, "DisplaySettingsButton");
+        Assert.True(settings.IsVisible);
+        Assert.Equal("Open Windows display settings", AutomationProperties.GetName(settings));
+        Assert.Empty(Lunar.Desktop.UITests.Accessibility.AutomationAudit.Problems(rig.Page));
+    });
+
+    [Fact]
+    public void WithoutABrightnessCardThePageIsAsBefore() => RunOnSta(() =>
+    {
+        using var rig = Create(withBrightness: false);
+
+        Assert.False(Named<StackPanel>(rig, "BrightnessRow").IsVisible);
+    });
+
     [Fact]
     public void TheWorstCaseCardsStillFitTheExpandedIsland() => RunOnSta(() =>
     {
@@ -764,7 +843,7 @@ public sealed class SystemPageTests
         {
             wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
             bluetooth.State = new BluetoothState(CapabilityStatus.PermissionDenied, RadioState.Unknown, false);
-        });
+        }, brightness: BrightnessState.Unsupported); // the brightness card's longest state: a reason and Display settings
 
         rig.Page.Measure(new Size(PageWidth, double.PositiveInfinity));
 
@@ -772,19 +851,38 @@ public sealed class SystemPageTests
     });
 
     [Fact]
-    public void TheWorstCaseCardsWithAnErrorStillFit() => RunOnSta(() =>
+    // FE-32: with the brightness row added, this extreme combination (both radios with long reasons, an error, and brightness that cannot be
+    // changed) no longer fits the page's height; it scrolls instead, and everything, the error last, can be reached. Every other case still
+    // fits without scrolling (the tests above).
+    public void TheWorstCaseCardsWithAnErrorScrollAndNothingIsCutOff() => RunOnSta(() =>
     {
         using var rig = Create(arrange: (_, wifi, bluetooth) =>
         {
             wifi.State = new WifiState(CapabilityStatus.Unsupported, RadioState.Unavailable, WifiConnectivity.Unknown, false);
             bluetooth.State = new BluetoothState(CapabilityStatus.PermissionDenied, RadioState.Unknown, false);
-        });
+        }, brightness: BrightnessState.Unsupported);
         rig.Model.Wifi.ShowFault("Windows didn't allow this change. Use Settings to switch Bluetooth.");
         Settle(rig.Window);
 
-        rig.Page.Measure(new Size(PageWidth, double.PositiveInfinity));
+        var scroll = Named<ScrollViewer>(rig, "PageScroll");
+        Assert.True(scroll.ScrollableHeight > 0, "The page does not scroll.");
+        Assert.True(scroll.ActualHeight <= PageHeight, $"The scroll area is {scroll.ActualHeight} high.");
+        scroll.ScrollToEnd();
+        Settle(rig.Window);
+        var error = Named<FrameworkElement>(rig, "PageError");
+        var bounds = error.TransformToAncestor(scroll).TransformBounds(new Rect(error.RenderSize));
+        Assert.True(bounds.Bottom <= scroll.ViewportHeight + 0.5 && bounds.Height > 0, $"The error ends at {bounds.Bottom} in a {scroll.ViewportHeight} viewport.");
+    });
 
-        Assert.True(rig.Page.DesiredSize.Height <= PageHeight, $"Page wants {rig.Page.DesiredSize.Height} high, {PageHeight} available.");
+    [Fact]
+    public void TheScrollBarStaysClearOfTheSwiperArrows() => RunOnSta(() =>
+    {
+        using var rig = Create();
+        var scroll = Named<ScrollViewer>(rig, "PageScroll");
+
+        var bounds = scroll.TransformToAncestor(rig.Page).TransformBounds(new Rect(scroll.RenderSize));
+
+        Assert.True(bounds.Left >= 36 && bounds.Right <= PageWidth - 36, $"The scroll area spans {bounds.Left}..{bounds.Right}.");
     });
 
     [Fact]
