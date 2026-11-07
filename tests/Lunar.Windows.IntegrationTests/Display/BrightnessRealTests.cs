@@ -21,7 +21,16 @@ public sealed class BrightnessRealTests
         var read = await service.GetAsync(null, Ct);
 
         Assert.True(read.IsSuccess, read.Error?.SafeMessage);
-        var panels = new WmiBrightness().Read();
+        IReadOnlyList<WmiPanel> panels;
+        try
+        {
+            panels = new WmiBrightness().Read();
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            panels = []; // no WMI brightness at all (a VM, most desktops): the service treats it the same way
+        }
+
         if (panels.Count == 0)
         {
             Assert.NotEqual(BrightnessSource.BuiltIn, read.Value.Source);
