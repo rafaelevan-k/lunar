@@ -179,7 +179,7 @@ public sealed class IslandLayoutTests
             window.Show();
             try
             {
-                Assert.Equal(160d, window.Width);
+                Assert.Equal(380d, window.Width);
                 Assert.Equal(44d, window.Height);
 
                 viewModel.Toggle(); // Expanding uses the expanded layout
@@ -192,11 +192,11 @@ public sealed class IslandLayoutTests
                 Assert.Equal(380d, window.Width);
 
                 viewModel.Collapse();
-                Assert.Equal(380d, window.Width); // still large while collapsing
+                Assert.Equal(380d, window.Width); // the width never changes (FE-33)
                 viewModel.CompleteCollapse();
-                Assert.Equal(160d, window.Width);
+                Assert.Equal(380d, window.Width);
                 Assert.Equal(44d, window.Height);
-                Assert.Equal(160d, window.MaxWidth);
+                Assert.Equal(44d, window.MaxHeight);
             }
             finally
             {
@@ -274,7 +274,7 @@ public sealed class IslandLayoutTests
             {
                 window.ViewContent = new Border { Width = 900, Height = 900 };
 
-                Assert.Equal(160d, window.Width);
+                Assert.Equal(160d, Assert.IsType<Border>(window.Content).Width); // the pill keeps its size; only the window beside it follows the content
                 Assert.Equal(44d, window.Height);
             }
             finally
@@ -326,11 +326,14 @@ public sealed class IslandLayoutTests
                 Assert.Equal(new CornerRadius(pill.ActualHeight / 2), pill.CornerRadius); // stadium: semicircular ends
 
                 viewModel.Toggle();
+                window.ResetPill(idle: false); // no transition controller here: the pill fills the window as it does when the animation ends
+                window.UpdateLayout();
                 Assert.Equal(new CornerRadius(24), pill.CornerRadius);
 
                 viewModel.CompleteExpansion();
                 viewModel.Collapse();
                 viewModel.CompleteCollapse();
+                window.ResetPill(idle: true);
                 window.UpdateLayout();
                 Assert.Equal(new CornerRadius(pill.ActualHeight / 2), pill.CornerRadius);
             }

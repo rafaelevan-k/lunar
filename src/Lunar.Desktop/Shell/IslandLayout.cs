@@ -43,6 +43,18 @@ public static class IslandLayout
             maxHeight);
     }
 
+    /// <summary>
+    /// The window's own limits (FE-33): always as wide as the expanded panel, and only its height follows the layout. Windows moves a layered
+    /// window and replaces its picture at different moments, so a window that moved sideways on every expand and collapse showed some frames
+    /// with the eyes far from the pill. With the left edge fixed there is nothing to get out of step. The part of the window beside the idle
+    /// pill is fully transparent, so it is neither visible nor clickable.
+    /// </summary>
+    public static IslandLayoutLimits WindowLimitsFor(bool expanded, DisplayInfo display, double topOffsetDip)
+    {
+        var panel = LimitsFor(expanded: true, display, topOffsetDip);
+        return expanded ? panel : panel with { MinHeight = IdleHeight, MaxHeight = IdleHeight };
+    }
+
     /// <summary>The measured content size clamped into the limits; non-finite or negative sizes count as zero.</summary>
     public static (double Width, double Height) Fit(IslandLayoutLimits limits, double contentWidth, double contentHeight)
     {

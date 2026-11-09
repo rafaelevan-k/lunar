@@ -92,7 +92,7 @@ public sealed class IslandPositionControllerTests
         window.Show();
         try
         {
-            var expected = IslandPlacement.PlaceTopCenter(display, 160, 44, 8);
+            var expected = IslandPlacement.PlaceTopCenter(display, 380, 44, 8);
             var actual = PixelsOf(window);
 
             Assert.True(started.IsSuccess);
@@ -122,7 +122,7 @@ public sealed class IslandPositionControllerTests
         window.Show();
         try
         {
-            var expected = IslandPlacement.PlaceTopCenter(left, 160, 44, 20);
+            var expected = IslandPlacement.PlaceTopCenter(left, 380, 44, 20);
             var actual = PixelsOf(window);
 
             Assert.True(expected.X < 0);
@@ -152,8 +152,8 @@ public sealed class IslandPositionControllerTests
             controller.UpdatePreference(new IslandSettings { PreferredMonitorId = "\\\\.\\DISPLAY2", TopOffsetDip = 40 });
             var elsewhere = PixelsOf(window);
 
-            var onPrimary = IslandPlacement.PlaceTopCenter(primary, 160, 44, 40);
-            var onRight = IslandPlacement.PlaceTopCenter(right, 160, 44, 40);
+            var onPrimary = IslandPlacement.PlaceTopCenter(primary, 380, 44, 40);
+            var onRight = IslandPlacement.PlaceTopCenter(right, 380, 44, 40);
             Assert.Equal(onPrimary.Y, moved.Top);
             Assert.Equal(onPrimary.X, moved.Left);
             Assert.Equal(onRight.X, elsewhere.Left);
@@ -181,7 +181,7 @@ public sealed class IslandPositionControllerTests
             var placed = PixelsOf(window);
             controller.UpdatePreference(new IslandSettings { TopOffsetDip = 30 });
 
-            Assert.Equal(IslandPlacement.PlaceTopCenter(display, 160, 44, 30).Y, placed.Top);
+            Assert.Equal(IslandPlacement.PlaceTopCenter(display, 380, 44, 30).Y, placed.Top);
             Assert.Equal(placed.Top, PixelsOf(window).Top);
         }
         finally
@@ -203,13 +203,13 @@ public sealed class IslandPositionControllerTests
         window.Show();
         try
         {
-            Assert.Equal(IslandPlacement.PlaceTopCenter(second, 160, 44, 8).X, PixelsOf(window).Left);
+            Assert.Equal(IslandPlacement.PlaceTopCenter(second, 380, 44, 8).X, PixelsOf(window).Left);
 
             environment.Displays = [primary]; // unplugged
             Task.Run(environment.Raise).Wait(TestContext.Current.CancellationToken); // pool thread, as in production
             Pump(window);
 
-            var expected = IslandPlacement.PlaceTopCenter(primary, 160, 44, 8);
+            var expected = IslandPlacement.PlaceTopCenter(primary, 380, 44, 8);
             Assert.Equal(expected.X, PixelsOf(window).Left);
             Assert.Equal(expected.Y, PixelsOf(window).Top);
         }
@@ -238,7 +238,7 @@ public sealed class IslandPositionControllerTests
             Pump(window);
 
             Assert.Equal(before + 48, PixelsOf(window).Top);
-            Assert.Equal(IslandPlacement.PlaceTopCenter(topTaskbar, 160, 44, 8).Y, PixelsOf(window).Top);
+            Assert.Equal(IslandPlacement.PlaceTopCenter(topTaskbar, 380, 44, 8).Y, PixelsOf(window).Top);
         }
         finally
         {
@@ -257,7 +257,7 @@ public sealed class IslandPositionControllerTests
         window.Show();
         try
         {
-            var expected = IslandPlacement.PlaceTopCenter(DisplayInfo.Fallback, 160, 44, 8);
+            var expected = IslandPlacement.PlaceTopCenter(DisplayInfo.Fallback, 380, 44, 8);
             var actual = PixelsOf(window);
 
             Assert.InRange(actual.Left, 0, DisplayInfo.Fallback.WorkArea.Right);
@@ -298,7 +298,7 @@ public sealed class IslandPositionControllerTests
         try
         {
             Assert.True(started.IsFailure);
-            Assert.Equal(IslandPlacement.PlaceTopCenter(display, 160, 44, 8).X, PixelsOf(window).Left);
+            Assert.Equal(IslandPlacement.PlaceTopCenter(display, 380, 44, 8).X, PixelsOf(window).Left);
             Assert.Contains(log.Events, e => e.EventId == "island.position.listener.failed" && e.Error == ErrorCode.IoFailure);
         }
         finally

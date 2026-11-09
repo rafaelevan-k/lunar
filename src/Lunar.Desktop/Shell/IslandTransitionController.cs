@@ -7,9 +7,9 @@ namespace Lunar.Desktop.Shell;
 /// Plays the pill-to-panel and panel-to-pill animation (FE-10) for the transitions the view model starts, and reports
 /// each animation's end back with its transition id. The state machine (BE-09) decides what happens; this class only
 /// draws it:
-/// - Expanding: the window is already at the expanded size (IslandPositionController), the pill glides from the idle
-///   size to the window size.
-/// - Collapsing: the pill glides to the idle size, and the window shrinks only when the animation has finished.
+/// - Expanding: the window is already at the expanded height (IslandPositionController; its width never changes, FE-33), the pill glides
+///   from the idle size to the window size.
+/// - Collapsing: the pill glides to the idle size, and the window loses its height only when the animation has finished.
 /// - Interruption: a reversal starts from the pill's live size, so there is no jump, and the replaced animation's
 ///   completion is never reported; a late or repeated completion is also ignored by the state machine.
 /// - Reduced motion: no animation. The pill is placed at once and the transition is completed on the next dispatcher
@@ -45,7 +45,7 @@ public sealed class IslandTransitionController : IDisposable
             return;
         _disposed = true;
         _viewModel.PropertyChanged -= OnViewModelChanged;
-        _window.ResetPill();
+        _window.ResetPill(idle: !_viewModel.IsExpandedLayout);
     }
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -53,15 +53,7 @@ public sealed class IslandTransitionController : IDisposable
         if (_disposed)
             return;
 
-        // The view model raises State first, then IsExpandedLayout (the position controller resizes the window), then
-        // TransitionId. Holding the pill at the idle size on State means it is not stretched by the resize.
-        if (e.PropertyName == nameof(IslandViewModel.State))
-        {
-            if (_viewModel.State == IslandVisualState.Expanding)
-                _window.HoldPill(IslandLayout.IdleWidth, IslandLayout.IdleHeight);
-            return;
-        }
-
+        // The view model raises State first, then IsExpandedLayout (the position controller resizes the window), then TransitionId.
         if (e.PropertyName != nameof(IslandViewModel.TransitionId))
             return;
 
@@ -75,8 +67,8 @@ public sealed class IslandTransitionController : IDisposable
                 Run(_window.Width, _window.Height, IslandLayout.IdleWidth, IslandLayout.IdleHeight, CollapseDuration, () => _viewModel.CompleteCollapse(id), id);
                 break;
             default:
-                // Not animating: a completion (or exit) has finished the transition, so the pill fills the window.
-                _window.ResetPill();
+                // Not animating: a completion (or exit) has finished the transition, so the pill takes its resting size.
+                _window.ResetPill(idle: !_viewModel.IsExpandedLayout);
                 break;
         }
     }

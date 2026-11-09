@@ -97,9 +97,13 @@ public sealed class IslandPositionController : IDisposable
 
         var display = ChooseDisplay();
         CurrentDisplayId = ReferenceEquals(display, DisplayInfo.Fallback) ? null : display.Id;
-        var limits = IslandLayout.LimitsFor(_viewModel.IsExpandedLayout, display, _preference.TopOffsetDip);
-        var content = _window.MeasureContent(new System.Windows.Size(limits.MaxWidth, limits.MaxHeight));
+        // Measured for the panel in both layouts, so the width (and with it the left edge) is the same whether the island is open or not (FE-33).
+        var panel = IslandLayout.WindowLimitsFor(expanded: true, display, _preference.TopOffsetDip);
+        var limits = IslandLayout.WindowLimitsFor(_viewModel.IsExpandedLayout, display, _preference.TopOffsetDip);
+        var content = _window.MeasureContent(new System.Windows.Size(panel.MaxWidth, panel.MaxHeight));
         var (width, height) = IslandLayout.Fit(limits, content.Width, content.Height);
+        if (!_viewModel.IsExpandedLayout)
+            _window.HoldPill(IslandLayout.IdleWidth, IslandLayout.IdleHeight);
         _window.ApplySize(limits, width, height);
         var rect = IslandPlacement.PlaceTopCenter(display, width, height, _preference.TopOffsetDip);
 

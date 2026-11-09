@@ -79,9 +79,11 @@ public sealed class IslandTransitionControllerTests
             throw new InvalidOperationException("WPF transition check failed.", failure);
     }
 
-    private static bool PillIsAtRest(Border pill) =>
-        double.IsNaN(pill.Width) && double.IsNaN(pill.Height) && !pill.HasAnimatedProperties
-        && pill.HorizontalAlignment == HorizontalAlignment.Stretch && pill.VerticalAlignment == VerticalAlignment.Stretch;
+    // An idle pill rests at its own size in the middle of the window (FE-33); an expanded one fills the window.
+    private static bool PillIsAtRest(Border pill, bool idle) =>
+        !pill.HasAnimatedProperties && (idle
+            ? pill.Width == IslandLayout.IdleWidth && pill.Height == IslandLayout.IdleHeight && pill.HorizontalAlignment == HorizontalAlignment.Center && pill.VerticalAlignment == VerticalAlignment.Top
+            : double.IsNaN(pill.Width) && double.IsNaN(pill.Height) && pill.HorizontalAlignment == HorizontalAlignment.Stretch && pill.VerticalAlignment == VerticalAlignment.Stretch);
 
     [Fact]
     public void ReducedMotionPlacesThePillAtOnceAndCompletesOnTheNextDispatcherTurn() => RunOnSta(() =>
@@ -98,7 +100,7 @@ public sealed class IslandTransitionControllerTests
 
         Pump(() => rig.ViewModel.State == IslandVisualState.Expanded, 1000);
         Assert.Equal(IslandVisualState.Expanded, rig.ViewModel.State);
-        Assert.True(PillIsAtRest(rig.Pill));
+        Assert.True(PillIsAtRest(rig.Pill, idle: false));
         Assert.Equal(380d, rig.Window.Width);
 
         rig.ViewModel.Toggle();
@@ -106,8 +108,8 @@ public sealed class IslandTransitionControllerTests
         Assert.Equal(44d, rig.Pill.Height);
         Pump(() => rig.ViewModel.State == IslandVisualState.Idle, 1000);
         Assert.Equal(IslandVisualState.Idle, rig.ViewModel.State);
-        Assert.True(PillIsAtRest(rig.Pill));
-        Assert.Equal(160d, rig.Window.Width);
+        Assert.True(PillIsAtRest(rig.Pill, idle: true));
+        Assert.Equal(380d, rig.Window.Width);
         Assert.Equal(44d, rig.Window.Height);
     });
 
@@ -154,16 +156,16 @@ public sealed class IslandTransitionControllerTests
         Assert.Equal(heights.OrderBy(h => h), heights.Where(h => h <= 320)); // grows, never shrinks, while expanding
         Pump(() => rig.ViewModel.State == IslandVisualState.Expanded);
         Assert.Equal(IslandVisualState.Expanded, rig.ViewModel.State);
-        Assert.True(PillIsAtRest(rig.Pill));
+        Assert.True(PillIsAtRest(rig.Pill, idle: false));
 
         rig.ViewModel.Toggle();
         Assert.Equal(IslandVisualState.Collapsing, rig.ViewModel.State);
-        Assert.Equal(380d, rig.Window.Width); // the window shrinks only when the pill has finished
+        Assert.Equal(380d, rig.Window.Width); // the window keeps its width throughout (FE-33)
         Pump(() => rig.ViewModel.State == IslandVisualState.Idle);
 
         Assert.Equal(IslandVisualState.Idle, rig.ViewModel.State);
-        Assert.True(PillIsAtRest(rig.Pill));
-        Assert.Equal(160d, rig.Window.Width);
+        Assert.True(PillIsAtRest(rig.Pill, idle: true));
+        Assert.Equal(380d, rig.Window.Width);
         Assert.Equal(44d, rig.Window.Height);
     });
 
@@ -186,8 +188,8 @@ public sealed class IslandTransitionControllerTests
         Pump(() => rig.ViewModel.State == IslandVisualState.Idle);
 
         Assert.Equal([IslandVisualState.Expanding, IslandVisualState.Collapsing, IslandVisualState.Idle], states);
-        Assert.True(PillIsAtRest(rig.Pill));
-        Assert.Equal(160d, rig.Window.Width);
+        Assert.True(PillIsAtRest(rig.Pill, idle: true));
+        Assert.Equal(380d, rig.Window.Width);
     });
 
     [Theory]
@@ -210,8 +212,8 @@ public sealed class IslandTransitionControllerTests
 
         Assert.Equal(expected, rig.ViewModel.State);
         Assert.Equal(0, rig.ViewModel.TransitionId);
-        Assert.True(PillIsAtRest(rig.Pill));
-        Assert.Equal(expected == IslandVisualState.Expanded ? 380d : 160d, rig.Window.Width);
+        Assert.True(PillIsAtRest(rig.Pill, idle: expected == IslandVisualState.Idle));
+        Assert.Equal(380d, rig.Window.Width);
     });
 
     [Fact]
@@ -236,7 +238,7 @@ public sealed class IslandTransitionControllerTests
 
         rig.Transition.Dispose();
 
-        Assert.True(PillIsAtRest(rig.Pill));
+        Assert.True(PillIsAtRest(rig.Pill, idle: false));
         rig.Transition.Dispose(); // idempotent
         rig.ViewModel.Toggle(); // no longer animated by the disposed controller
         Assert.False(rig.Pill.HasAnimatedProperties);

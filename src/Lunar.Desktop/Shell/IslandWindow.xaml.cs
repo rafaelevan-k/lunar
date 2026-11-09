@@ -18,6 +18,19 @@ public partial class IslandWindow : Window
         SourceInitialized += OnSourceInitialized;
         Deactivated += OnDeactivated;
         Closed += OnClosed;
+        Pill.SizeChanged += OnPillSizeChanged;
+    }
+
+    // The Border draws rounded corners but does not cut its content, so the content is cut to the same outline at every size the pill passes through (FE-33).
+    private void OnPillSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var border = Pill.BorderThickness;
+        var width = Math.Max(0, Pill.ActualWidth - border.Left - border.Right);
+        var height = Math.Max(0, Pill.ActualHeight - border.Top - border.Bottom);
+        var radius = Math.Max(0, Pill.CornerRadius.TopLeft - border.Left);
+        var clip = new System.Windows.Media.RectangleGeometry(new Rect(0, 0, width, height), radius, radius);
+        clip.Freeze();
+        ViewHost.Clip = clip;
     }
 
     /// <summary>Raised after <see cref="ViewContent"/> is replaced, so the owner can measure the new content.</summary>
@@ -113,12 +126,21 @@ public partial class IslandWindow : Window
         Pill.Height = height;
     }
 
-    /// <summary>Stops any animation and lets the pill fill the window again.</summary>
-    internal void ResetPill()
+    /// <summary>Stops any animation. An idle pill rests at its own size in the middle of the window; an expanded one fills the window.</summary>
+    internal void ResetPill(bool idle)
     {
         _pillAnimation++; // invalidates a running animation's completion
         Pill.BeginAnimation(WidthProperty, null);
         Pill.BeginAnimation(HeightProperty, null);
+        if (idle)
+        {
+            Pill.HorizontalAlignment = HorizontalAlignment.Center;
+            Pill.VerticalAlignment = VerticalAlignment.Top;
+            Pill.Width = IslandLayout.IdleWidth;
+            Pill.Height = IslandLayout.IdleHeight;
+            return;
+        }
+
         Pill.ClearValue(WidthProperty);
         Pill.ClearValue(HeightProperty);
         Pill.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -191,5 +213,6 @@ public partial class IslandWindow : Window
         SourceInitialized -= OnSourceInitialized;
         Deactivated -= OnDeactivated;
         Closed -= OnClosed;
+        Pill.SizeChanged -= OnPillSizeChanged;
     }
 }
