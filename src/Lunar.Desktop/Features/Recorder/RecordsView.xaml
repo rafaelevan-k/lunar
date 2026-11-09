@@ -1,0 +1,159 @@
+<UserControl x:Class="Lunar.Desktop.Features.Recorder.RecordsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:c="clr-namespace:Lunar.Desktop.Controls"
+             Focusable="False" IsTabStop="False" Background="Transparent"
+             automation:AutomationProperties.Name="{res:Text Records.Title}">
+  <!--
+    FE-34, ADR-0022: the recorder. It only binds to RecordsViewModel. Like the other pages it keeps 40 DIP clear on both sides for the swiper's arrows.
+    The list of microphones is drawn in place instead of in a pop-up: a pop-up of the non-activating island would need the keyboard and the mouse capture it
+    does not have (ADR-0007).
+  -->
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+
+    <Style x:Key="SmallButton" TargetType="Button">
+      <Setter Property="c:Squish.Enabled" Value="True" />
+      <Setter Property="Focusable" Value="True" />
+      <Setter Property="IsTabStop" Value="True" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="10,1" />
+      <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+      <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
+      <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Caption}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Face" CornerRadius="12" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
+                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Face" Property="Opacity" Value="0.4" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="OptionRow" TargetType="Button">
+      <Setter Property="Focusable" Value="True" />
+      <Setter Property="IsTabStop" Value="True" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Face" Background="{DynamicResource Lunar.Brush.Surface}" CornerRadius="8" Padding="10,5"
+                    BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="0">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderThickness" Value="1" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="40,0,40,2">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Which microphone; pressing it opens or closes the list below. -->
+    <DockPanel Grid.Row="0" LastChildFill="True" Margin="0,0,0,4">
+      <TextBlock DockPanel.Dock="Left" Text="{res:Text Records.Microphone}" Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <Button x:Name="InputButton" Style="{StaticResource SmallButton}" Command="{Binding TogglePickerCommand}" HorizontalAlignment="Right"
+              automation:AutomationProperties.Name="{res:Text Records.ChooseMicrophoneName}">
+        <TextBlock Text="{Binding CurrentInputText}" TextTrimming="CharacterEllipsis" MaxWidth="170" />
+      </Button>
+    </DockPanel>
+
+    <!-- The list of microphones, in place of the recorder while it is open. -->
+    <ScrollViewer x:Name="InputList" Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding IsPickingInput, Converter={StaticResource BoolToVisible}}">
+      <ItemsControl ItemsSource="{Binding Options}" Focusable="False" IsTabStop="False">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Style="{StaticResource OptionRow}" Command="{Binding SelectCommand}" Margin="0,0,4,4" automation:AutomationProperties.Name="{Binding Name}">
+              <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Margin="8,0,0,0"
+                           Foreground="{DynamicResource Lunar.Brush.Accent}"
+                           Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisible}}" />
+                <TextBlock Text="{Binding Name}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" />
+              </DockPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- The recorder. -->
+    <Grid x:Name="Recorder" Grid.Row="1" Visibility="{Binding ShowRecorder, Converter={StaticResource BoolToVisible}}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <TextBlock x:Name="ElapsedText" Grid.Row="0" Text="{Binding ElapsedText}" Style="{DynamicResource Lunar.Text.Title}" HorizontalAlignment="Center"
+                 automation:AutomationProperties.Name="{res:Text Records.ElapsedName}" />
+
+      <c:VoiceLevelsView x:Name="Levels" Grid.Row="1" Levels="{Binding Levels}" BarBrush="{DynamicResource Lunar.Brush.Error}" Width="160" Height="24" Margin="0,2,0,6"
+                         HorizontalAlignment="Center" />
+
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+        <Button x:Name="RecordButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Records.Record}" Command="{Binding RecordCommand}"
+                automation:AutomationProperties.Name="{res:Text Records.RecordName}"
+                Visibility="{Binding ShowRecord, Converter={StaticResource BoolToVisible}}" />
+        <Button x:Name="PauseButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{Binding PauseResumeText}" Command="{Binding PauseResumeCommand}"
+                automation:AutomationProperties.Name="{Binding PauseResumeName}" Margin="0,0,8,0"
+                Visibility="{Binding ShowTransport, Converter={StaticResource BoolToVisible}}" />
+        <Button x:Name="StopButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Records.Stop}" Command="{Binding StopCommand}"
+                automation:AutomationProperties.Name="{res:Text Records.StopName}"
+                Visibility="{Binding ShowTransport, Converter={StaticResource BoolToVisible}}" />
+        <TextBlock x:Name="SavingText" Text="{res:Text Records.Saving}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Center" MinHeight="28"
+                   automation:AutomationProperties.LiveSetting="Polite"
+                   Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisible}}" />
+      </StackPanel>
+
+      <DockPanel Grid.Row="3" LastChildFill="True" Margin="0,0,0,4">
+        <Button x:Name="ChangeFolderButton" DockPanel.Dock="Right" Style="{StaticResource SmallButton}" Content="{res:Text Records.Change}" Command="{Binding ChangeFolderCommand}"
+                automation:AutomationProperties.Name="{res:Text Records.ChangeName}" />
+        <TextBlock Style="{DynamicResource Lunar.Text.Caption}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" ToolTip="{Binding FolderPath}">
+          <Run Text="{res:Text Records.SaveTo}" /> <Run Text="{Binding FolderName, Mode=OneWay}" />
+        </TextBlock>
+      </DockPanel>
+
+      <DockPanel x:Name="StatusRow" Grid.Row="4" LastChildFill="True" Visibility="{Binding HasStatus, Converter={StaticResource BoolToVisible}}">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+          <Button x:Name="ShowFileButton" Style="{StaticResource SmallButton}" Content="{res:Text Records.Show}" Command="{Binding ShowFileCommand}"
+                  automation:AutomationProperties.Name="{res:Text Records.ShowName}"
+                  Visibility="{Binding ShowFileButton, Converter={StaticResource BoolToVisible}}" />
+          <Button x:Name="OpenSettingsButton" Style="{StaticResource SmallButton}" Content="{res:Text Records.OpenSettings}" Command="{Binding OpenMicrophoneSettingsCommand}"
+                  automation:AutomationProperties.Name="{res:Text Records.OpenSettingsName}"
+                  Visibility="{Binding ShowOpenMicrophoneSettings, Converter={StaticResource BoolToVisible}}" />
+        </StackPanel>
+        <TextBlock x:Name="StatusText" Text="{Binding Status}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis"
+                   Margin="0,0,8,0" automation:AutomationProperties.LiveSetting="Polite" />
+      </DockPanel>
+    </Grid>
+  </Grid>
+</UserControl>

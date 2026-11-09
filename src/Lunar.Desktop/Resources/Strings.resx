@@ -407,4 +407,40 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="System.BrightnessShortNoDisplay" xml:space="preserve"><value>No display found</value></data>
   <data name="System.BrightnessShortDenied" xml:space="preserve"><value>Not allowed by Windows</value></data>
   <data name="System.BrightnessShortReadFailed" xml:space="preserve"><value>Couldn't be read</value></data>
+  <data name="Records.Title" xml:space="preserve"><value>Voice recorder</value></data>
+  <data name="Records.NotesTab" xml:space="preserve"><value>Notes</value></data>
+  <data name="Records.RecordsTab" xml:space="preserve"><value>Records</value></data>
+  <data name="Records.Microphone" xml:space="preserve"><value>Microphone</value></data>
+  <data name="Records.ChooseMicrophoneName" xml:space="preserve"><value>Choose the microphone</value></data>
+  <data name="Records.Automatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Records.ElapsedName" xml:space="preserve"><value>Time recorded</value></data>
+  <data name="Records.Record" xml:space="preserve"><value>Record</value></data>
+  <data name="Records.RecordName" xml:space="preserve"><value>Start recording</value></data>
+  <data name="Records.Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Records.PauseName" xml:space="preserve"><value>Pause the recording</value></data>
+  <data name="Records.Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Records.ResumeName" xml:space="preserve"><value>Resume the recording</value></data>
+  <data name="Records.Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Records.StopName" xml:space="preserve"><value>Stop and save the recording</value></data>
+  <data name="Records.Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="Records.SaveTo" xml:space="preserve"><value>Saves to</value></data>
+  <data name="Records.Change" xml:space="preserve"><value>Change</value></data>
+  <data name="Records.ChangeName" xml:space="preserve"><value>Change the folder for recordings</value></data>
+  <data name="Records.Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Records.ShowName" xml:space="preserve"><value>Show the recording in its folder</value></data>
+  <data name="Records.OpenSettings" xml:space="preserve"><value>Open settings</value></data>
+  <data name="Records.OpenSettingsName" xml:space="preserve"><value>Open the microphone settings of Windows</value></data>
+  <data name="Records.Saved" xml:space="preserve"><value>Saved: {0}</value></data>
+  <data name="Records.ErrorBlocked" xml:space="preserve"><value>Windows is blocking the microphone for apps.</value></data>
+  <data name="Records.ErrorNoMicrophone" xml:space="preserve"><value>No microphone was found.</value></data>
+  <data name="Records.ErrorNoEncoder" xml:space="preserve"><value>This PC has no MP3 encoder. On Windows N, install the Media Feature Pack.</value></data>
+  <data name="Records.ErrorFolder" xml:space="preserve"><value>That folder can't be written to, or it is nearly full.</value></data>
+  <data name="Records.ErrorNotSaved" xml:space="preserve"><value>The recording could not be saved.</value></data>
+  <data name="Records.ErrorOther" xml:space="preserve"><value>Something went wrong with the recording.</value></data>
+  <data name="Records.NoticeChosenMissing" xml:space="preserve"><value>Your chosen microphone is gone, so Automatic is being used.</value></data>
+  <data name="Records.NoticeDeviceLost" xml:space="preserve"><value>The microphone was lost.</value></data>
+  <data name="Records.NoticeDiskFull" xml:space="preserve"><value>The disk is nearly full, so recording stopped.</value></data>
+  <data name="Records.NoticeLengthLimit" xml:space="preserve"><value>Recording stopped at the 12-hour limit.</value></data>
+  <data name="Records.NoticeRecovered" xml:space="preserve"><value>A recording from an earlier run was recovered.</value></data>
+  <data name="Records.NoticeKeptAsItIs" xml:space="preserve"><value>A recording from an earlier run could not be repaired. It is still in its folder.</value></data>
 </root>

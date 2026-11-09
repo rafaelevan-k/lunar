@@ -64,6 +64,7 @@ public partial class App : System.Windows.Application
     private ConverterQueueViewModel? _converterQueue;
     private ConverterBusyLink? _converterBusy;
     private NotesPageViewModel? _notes;
+    private Lunar.Desktop.Features.Recorder.RecordsViewModel? _records;
     private Lunar.Application.Recording.RecordingService? _recording;
     private NotesLifetime? _notesLifetime;
     private UsagePageViewModel? _usage;
@@ -265,7 +266,15 @@ public partial class App : System.Windows.Application
             new DispatcherOneShotTimer(),
             TimeProvider.System,
             _log);
-        pages[3] = new NotesPage { DataContext = _notes };
+        _records = new Lunar.Desktop.Features.Recorder.RecordsViewModel(
+            _services.GetRequiredService<Lunar.Application.Recording.RecordingService>(),
+            _services.GetRequiredService<IFolderPicker>(),
+            _services.GetRequiredService<IOutputRevealer>(),
+            _services.GetRequiredService<ISystemSettingsLauncher>(),
+            toUi,
+            TimeProvider.System,
+            _log);
+        pages[3] = new NotesHostPage { DataContext = new NotesHostViewModel(_notes, _records, _lifetime.Token) };
         pages[4] = new UsagePage { DataContext = _usage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
@@ -424,6 +433,8 @@ public partial class App : System.Windows.Application
         _usage = null;
         _notesLifetime?.Dispose();
         _notesLifetime = null;
+        _records?.Dispose();
+        _records = null;
         _notes?.Dispose();
         _notes = null;
         _media?.Dispose();

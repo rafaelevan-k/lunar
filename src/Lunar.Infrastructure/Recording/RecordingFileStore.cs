@@ -82,7 +82,7 @@ public sealed partial class RecordingFileStore : IRecordingFiles
         }
         catch (UnauthorizedAccessException)
         {
-            return Result.Failure<string>(new OperationError(ErrorCode.AccessDenied, "Lunar is not allowed to write to that folder."));
+            return Result.Failure<string>(new OperationError(ErrorCode.IoFailure, "Lunar is not allowed to write to that folder."));
         }
         catch (Exception ex) when (IsExpected(ex))
         {
@@ -155,7 +155,7 @@ public sealed partial class RecordingFileStore : IRecordingFiles
         }
         catch (UnauthorizedAccessException)
         {
-            return Result.Failure<SavedRecording>(new OperationError(ErrorCode.AccessDenied, "Lunar is not allowed to finish the file in that folder."));
+            return Result.Failure<SavedRecording>(new OperationError(ErrorCode.IoFailure, "Lunar is not allowed to finish the file in that folder."));
         }
         catch (Exception ex) when (IsExpected(ex))
         {

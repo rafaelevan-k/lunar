@@ -118,7 +118,7 @@ public sealed class WinRtVoiceCaptureEngine : IVoiceCaptureEngine
         }
         catch (UnauthorizedAccessException)
         {
-            return Result.Failure(new OperationError(ErrorCode.AccessDenied, "The recording file could not be created there."));
+            return Result.Failure(new OperationError(ErrorCode.IoFailure, "The recording file could not be created there."));
         }
         catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException)
         {

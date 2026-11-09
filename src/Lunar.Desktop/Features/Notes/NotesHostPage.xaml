@@ -1,0 +1,65 @@
+<UserControl x:Class="Lunar.Desktop.Features.Notes.NotesHostPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:notes="clr-namespace:Lunar.Desktop.Features.Notes"
+             xmlns:recorder="clr-namespace:Lunar.Desktop.Features.Recorder"
+             Focusable="False" IsTabStop="False" Background="Transparent"
+             automation:AutomationProperties.Name="{res:Text Nav.Notes}">
+  <!-- FE-34: the two buttons of the Notes page and the two views. Both views stay in the tree, so nothing is lost by switching. -->
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+    <Style x:Key="ViewSwitch" TargetType="RadioButton">
+      <Setter Property="Focusable" Value="True" />
+      <Setter Property="IsTabStop" Value="True" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="GroupName" Value="NotesView" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="MinWidth" Value="76" />
+      <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+      <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
+      <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Caption}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="Face" CornerRadius="12" Padding="12,1" Background="Transparent"
+                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="{DynamicResource Lunar.Brush.Accent}" />
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+                <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.OnAccent}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6">
+      <RadioButton x:Name="NotesSwitch" Style="{StaticResource ViewSwitch}" Content="{res:Text Records.NotesTab}" IsChecked="{Binding IsNotesShown}" Margin="0,0,6,0"
+                   automation:AutomationProperties.Name="{res:Text Records.NotesTab}" />
+      <RadioButton x:Name="RecordsSwitch" Style="{StaticResource ViewSwitch}" Content="{res:Text Records.RecordsTab}" IsChecked="{Binding IsRecordsShown}"
+                   automation:AutomationProperties.Name="{res:Text Records.RecordsTab}" />
+    </StackPanel>
+
+    <notes:NotesPage x:Name="NotesView" Grid.Row="1" DataContext="{Binding Notes}"
+                     Visibility="{Binding DataContext.IsNotesShown, RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource BoolToVisible}}" />
+    <recorder:RecordsView x:Name="RecordsView" Grid.Row="1" DataContext="{Binding Records}"
+                          Visibility="{Binding DataContext.IsRecordsShown, RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource BoolToVisible}}" />
+  </Grid>
+</UserControl>

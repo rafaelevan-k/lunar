@@ -407,4 +407,40 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="System.BrightnessShortNoDisplay" xml:space="preserve"><value>Layar tidak ditemukan</value></data>
   <data name="System.BrightnessShortDenied" xml:space="preserve"><value>Tidak diizinkan Windows</value></data>
   <data name="System.BrightnessShortReadFailed" xml:space="preserve"><value>Tidak bisa dibaca</value></data>
+  <data name="Records.Title" xml:space="preserve"><value>Perekam suara</value></data>
+  <data name="Records.NotesTab" xml:space="preserve"><value>Catatan</value></data>
+  <data name="Records.RecordsTab" xml:space="preserve"><value>Rekaman</value></data>
+  <data name="Records.Microphone" xml:space="preserve"><value>Mikrofon</value></data>
+  <data name="Records.ChooseMicrophoneName" xml:space="preserve"><value>Pilih mikrofon</value></data>
+  <data name="Records.Automatic" xml:space="preserve"><value>Otomatis</value></data>
+  <data name="Records.ElapsedName" xml:space="preserve"><value>Waktu terekam</value></data>
+  <data name="Records.Record" xml:space="preserve"><value>Rekam</value></data>
+  <data name="Records.RecordName" xml:space="preserve"><value>Mulai merekam</value></data>
+  <data name="Records.Pause" xml:space="preserve"><value>Jeda</value></data>
+  <data name="Records.PauseName" xml:space="preserve"><value>Jeda rekaman</value></data>
+  <data name="Records.Resume" xml:space="preserve"><value>Lanjut</value></data>
+  <data name="Records.ResumeName" xml:space="preserve"><value>Lanjutkan rekaman</value></data>
+  <data name="Records.Stop" xml:space="preserve"><value>Berhenti</value></data>
+  <data name="Records.StopName" xml:space="preserve"><value>Hentikan dan simpan rekaman</value></data>
+  <data name="Records.Saving" xml:space="preserve"><value>Menyimpan…</value></data>
+  <data name="Records.SaveTo" xml:space="preserve"><value>Disimpan di</value></data>
+  <data name="Records.Change" xml:space="preserve"><value>Ubah</value></data>
+  <data name="Records.ChangeName" xml:space="preserve"><value>Ubah folder rekaman</value></data>
+  <data name="Records.Show" xml:space="preserve"><value>Lihat</value></data>
+  <data name="Records.ShowName" xml:space="preserve"><value>Tampilkan rekaman di foldernya</value></data>
+  <data name="Records.OpenSettings" xml:space="preserve"><value>Buka pengaturan</value></data>
+  <data name="Records.OpenSettingsName" xml:space="preserve"><value>Buka pengaturan mikrofon Windows</value></data>
+  <data name="Records.Saved" xml:space="preserve"><value>Tersimpan: {0}</value></data>
+  <data name="Records.ErrorBlocked" xml:space="preserve"><value>Windows memblokir mikrofon untuk aplikasi.</value></data>
+  <data name="Records.ErrorNoMicrophone" xml:space="preserve"><value>Mikrofon tidak ditemukan.</value></data>
+  <data name="Records.ErrorNoEncoder" xml:space="preserve"><value>PC ini tidak punya encoder MP3. Di Windows N, pasang Media Feature Pack.</value></data>
+  <data name="Records.ErrorFolder" xml:space="preserve"><value>Folder itu tidak bisa ditulis, atau hampir penuh.</value></data>
+  <data name="Records.ErrorNotSaved" xml:space="preserve"><value>Rekaman tidak bisa disimpan.</value></data>
+  <data name="Records.ErrorOther" xml:space="preserve"><value>Terjadi masalah pada rekaman.</value></data>
+  <data name="Records.NoticeChosenMissing" xml:space="preserve"><value>Mikrofon pilihan Anda tidak ada, jadi memakai Otomatis.</value></data>
+  <data name="Records.NoticeDeviceLost" xml:space="preserve"><value>Mikrofon terputus.</value></data>
+  <data name="Records.NoticeDiskFull" xml:space="preserve"><value>Disk hampir penuh, jadi rekaman dihentikan.</value></data>
+  <data name="Records.NoticeLengthLimit" xml:space="preserve"><value>Rekaman berhenti di batas 12 jam.</value></data>
+  <data name="Records.NoticeRecovered" xml:space="preserve"><value>Rekaman dari sesi sebelumnya berhasil dipulihkan.</value></data>
+  <data name="Records.NoticeKeptAsItIs" xml:space="preserve"><value>Rekaman dari sesi sebelumnya tidak bisa diperbaiki. File masih ada di foldernya.</value></data>
 </root>
