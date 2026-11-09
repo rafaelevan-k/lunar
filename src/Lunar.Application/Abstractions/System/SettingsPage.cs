@@ -11,5 +11,8 @@ public enum SettingsPage
     Display,
 
     /// <summary>Windows Settings &gt; Privacy &gt; Microphone, the way out when Windows blocks the microphone (ADR-0022).</summary>
-    Microphone
+    Microphone,
+
+    /// <summary>Windows Settings &gt; Notifications, the way out when Lunar cannot turn on Do Not Disturb (ADR-0023).</summary>
+    Focus
 }

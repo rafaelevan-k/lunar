@@ -33,6 +33,7 @@ public sealed class WindowsSettingsLauncher : ISystemSettingsLauncher
         SettingsPage.DateAndTime => "ms-settings:dateandtime",
         SettingsPage.Display => "ms-settings:display",
         SettingsPage.Microphone => "ms-settings:privacy-microphone",
+        SettingsPage.Focus => "ms-settings:notifications",
         _ => null
     };
 

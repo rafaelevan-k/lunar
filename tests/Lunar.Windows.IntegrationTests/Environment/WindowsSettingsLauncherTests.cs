@@ -15,6 +15,7 @@ public sealed class WindowsSettingsLauncherTests
     [InlineData(SettingsPage.DateAndTime, "ms-settings:dateandtime")]
     [InlineData(SettingsPage.Display, "ms-settings:display")]
     [InlineData(SettingsPage.Microphone, "ms-settings:privacy-microphone")]
+    [InlineData(SettingsPage.Focus, "ms-settings:notifications")]
     public async Task EachWhitelistedPageOpensItsFixedUri(SettingsPage page, string expectedUri)
     {
         var started = new List<string>();

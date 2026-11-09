@@ -134,7 +134,7 @@ public sealed class PortContractTests
         Assert.True((await launcher.OpenAsync(SettingsPage.Wifi, CancellationToken.None)).IsFailure);
         Assert.Equal(new[] { SettingsPage.Bluetooth }, launcher.Opened);
         // The whitelist grows only by decision: Display was added for brightness (ADR-0021, FE-32), Microphone for the recorder (ADR-0022, BE-40).
-        Assert.Equal([SettingsPage.Wifi, SettingsPage.Bluetooth, SettingsPage.DateAndTime, SettingsPage.Display, SettingsPage.Microphone], Enum.GetValues<SettingsPage>());
+        Assert.Equal([SettingsPage.Wifi, SettingsPage.Bluetooth, SettingsPage.DateAndTime, SettingsPage.Display, SettingsPage.Microphone, SettingsPage.Focus], Enum.GetValues<SettingsPage>());
     }
 
     [Fact]
