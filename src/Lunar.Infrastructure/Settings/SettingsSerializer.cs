@@ -24,6 +24,7 @@ internal static class SettingsSerializer
         var conversion = Section(root, "conversion", ref reset);
         var privacy = Section(root, "privacy", ref reset);
         var usage = Section(root, "usage", ref reset);
+        var recorder = Section(root, "recorder", ref reset);
 
         var settings = new LunarSettings
         {
@@ -47,7 +48,12 @@ internal static class SettingsSerializer
             {
                 DiagnosticsEnabled = Bool(privacy, "diagnosticsEnabled", defaults.Privacy.DiagnosticsEnabled, ref reset)
             },
-            Usage = new UsageSettings { Enabled = Bool(usage, "enabled", defaults.Usage.Enabled, ref reset) }
+            Usage = new UsageSettings { Enabled = Bool(usage, "enabled", defaults.Usage.Enabled, ref reset) },
+            Recorder = new RecorderSettings
+            {
+                OutputDirectory = Text(recorder, "outputDirectory", ref reset),
+                InputDeviceId = Text(recorder, "inputDeviceId", ref reset)
+            }
         };
 
         valuesReset = reset;
@@ -77,7 +83,12 @@ internal static class SettingsSerializer
             ["media"] = new JsonObject { ["preferredSessionId"] = settings.Media.PreferredSessionId },
             ["conversion"] = new JsonObject { ["outputDirectory"] = settings.Conversion.OutputDirectory },
             ["privacy"] = new JsonObject { ["diagnosticsEnabled"] = settings.Privacy.DiagnosticsEnabled },
-            ["usage"] = new JsonObject { ["enabled"] = settings.Usage.Enabled }
+            ["usage"] = new JsonObject { ["enabled"] = settings.Usage.Enabled },
+            ["recorder"] = new JsonObject
+            {
+                ["outputDirectory"] = settings.Recorder.OutputDirectory,
+                ["inputDeviceId"] = settings.Recorder.InputDeviceId
+            }
         };
 
         return new UTF8Encoding(false).GetBytes(root.ToJsonString(WriteOptions));

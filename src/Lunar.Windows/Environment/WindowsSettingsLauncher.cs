@@ -32,6 +32,7 @@ public sealed class WindowsSettingsLauncher : ISystemSettingsLauncher
         SettingsPage.Bluetooth => "ms-settings:bluetooth",
         SettingsPage.DateAndTime => "ms-settings:dateandtime",
         SettingsPage.Display => "ms-settings:display",
+        SettingsPage.Microphone => "ms-settings:privacy-microphone",
         _ => null
     };
 

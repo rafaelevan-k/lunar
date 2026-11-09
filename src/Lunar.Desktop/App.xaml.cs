@@ -64,6 +64,7 @@ public partial class App : System.Windows.Application
     private ConverterQueueViewModel? _converterQueue;
     private ConverterBusyLink? _converterBusy;
     private NotesPageViewModel? _notes;
+    private Lunar.Application.Recording.RecordingService? _recording;
     private NotesLifetime? _notesLifetime;
     private UsagePageViewModel? _usage;
     private UsageLifetime? _usageLifetime;
@@ -339,6 +340,7 @@ public partial class App : System.Windows.Application
             _usage.InitializeAsync(_lifetime.Token),
             _notes.InitializeAsync(_lifetime.Token),
             RemoveLegacyUsageTokenAsync(),
+            (_recording = _services.GetRequiredService<Lunar.Application.Recording.RecordingService>()).RecoverAsync(_lifetime.Token),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
     }
 
@@ -384,6 +386,17 @@ public partial class App : System.Windows.Application
         catch (AggregateException ex)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "notes.exit.flush.failed", "App", "Exit", ErrorCode.Unexpected,
+                ExceptionType: ex.InnerException?.GetType()));
+        }
+
+        // A running recording is saved, not lost (ADR-0022). The same reasoning as the note above; the engine limits its own finish to 10 s.
+        try
+        {
+            _recording?.ShutdownAsync().Wait(TimeSpan.FromSeconds(12));
+        }
+        catch (AggregateException ex)
+        {
+            _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "recording.exit.save.failed", "App", "Exit", ErrorCode.Unexpected,
                 ExceptionType: ex.InnerException?.GetType()));
         }
 

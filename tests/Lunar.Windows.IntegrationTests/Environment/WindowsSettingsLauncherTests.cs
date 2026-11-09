@@ -14,6 +14,7 @@ public sealed class WindowsSettingsLauncherTests
     [InlineData(SettingsPage.Bluetooth, "ms-settings:bluetooth")]
     [InlineData(SettingsPage.DateAndTime, "ms-settings:dateandtime")]
     [InlineData(SettingsPage.Display, "ms-settings:display")]
+    [InlineData(SettingsPage.Microphone, "ms-settings:privacy-microphone")]
     public async Task EachWhitelistedPageOpensItsFixedUri(SettingsPage page, string expectedUri)
     {
         var started = new List<string>();

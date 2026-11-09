@@ -69,6 +69,7 @@ public sealed class SettingsSecretsTests
                 "launchAtStartup", "locale",
                 "media", "media.preferredSessionId",
                 "privacy", "privacy.diagnosticsEnabled",
+                "recorder", "recorder.inputDeviceId", "recorder.outputDirectory",
                 "schemaVersion",
                 "usage", "usage.enabled"
             ],

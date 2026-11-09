@@ -25,6 +25,7 @@ public static class SettingsRules
         var media = settings.Media ?? new MediaSettings();
         var conversion = settings.Conversion ?? new ConversionSettings();
         var privacy = settings.Privacy ?? new PrivacySettings();
+        var recorder = settings.Recorder ?? new RecorderSettings();
 
         var normalized = settings with
         {
@@ -43,7 +44,12 @@ public static class SettingsRules
             Media = media with { PreferredSessionId = Token(media.PreferredSessionId, MaxIdLength) },
             Conversion = conversion with { OutputDirectory = Token(conversion.OutputDirectory, MaxPathLength) },
             Privacy = privacy,
-            Usage = settings.Usage ?? new UsageSettings()
+            Usage = settings.Usage ?? new UsageSettings(),
+            Recorder = recorder with
+            {
+                OutputDirectory = Token(recorder.OutputDirectory, MaxPathLength),
+                InputDeviceId = Token(recorder.InputDeviceId, MaxPathLength)
+            }
         };
 
         changed = normalized != settings;

@@ -54,6 +54,15 @@ public sealed record UsageSettings
     public bool Enabled { get; init; }
 }
 
+public sealed record RecorderSettings
+{
+    /// <summary>Absolute local folder for recordings, or null for the default. Never logged.</summary>
+    public string? OutputDirectory { get; init; }
+
+    /// <summary>Opaque id of the chosen microphone, or null for Automatic (the Windows default). Never logged.</summary>
+    public string? InputDeviceId { get; init; }
+}
+
 /// <summary>
 /// User preferences (ADR-0011). Immutable; every default is a safe value, so a missing file or field is never an
 /// error. Values are checked and repaired by <see cref="SettingsRules.Normalize"/>.
@@ -78,4 +87,6 @@ public sealed record LunarSettings
     public PrivacySettings Privacy { get; init; } = new();
 
     public UsageSettings Usage { get; init; } = new();
+
+    public RecorderSettings Recorder { get; init; } = new();
 }

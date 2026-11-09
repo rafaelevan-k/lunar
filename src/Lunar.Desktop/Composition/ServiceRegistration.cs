@@ -1,3 +1,4 @@
+using Lunar.Application.Abstractions.Audio;
 using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Media;
@@ -9,6 +10,7 @@ using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Notes;
+using Lunar.Application.Recording;
 using Lunar.Application.Settings;
 using Lunar.Application.Shell.UseCases;
 using Lunar.Application.Usage;
@@ -20,6 +22,7 @@ using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Shell;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Notes;
+using Lunar.Infrastructure.Recording;
 using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
 using Lunar.Infrastructure.Usage;
@@ -86,6 +89,19 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
         // The one writer of the settings and the announcer of changes (ADR-0016); the theme source tells when Windows changes light or dark.
         services.AddSingleton<SettingsService>(sp => new SettingsService(sp.GetRequiredService<ISettingsRepository>()));
+        // Recorder (ADR-0022, BE-39/BE-40). Nothing opens a microphone until the user presses Record.
+        services.AddSingleton<WindowsAudioInputCatalog>();
+        services.AddSingleton<IAudioInputCatalog>(sp => sp.GetRequiredService<WindowsAudioInputCatalog>());
+        services.AddSingleton<IVoiceCaptureEngine, WinRtVoiceCaptureEngine>();
+        services.AddSingleton<IRecordingFiles>(_ => new RecordingFileStore());
+        services.AddSingleton<RecordingService>(sp => new RecordingService(
+            sp.GetRequiredService<IVoiceCaptureEngine>(),
+            sp.GetRequiredService<IAudioInputCatalog>(),
+            sp.GetRequiredService<IRecordingFiles>(),
+            sp.GetRequiredService<SettingsService>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IDiagnosticLog>()));
+
         // Notes (ADR-0020, BE-36): notes.json beside the settings, and the one writer of it. Nothing is read until the Notes page asks.
         services.AddSingleton<INotesRepository>(sp => new JsonNotesRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<NotesService>(sp => new NotesService(sp.GetRequiredService<INotesRepository>(), TimeProvider.System, sp.GetRequiredService<IDiagnosticLog>()));
