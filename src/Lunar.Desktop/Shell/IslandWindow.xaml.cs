@@ -127,7 +127,7 @@ public partial class IslandWindow : Window
     }
 
     /// <summary>Stops any animation. An idle pill rests at its own size in the middle of the window; an expanded one fills the window.</summary>
-    internal void ResetPill(bool idle)
+    internal void ResetPill(bool idle, double idleWidth = IslandLayout.IdleWidth)
     {
         _pillAnimation++; // invalidates a running animation's completion
         Pill.BeginAnimation(WidthProperty, null);
@@ -136,7 +136,7 @@ public partial class IslandWindow : Window
         {
             Pill.HorizontalAlignment = HorizontalAlignment.Center;
             Pill.VerticalAlignment = VerticalAlignment.Top;
-            Pill.Width = IslandLayout.IdleWidth;
+            Pill.Width = idleWidth;
             Pill.Height = IslandLayout.IdleHeight;
             return;
         }

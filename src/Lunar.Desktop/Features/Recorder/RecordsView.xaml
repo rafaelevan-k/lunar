@@ -116,7 +116,7 @@
       <TextBlock x:Name="ElapsedText" Grid.Row="0" Text="{Binding ElapsedText}" Style="{DynamicResource Lunar.Text.Title}" HorizontalAlignment="Center"
                  automation:AutomationProperties.Name="{res:Text Records.ElapsedName}" />
 
-      <c:VoiceLevelsView x:Name="Levels" Grid.Row="1" Levels="{Binding Levels}" BarBrush="{DynamicResource Lunar.Brush.Error}" Width="160" Height="24" Margin="0,2,0,6"
+      <c:VoiceLevelsView x:Name="Levels" Grid.Row="1" Levels="{Binding Levels}" BarBrush="{DynamicResource Lunar.Brush.Recording}" Width="160" Height="24" Margin="0,2,0,6"
                          HorizontalAlignment="Center" />
 
       <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">

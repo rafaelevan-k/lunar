@@ -24,6 +24,7 @@ public sealed class IslandShellView : Grid, IDisposable
     private readonly IslandViewModel _viewModel;
     private readonly EyesView _eyes;
     private readonly ConfettiBurst _confetti = new();
+    private readonly ContentControl _idleActivity = new() { Focusable = false, IsTabStop = false, Visibility = Visibility.Collapsed };
     private bool _reduceMotion;
     private bool _disposed;
 
@@ -44,6 +45,8 @@ public sealed class IslandShellView : Grid, IDisposable
         SetRow(eyes, 0);
         SetRow(swiper, 1);
         Children.Add(eyes);
+        SetRow(_idleActivity, 0);
+        Children.Add(_idleActivity);
         Children.Add(swiper);
 
         // The island's recoverable error, in place under the pages; it takes no room while there is no error.
@@ -89,6 +92,24 @@ public sealed class IslandShellView : Grid, IDisposable
 
     public InlineError Error { get; }
 
+    /// <summary>What the collapsed island shows instead of the eyes (ADR-0024); null for the eyes. It never shows while the island is open. UI thread only.</summary>
+    public void SetIdleActivity(FrameworkElement? view)
+    {
+        if (ReferenceEquals(_idleActivity.Content, view))
+            return;
+        _idleActivity.Content = view;
+        ApplyIdleActivity();
+    }
+
+    private void ApplyIdleActivity()
+    {
+        var show = _idleActivity.Content is not null && _viewModel.State is IslandVisualState.Idle or IslandVisualState.Collapsing;
+        _idleActivity.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+
+        // Hidden rather than collapsed keeps the row's layout; either way the timers of the eyes stop while they are not seen.
+        _eyes.Visibility = show ? Visibility.Hidden : Visibility.Visible;
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -119,8 +140,12 @@ public sealed class IslandShellView : Grid, IDisposable
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(IslandViewModel.IsExpanded) && !_disposed)
+        if (_disposed)
+            return;
+        if (e.PropertyName == nameof(IslandViewModel.IsExpanded))
             Apply(_viewModel.IsExpanded, animate: true);
+        else if (e.PropertyName == nameof(IslandViewModel.State))
+            ApplyIdleActivity();
     }
 
     private void Apply(bool expanded, bool animate)

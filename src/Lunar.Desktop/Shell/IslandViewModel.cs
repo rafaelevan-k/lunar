@@ -21,6 +21,7 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 {
     private readonly TransitionIsland _island;
     private string? _errorMessage;
+    private double _idleWidth = IslandLayout.IdleWidth;
 
     public IslandViewModel()
         : this(new TransitionIsland(SystemClock.Instance))
@@ -48,6 +49,19 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 
     /// <summary>Identifies the running animation (zero when none); the view passes it back when the animation ends.</summary>
     public long TransitionId => _island.TransitionId;
+
+    /// <summary>How wide the collapsed pill should be for what it shows (ADR-0024). Changing it moves nothing but the pill.</summary>
+    public double IdleWidth
+    {
+        get => _idleWidth;
+        set
+        {
+            if (_idleWidth == value)
+                return;
+            _idleWidth = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IdleWidth)));
+        }
+    }
 
     /// <summary>True while fully expanded (Expanded or Busy); false during both animations.</summary>
     public bool IsExpanded => State is IslandVisualState.Expanded or IslandVisualState.Busy;

@@ -11,5 +11,6 @@
   <Color x:Key="Lunar.Color.Focus">#0B0C10</Color>
   <Color x:Key="Lunar.Color.Border">#D4D7E2</Color>
   <Color x:Key="Lunar.Color.Error">#B3261E</Color>
+  <Color x:Key="Lunar.Color.Recording">#C8102E</Color>
   <Color x:Key="Lunar.Color.Success">#1B7F4B</Color>
 </ResourceDictionary>

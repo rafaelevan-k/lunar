@@ -443,4 +443,8 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Records.NoticeLengthLimit" xml:space="preserve"><value>Rekaman berhenti di batas 12 jam.</value></data>
   <data name="Records.NoticeRecovered" xml:space="preserve"><value>Rekaman dari sesi sebelumnya berhasil dipulihkan.</value></data>
   <data name="Records.NoticeKeptAsItIs" xml:space="preserve"><value>Rekaman dari sesi sebelumnya tidak bisa diperbaiki. File masih ada di foldernya.</value></data>
+  <data name="Records.AnnounceStarted" xml:space="preserve"><value>Perekaman dimulai</value></data>
+  <data name="Records.AnnouncePaused" xml:space="preserve"><value>Perekaman dijeda</value></data>
+  <data name="Records.AnnounceResumed" xml:space="preserve"><value>Perekaman dilanjutkan</value></data>
+  <data name="Records.AnnounceEnded" xml:space="preserve"><value>Perekaman dihentikan</value></data>
 </root>

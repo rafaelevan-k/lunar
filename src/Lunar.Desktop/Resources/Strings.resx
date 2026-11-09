@@ -443,4 +443,8 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Records.NoticeLengthLimit" xml:space="preserve"><value>Recording stopped at the 12-hour limit.</value></data>
   <data name="Records.NoticeRecovered" xml:space="preserve"><value>A recording from an earlier run was recovered.</value></data>
   <data name="Records.NoticeKeptAsItIs" xml:space="preserve"><value>A recording from an earlier run could not be repaired. It is still in its folder.</value></data>
+  <data name="Records.AnnounceStarted" xml:space="preserve"><value>Recording started</value></data>
+  <data name="Records.AnnouncePaused" xml:space="preserve"><value>Recording paused</value></data>
+  <data name="Records.AnnounceResumed" xml:space="preserve"><value>Recording resumed</value></data>
+  <data name="Records.AnnounceEnded" xml:space="preserve"><value>Recording stopped</value></data>
 </root>

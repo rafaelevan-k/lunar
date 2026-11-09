@@ -16,5 +16,6 @@
   <x:Static x:Key="Lunar.Color.Focus" Member="SystemColors.HotTrackColor" />
   <x:Static x:Key="Lunar.Color.Border" Member="SystemColors.WindowTextColor" />
   <x:Static x:Key="Lunar.Color.Error" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.Recording" Member="SystemColors.WindowTextColor" />
   <x:Static x:Key="Lunar.Color.Success" Member="SystemColors.WindowTextColor" />
 </ResourceDictionary>

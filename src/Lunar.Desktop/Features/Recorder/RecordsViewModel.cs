@@ -112,6 +112,12 @@ public sealed class RecordsViewModel : INotifyPropertyChanged, IObserver<Recordi
 
     public bool IsSaving => _snapshot.Phase == RecordingPhase.Saving;
 
+    /// <summary>The collapsed island shows the recording (ADR-0024), until the file is saved.</summary>
+    public bool ShowsInIsland => ShowTransport || IsSaving;
+
+    /// <summary>Play while paused, pause while recording.</summary>
+    public string PauseResumeGlyph => IsPaused ? "\uE768" : "\uE769";
+
     public bool IsPaused => _snapshot.Phase == RecordingPhase.Paused;
 
     public bool CanRecord => !IsRecordingActive && !HasNoInputs;
@@ -356,7 +362,7 @@ public sealed class RecordsViewModel : INotifyPropertyChanged, IObserver<Recordi
     {
         foreach (var name in new[]
         {
-            nameof(IsRecordingActive), nameof(ShowRecord), nameof(ShowTransport), nameof(IsSaving), nameof(IsPaused), nameof(CanRecord), nameof(HasNoInputs),
+            nameof(IsRecordingActive), nameof(ShowRecord), nameof(ShowTransport), nameof(IsSaving), nameof(ShowsInIsland), nameof(PauseResumeGlyph), nameof(IsPaused), nameof(CanRecord), nameof(HasNoInputs),
             nameof(PauseResumeText), nameof(PauseResumeName), nameof(Status), nameof(HasStatus), nameof(IsProblem), nameof(ShowOpenMicrophoneSettings), nameof(ShowFileButton)
         })
         {

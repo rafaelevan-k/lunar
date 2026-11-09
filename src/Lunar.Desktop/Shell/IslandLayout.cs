@@ -15,6 +15,9 @@ public static class IslandLayout
 {
     public const double IdleWidth = 160;
     public const double IdleHeight = 44;
+
+    /// <summary>The collapsed island while recording (ADR-0024): the lines, the time and two buttons do not fit the normal pill.</summary>
+    public const double RecordingIdleWidth = 232;
     public const double ExpandedMinWidth = 380;
     public const double ExpandedMinHeight = 320;
 
@@ -42,6 +45,9 @@ public static class IslandLayout
             maxWidth,
             maxHeight);
     }
+
+    /// <summary>How wide the collapsed pill is for what it shows.</summary>
+    public static double IdleWidthFor(IslandActivity activity) => activity == IslandActivity.Recording ? RecordingIdleWidth : IdleWidth;
 
     /// <summary>
     /// The window's own limits (FE-33): always as wide as the expanded panel, and only its height follows the layout. Windows moves a layered

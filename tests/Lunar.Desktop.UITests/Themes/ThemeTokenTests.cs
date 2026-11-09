@@ -76,7 +76,7 @@ public sealed class ThemeTokenTests
 
         foreach (var background in new[] { "Background", "Surface" })
         {
-            foreach (var foreground in new[] { "TextPrimary", "TextSecondary", "Accent", "Error", "Success" })
+            foreach (var foreground in new[] { "TextPrimary", "TextSecondary", "Accent", "Error", "Recording", "Success" })
             {
                 var ratio = Contrast(colors["Lunar.Color." + foreground], colors["Lunar.Color." + background]);
                 Assert.True(ratio >= 4.5, $"{theme}: {foreground} on {background} is {ratio:0.00}:1, needs 4.5:1.");

@@ -103,7 +103,7 @@ public sealed class IslandPositionController : IDisposable
         var content = _window.MeasureContent(new System.Windows.Size(panel.MaxWidth, panel.MaxHeight));
         var (width, height) = IslandLayout.Fit(limits, content.Width, content.Height);
         if (!_viewModel.IsExpandedLayout)
-            _window.HoldPill(IslandLayout.IdleWidth, IslandLayout.IdleHeight);
+            _window.HoldPill(_viewModel.IdleWidth, IslandLayout.IdleHeight);
         _window.ApplySize(limits, width, height);
         var rect = IslandPlacement.PlaceTopCenter(display, width, height, _preference.TopOffsetDip);
 

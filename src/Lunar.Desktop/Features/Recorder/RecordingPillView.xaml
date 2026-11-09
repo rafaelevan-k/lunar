@@ -1,0 +1,30 @@
+<UserControl x:Class="Lunar.Desktop.Features.Recorder.RecordingPillView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:c="clr-namespace:Lunar.Desktop.Controls"
+             Focusable="False" IsTabStop="False" Background="Transparent" Cursor="Hand"
+             Width="230" Height="42"
+             automation:AutomationProperties.Name="{res:Text Records.Title}">
+  <!--
+    FE-35, ADR-0024: the collapsed island while recording. Pause and Stop at the left, the frequency lines in the middle, the time at the far right. A click anywhere
+    but on the buttons opens the island, as a click on the eyes does. It binds to the same RecordsViewModel as the Records view.
+  -->
+  <Grid Margin="8,0,16,0">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <c:IconButton x:Name="PauseButton" Grid.Column="0" Width="28" Height="28" VerticalAlignment="Center" Glyph="{Binding PauseResumeGlyph}"
+                  Label="{Binding PauseResumeName}" Command="{Binding PauseResumeCommand}" Margin="0,0,4,0" />
+    <c:IconButton x:Name="StopButton" Grid.Column="1" Width="28" Height="28" VerticalAlignment="Center" Glyph="&#xE71A;"
+                  Label="{res:Text Records.StopName}" Command="{Binding StopCommand}" />
+    <c:VoiceLevelsView x:Name="Levels" Grid.Column="2" Levels="{Binding Levels}" BarBrush="{DynamicResource Lunar.Brush.Recording}" Height="26" Margin="10,0"
+                       VerticalAlignment="Center" />
+    <TextBlock x:Name="ElapsedText" Grid.Column="3" Text="{Binding ElapsedText}" Style="{DynamicResource Lunar.Text.Body}" VerticalAlignment="Center" TextAlignment="Right" MinWidth="40"
+               automation:AutomationProperties.Name="{res:Text Records.ElapsedName}" />
+  </Grid>
+</UserControl>
