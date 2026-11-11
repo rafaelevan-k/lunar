@@ -470,4 +470,11 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Pomodoro.Off" xml:space="preserve"><value>Do Not Disturb is off.</value></data>
   <data name="Pomodoro.Finished" xml:space="preserve"><value>Focus time is over. Do Not Disturb is back as it was.</value></data>
   <data name="Pomodoro.PausedOff" xml:space="preserve"><value>Paused. Do Not Disturb is off until you resume.</value></data>
+  <data name="Pomodoro.PillName" xml:space="preserve"><value>Focus timer</value></data>
+  <data name="Pomodoro.Paused" xml:space="preserve"><value>Paused</value></data>
+  <data name="Pomodoro.AnnounceStarted" xml:space="preserve"><value>Focus timer started</value></data>
+  <data name="Pomodoro.AnnouncePaused" xml:space="preserve"><value>Focus timer paused</value></data>
+  <data name="Pomodoro.AnnounceResumed" xml:space="preserve"><value>Focus timer resumed</value></data>
+  <data name="Pomodoro.AnnounceStopped" xml:space="preserve"><value>Focus timer stopped</value></data>
+  <data name="Pomodoro.AnnounceFinished" xml:space="preserve"><value>Focus time is over</value></data>
 </root>

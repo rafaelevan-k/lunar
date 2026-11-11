@@ -291,7 +291,13 @@ public partial class App : System.Windows.Application
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
         // A finished conversion makes the eyes smile and, while the island is open, throws a little confetti.
         _converterQueue.JobSucceeded += (_, _) => _shell?.Celebrate();
-        _activity = new IslandActivityController(viewModel, _shell, _records, new Lunar.Desktop.Features.Recorder.RecordingPillView { DataContext = _records, ExpandCommand = viewModel.ToggleCommand });
+        _activity = new IslandActivityController(
+            viewModel,
+            _shell,
+            _records,
+            new Lunar.Desktop.Features.Recorder.RecordingPillView { DataContext = _records, ExpandCommand = viewModel.ToggleCommand },
+            _pomodoroPage,
+            new Lunar.Desktop.Features.Pomodoro.FocusPillView { DataContext = _pomodoroPage, ExpandCommand = viewModel.ToggleCommand });
         _window = new IslandWindow { DataContext = viewModel, ViewContent = _shell };
         _capture.Attach(_window); // excluded when its handle is created, before it is first shown
         MainWindow = _window;

@@ -1,0 +1,36 @@
+<UserControl x:Class="Lunar.Desktop.Features.Pomodoro.FocusPillView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             Focusable="False" IsTabStop="False" Background="Transparent" Cursor="Hand"
+             Width="158" Height="42"
+             automation:AutomationProperties.Name="{res:Text Pomodoro.PillName}">
+  <!--
+    FE-37, ADR-0024: the collapsed island during a focus session. The time left sits in the middle of the normal pill; a click opens the island, as a click
+    on the eyes does. While paused the digits use the secondary text colour and a pause symbol stands beside them, so the state is not carried by colour
+    alone. Nothing here moves, so reduced motion has nothing to stop. It binds to the same PomodoroPageViewModel as the Pomodoro page.
+  -->
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+  </UserControl.Resources>
+  <StackPanel x:Name="Row" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <StackPanel.Style>
+      <Style TargetType="StackPanel">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsPaused}" Value="True">
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource Lunar.Brush.TextSecondary}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </StackPanel.Style>
+    <TextBlock x:Name="PausedGlyph" Text="&#xE769;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol, Segoe UI" FontSize="14"
+               VerticalAlignment="Center" Margin="0,0,8,0" Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisible}}"
+               automation:AutomationProperties.Name="{res:Text Pomodoro.Paused}" />
+    <!-- Tabular digits keep every digit the same width, so the time does not shift as it counts down. -->
+    <TextBlock x:Name="CountdownText" Text="{Binding TimeText}" FontFamily="{DynamicResource Lunar.Font.Family.Display}" FontSize="{DynamicResource Lunar.Font.Size.Title}"
+               FontWeight="SemiBold" Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
+               automation:AutomationProperties.Name="{Binding TimeName}" />
+  </StackPanel>
+</UserControl>

@@ -470,4 +470,11 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Pomodoro.Off" xml:space="preserve"><value>Jangan Ganggu mati.</value></data>
   <data name="Pomodoro.Finished" xml:space="preserve"><value>Waktu fokus selesai. Jangan Ganggu kembali seperti semula.</value></data>
   <data name="Pomodoro.PausedOff" xml:space="preserve"><value>Dijeda. Jangan Ganggu mati sampai Anda melanjutkan.</value></data>
+  <data name="Pomodoro.PillName" xml:space="preserve"><value>Timer fokus</value></data>
+  <data name="Pomodoro.Paused" xml:space="preserve"><value>Dijeda</value></data>
+  <data name="Pomodoro.AnnounceStarted" xml:space="preserve"><value>Timer fokus dimulai</value></data>
+  <data name="Pomodoro.AnnouncePaused" xml:space="preserve"><value>Timer fokus dijeda</value></data>
+  <data name="Pomodoro.AnnounceResumed" xml:space="preserve"><value>Timer fokus dilanjutkan</value></data>
+  <data name="Pomodoro.AnnounceStopped" xml:space="preserve"><value>Timer fokus dihentikan</value></data>
+  <data name="Pomodoro.AnnounceFinished" xml:space="preserve"><value>Waktu fokus selesai</value></data>
 </root>

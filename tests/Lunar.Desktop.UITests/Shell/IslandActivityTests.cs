@@ -9,25 +9,28 @@ using System.Windows.Threading;
 using Lunar.Application.Abstractions.Audio;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Shell;
+using Lunar.Application.Focus;
 using Lunar.Application.Recording;
 using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Application.Shell.Models;
 using Lunar.Desktop.Behaviors;
 using Lunar.Desktop.Features.Eyes;
+using Lunar.Desktop.Features.Pomodoro;
 using Lunar.Desktop.Features.Recorder;
 using Lunar.Desktop.Navigation;
 using Lunar.Desktop.Shell;
 using Lunar.Desktop.UITests.Accessibility;
 using Lunar.Desktop.UITests.Features;
 using Lunar.Desktop.UITests.Themes;
+using Lunar.Domain.Focus;
 using Lunar.Domain.Recording;
 using Lunar.Domain.Shared;
 using Xunit;
 
 namespace Lunar.Desktop.UITests.Shell;
 
-// FE-35: the real island window, shell, transition and position controllers over the real RecordingService. Whether the buttons leave the user's app in the
+// FE-35 and FE-37: the real island window, shell, transition and position controllers over the real RecordingService and PomodoroService. Whether the buttons leave the user's app in the
 // foreground, a real microphone in the pill and Narrator are manual checks (FE-35 evidence).
 public sealed class IslandActivityTests
 {
@@ -99,6 +102,8 @@ public sealed class IslandActivityTests
             Settings = new SettingsService(new RecordsPageTests.Repository());
             Service = new RecordingService(Engine, new RecordsPageTests.FakeCatalog(), new RecordsPageTests.FakeFiles(), Settings, new RecordsPageTests.Clock(), null, Time);
             Records = new RecordsViewModel(Service, new RecordsPageTests.FakeFolders(), new RecordsPageTests.FakeRevealer(), new RecordsPageTests.FakeLauncher(), post, Time);
+            FocusService = new PomodoroService(new PomodoroPageTests.FakeFocus(), new PomodoroPageTests.Marker(), Settings, FocusClock, null, FocusTime);
+            Focus = new PomodoroPageViewModel(FocusService, new RecordsPageTests.FakeLauncher(), post, FocusTime);
             Island = new IslandViewModel();
             var navigation = new PageNavigationViewModel(["One", "Two", "Three", "Four", "Five", "Six"]);
             var swiper = new SwiperView();
@@ -112,13 +117,14 @@ public sealed class IslandActivityTests
             swiper.Resources.MergedDictionaries.Clear();
             swiper.Initialize(navigation, IslandShellView.CreatePlaceholderPages(navigation.Titles), reduceMotion);
             Pill = new RecordingPillView { DataContext = Records, ExpandCommand = Island.ToggleCommand };
+            FocusPill = new FocusPillView { DataContext = Focus, ExpandCommand = Island.ToggleCommand };
             _ = new WindowInteropHelper(Window).EnsureHandle();
             var scale = VisualTreeHelper.GetDpi(Window).DpiScaleX;
             var dpi = (int)Math.Round(scale * 96);
             var display = new DisplayInfo("DISPLAY1", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1020), dpi, dpi);
             Position = new IslandPositionController(Window, Island, new Environment(display), new Log(), new IslandSettings { TopOffsetDip = 300 });
             Transition = new IslandTransitionController(Window, Island, reduceMotion);
-            Activity = new IslandActivityController(Island, Shell, Records, Pill);
+            Activity = new IslandActivityController(Island, Shell, Records, Pill, Focus, FocusPill);
             Position.Start();
             Window.Show();
             Settle();
@@ -145,6 +151,19 @@ public sealed class IslandActivityTests
 
         public RecordingPillView Pill { get; }
 
+        public PomodoroPageTests.MovableClock FocusClock { get; } = new();
+
+        /// <summary>The focus clock. Its 250 ms timers are the page ticker, so <c>TimerRunning</c> says whether the time is being counted.</summary>
+        public RecordsPageTests.ManualTime FocusTime { get; } = new();
+
+        public PomodoroService FocusService { get; }
+
+        public PomodoroPageViewModel Focus { get; }
+
+        public FocusPillView FocusPill { get; }
+
+        public TextBlock Countdown => (TextBlock)FocusPill.FindName("CountdownText");
+
         public IslandPositionController Position { get; }
 
         public IslandTransitionController Transition { get; }
@@ -170,6 +189,28 @@ public sealed class IslandActivityTests
         {
             var stopped = Service.StopAsync();
             Pump(() => stopped.IsCompleted && !Records.ShowsInIsland);
+            Settle();
+        }
+
+        public void StartFocus(int minutes = 25)
+        {
+            var started = FocusService.StartAsync(minutes, CancellationToken.None);
+            Pump(() => started.IsCompleted && Focus.IsActive);
+            Settle();
+        }
+
+        public void RunFocus(Func<CancellationToken, Task> action, Func<bool> done)
+        {
+            var task = action(CancellationToken.None);
+            Pump(() => task.IsCompleted && done());
+            Settle();
+        }
+
+        /// <summary>Moves the clock on and lets the page ticker read the new time.</summary>
+        public void Pass(TimeSpan time)
+        {
+            FocusClock.LocalNow += time;
+            FocusTime.FireTicks(PomodoroPageViewModel.TickInterval);
             Settle();
         }
 
@@ -201,6 +242,8 @@ public sealed class IslandActivityTests
             Shell.Dispose();
             Window.Close();
             Records.Dispose();
+            Focus.Dispose();
+            FocusService.Dispose();
             Service.Dispose();
             Settings.Dispose();
         }
@@ -399,6 +442,181 @@ public sealed class IslandActivityTests
 
         Assert.True(rig.Eyes.IsVisible);
         rig.Dispose();
+    });
+
+    [Fact]
+    public void TheCountdownReplacesTheEyesInTheNormalPill() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        var left = rig.Window.Left;
+        Assert.False(rig.FocusTime.TimerRunning); // nothing ticks before a session
+
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+
+        Assert.Equal(IslandActivity.FocusCountdown, rig.Activity.Current);
+        Assert.False(rig.Eyes.IsVisible); // its timers stop with it
+        Assert.True(rig.FocusPill.IsVisible);
+        Assert.Equal("25:00", rig.Countdown.Text);
+        Assert.Equal(left, rig.Window.Left);
+
+        rig.Pass(TimeSpan.FromMinutes(3) + TimeSpan.FromSeconds(15));
+        Assert.Equal("21:45", rig.Countdown.Text);
+        var middle = rig.Countdown.TranslatePoint(new Point(rig.Countdown.ActualWidth / 2, 0), rig.FocusPill).X;
+        Assert.Equal(rig.FocusPill.ActualWidth / 2, middle, 0); // centred in the pill
+    });
+
+    [Fact]
+    public void TheDigitsKeepTheirWidthAsTheyCount() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+        Assert.Equal(FontNumeralAlignment.Tabular, System.Windows.Documents.Typography.GetNumeralAlignment(rig.Countdown));
+
+        rig.Pass(TimeSpan.FromMinutes(5)); // 20:00
+        var wide = rig.Countdown.ActualWidth;
+        rig.Pass(TimeSpan.FromMinutes(8) + TimeSpan.FromSeconds(49)); // 11:11, narrow digits in a proportional font
+
+        Assert.Equal("11:11", rig.Countdown.Text);
+        Assert.Equal(wide, rig.Countdown.ActualWidth, 1);
+    });
+
+    [Fact]
+    public void FromOneHourTheCountdownShowsHours() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus(90);
+        rig.WaitForPillWidth(160);
+
+        Assert.Equal("1:30:00", rig.Countdown.Text);
+        Assert.True(rig.Countdown.TranslatePoint(new Point(rig.Countdown.ActualWidth, 0), rig.FocusPill).X <= rig.FocusPill.ActualWidth);
+    });
+
+    [Fact]
+    public void PausedDigitsAreDimmedAndMarkedWithAPauseSymbol() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+        var glyph = (TextBlock)rig.FocusPill.FindName("PausedGlyph");
+        var primary = ((SolidColorBrush)rig.Countdown.Foreground).Color;
+        Assert.False(glyph.IsVisible);
+
+        rig.RunFocus(rig.FocusService.PauseAsync, () => rig.Focus.IsPaused);
+
+        Assert.True(glyph.IsVisible); // not by colour alone
+        Assert.NotEqual(primary, ((SolidColorBrush)rig.Countdown.Foreground).Color);
+        Assert.Equal(((SolidColorBrush)rig.Window.FindResource("Lunar.Brush.TextSecondary")).Color, ((SolidColorBrush)rig.Countdown.Foreground).Color);
+        Assert.False(rig.FocusTime.TimerRunning); // a paused time needs no ticker
+        Assert.True(rig.FocusPill.IsVisible);
+
+        rig.RunFocus(rig.FocusService.ResumeAsync, () => !rig.Focus.IsPaused);
+
+        Assert.False(glyph.IsVisible);
+        Assert.Equal(primary, ((SolidColorBrush)rig.Countdown.Foreground).Color);
+    });
+
+    [Fact]
+    public void ARecordingTakesThePillAndTheCountdownComesBackAfterIt() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.StartRecording();
+        rig.WaitForPillWidth(232);
+
+        Assert.Equal(IslandActivity.Recording, rig.Activity.Current);
+        Assert.True(rig.Pill.IsVisible);
+        Assert.False(rig.FocusPill.IsVisible);
+
+        rig.StopRecording();
+        rig.WaitForPillWidth(160);
+
+        Assert.Equal(IslandActivity.FocusCountdown, rig.Activity.Current);
+        Assert.True(rig.FocusPill.IsVisible);
+        Assert.Equal(PomodoroPhase.Running, rig.FocusService.Current.Phase); // the countdown kept running underneath
+    });
+
+    [Fact]
+    public void ExpandingBringsTheEyesBackAndAClickOnTheCountdownExpands() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+
+        RaiseMouseUp(rig.Countdown);
+        Assert.Equal(IslandVisualState.Expanding, rig.Island.State);
+        Pump(() => rig.Island.State == IslandVisualState.Expanded);
+        rig.Settle();
+        Assert.True(rig.Eyes.IsVisible);
+        Assert.False(rig.FocusPill.IsVisible);
+
+        rig.Collapse();
+        Assert.True(rig.FocusPill.IsVisible);
+        Assert.False(rig.Eyes.IsVisible);
+    });
+
+    [Fact]
+    public void WhenTheTimeIsOverTheEyesComeBackAndCelebrate() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus(1);
+        rig.WaitForPillWidth(160);
+        var cheek = (TranslateTransform)rig.Eyes.FindName("LeftCheekOffset");
+
+        rig.FocusClock.LocalNow += TimeSpan.FromMinutes(1);
+        rig.FocusTime.FireTicks(TimeSpan.FromSeconds(1)); // the service ticks once a second
+        Pump(() => rig.FocusService.Current.Phase == PomodoroPhase.Finished);
+        rig.Settle();
+
+        Assert.Equal(IslandActivity.Eyes, rig.Activity.Current);
+        Assert.True(rig.Eyes.IsVisible);
+        Assert.False(rig.FocusPill.IsVisible);
+        Assert.True(cheek.HasAnimatedProperties); // the smile
+        Assert.False(rig.FocusTime.TimerRunning);
+    });
+
+    [Fact]
+    public void StoppingByHandBringsTheEyesBackWithoutACelebration() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+        var cheek = (TranslateTransform)rig.Eyes.FindName("LeftCheekOffset");
+
+        rig.RunFocus(_ => rig.FocusService.StopAsync(), () => !rig.Focus.IsActive);
+
+        Assert.True(rig.Eyes.IsVisible);
+        Assert.False(rig.FocusPill.IsVisible);
+        Assert.False(cheek.HasAnimatedProperties);
+        Assert.False(rig.FocusTime.TimerRunning);
+    });
+
+    [Fact]
+    public void TheCountdownPillIsNamedAndNeverTakesFocus() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+
+        // A label, not a control: nothing in it can take focus, so the island keeps its own keyboard handling.
+        Assert.Empty(AutomationAudit.UsableControls(rig.FocusPill));
+        Assert.False(rig.FocusPill.Focusable);
+        Assert.Equal(Lunar.Desktop.Resources.Strings.Get("Pomodoro.PillName"), AutomationAudit.NameOf(rig.FocusPill));
+        Assert.Equal(Lunar.Desktop.Resources.Strings.Format("Pomodoro.TimeLeftName", "25:00"), AutomationAudit.NameOf(rig.Countdown));
+    });
+
+    [Fact]
+    public void HighContrastColoursTheDigitsWithItsOwnBrushes() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.Window.Resources.MergedDictionaries[0] = Load("Themes", "Colors.HighContrast.xaml");
+        rig.StartFocus();
+        rig.WaitForPillWidth(160);
+
+        Assert.Equal(((SolidColorBrush)rig.Window.FindResource("Lunar.Brush.TextPrimary")).Color, ((SolidColorBrush)rig.Countdown.Foreground).Color);
+        rig.RunFocus(rig.FocusService.PauseAsync, () => rig.Focus.IsPaused);
+        Assert.Equal(((SolidColorBrush)rig.Window.FindResource("Lunar.Brush.TextSecondary")).Color, ((SolidColorBrush)rig.Countdown.Foreground).Color);
     });
 
     private sealed class Environment(DisplayInfo display) : IWindowEnvironment

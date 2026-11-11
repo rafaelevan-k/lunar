@@ -79,6 +79,9 @@ public sealed class PomodoroPageViewModel : INotifyPropertyChanged, IObserver<Po
 
     public bool IsPaused => _snapshot.Phase == PomodoroPhase.Paused;
 
+    /// <summary>The time ran out (not stopped by hand); the island celebrates it once (FE-37).</summary>
+    public bool IsFinished => _snapshot.Phase == PomodoroPhase.Finished;
+
     public bool CanStart => !IsActive;
 
     public bool CanChooseMinutes => !IsActive;
@@ -189,7 +192,7 @@ public sealed class PomodoroPageViewModel : INotifyPropertyChanged, IObserver<Po
             _ticker = null;
         }
 
-        foreach (var name in new[] { nameof(IsActive), nameof(IsPaused), nameof(CanStart), nameof(CanChooseMinutes), nameof(PauseResumeText), nameof(FocusText), nameof(ShowOpenSettings), nameof(Presets), nameof(EggIntroFrames), nameof(EggRows), nameof(IsEggBouncing) })
+        foreach (var name in new[] { nameof(IsActive), nameof(IsPaused), nameof(IsFinished), nameof(CanStart), nameof(CanChooseMinutes), nameof(PauseResumeText), nameof(FocusText), nameof(ShowOpenSettings), nameof(Presets), nameof(EggIntroFrames), nameof(EggRows), nameof(IsEggBouncing) })
             Raise(name);
         Refresh();
     }
