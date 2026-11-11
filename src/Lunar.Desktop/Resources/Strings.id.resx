@@ -477,4 +477,25 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Pomodoro.AnnounceResumed" xml:space="preserve"><value>Timer fokus dilanjutkan</value></data>
   <data name="Pomodoro.AnnounceStopped" xml:space="preserve"><value>Timer fokus dihentikan</value></data>
   <data name="Pomodoro.AnnounceFinished" xml:space="preserve"><value>Waktu fokus selesai</value></data>
+  <data name="Update.Title" xml:space="preserve"><value>Versi baru Lunar</value></data>
+  <data name="Update.Available" xml:space="preserve"><value>Lunar {0} siap diinstal. Anda memakai {1}.</value></data>
+  <data name="Update.AvailableBusy" xml:space="preserve"><value>Lunar {0} sudah siap. Bisa diinstal setelah sesi fokus atau rekaman selesai.</value></data>
+  <data name="Update.Downloading" xml:space="preserve"><value>Mengunduh dan memeriksa… {0}%</value></data>
+  <data name="Update.AnnounceDownloading" xml:space="preserve"><value>Mengunduh versi baru</value></data>
+  <data name="Update.Installing" xml:space="preserve"><value>Menginstal. Lunar ditutup sekarang dan akan terbuka lagi sendiri.</value></data>
+  <data name="Update.UpToDate" xml:space="preserve"><value>Anda memakai Lunar {0}, versi terbaru.</value></data>
+  <data name="Update.Off" xml:space="preserve"><value>Anda memakai Lunar {0}. Cek update dimatikan.</value></data>
+  <data name="Update.InstallNow" xml:space="preserve"><value>Instal sekarang</value></data>
+  <data name="Update.TryAgain" xml:space="preserve"><value>Coba lagi</value></data>
+  <data name="Update.Later" xml:space="preserve"><value>Nanti</value></data>
+  <data name="Update.Cancel" xml:space="preserve"><value>Batal</value></data>
+  <data name="Update.CancelName" xml:space="preserve"><value>Batalkan unduhan</value></data>
+  <data name="Update.ProgressName" xml:space="preserve"><value>Progres unduhan</value></data>
+  <data name="Update.FailedMismatch" xml:space="preserve"><value>File yang diunduh tidak cocok dengan rilisnya, jadi dihapus dan tidak ada yang diinstal.</value></data>
+  <data name="Update.FailedNetwork" xml:space="preserve"><value>Versi baru tidak bisa diunduh. Periksa koneksi lalu coba lagi.</value></data>
+  <data name="Update.FailedSave" xml:space="preserve"><value>Lunar tidak bisa menyimpan versi baru di PC ini.</value></data>
+  <data name="Update.FailedStart" xml:space="preserve"><value>Windows Installer tidak bisa dijalankan.</value></data>
+  <data name="Settings.UpdatesTitle" xml:space="preserve"><value>Update</value></data>
+  <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Cek update</value></data>
+  <data name="Settings.UpdatesHint" xml:space="preserve"><value>Sekali sehari Lunar menanyakan ke GitHub apakah ada versi yang lebih baru. Tidak ada yang diinstal sampai Anda memilih Instal sekarang.</value></data>
 </root>

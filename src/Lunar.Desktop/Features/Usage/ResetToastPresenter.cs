@@ -1,11 +1,8 @@
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Settings.Models;
-using Lunar.Application.Shell;
-using Lunar.Application.Shell.Models;
 using Lunar.Desktop.Shell;
 
 namespace Lunar.Desktop.Features.Usage;
@@ -17,7 +14,6 @@ namespace Lunar.Desktop.Features.Usage;
 /// </summary>
 internal sealed class ResetToastPresenter : IResetToastPresenter
 {
-    private const double MarginDip = 12;
     private static readonly TimeSpan FadeIn = TimeSpan.FromMilliseconds(150);
 
     private readonly IWindowEnvironment _environment;
@@ -118,47 +114,8 @@ internal sealed class ResetToastPresenter : IResetToastPresenter
         _disposed = true;
     }
 
-    private void Place(ResetToastWindow window)
-    {
-        var display = ChooseDisplay();
-        // Height is whatever the text needs at the fixed width.
-        var height = window.IsLoaded && window.ActualHeight > 0 ? window.ActualHeight : MeasureHeight(window);
-        var rect = ResetToastPlacement.BottomRight(display, window.Width, height, MarginDip);
-        var dpi = VisualTreeHelper.GetDpi(window);
-        var (left, top) = IslandPositionController.ToWindowOrigin(rect, dpi.DpiScaleX, dpi.DpiScaleY);
-        if (window.Left != left)
-            window.Left = left;
-        if (window.Top != top)
-            window.Top = top;
-    }
-
-    // Before the window is shown its height is what its card needs at the fixed width.
-    private static double MeasureHeight(ResetToastWindow window)
-    {
-        if (window.Content is not FrameworkElement card)
-            return 64;
-        card.Measure(new Size(window.Width, double.PositiveInfinity));
-        return card.DesiredSize.Height > 0 ? card.DesiredSize.Height : 64;
-    }
-
-    private DisplayInfo ChooseDisplay()
-    {
-        var displays = _environment.GetDisplays();
-        if (displays.IsFailure)
-        {
-            Log("usage.toast.display.fallback", displays.Error!.Code);
-            return DisplayInfo.Fallback;
-        }
-
-        var selected = IslandPlacement.SelectDisplay(displays.Value, _preference.PreferredMonitorId);
-        if (selected.IsFailure)
-        {
-            Log("usage.toast.display.fallback", selected.Error!.Code);
-            return DisplayInfo.Fallback;
-        }
-
-        return selected.Value;
-    }
+    private void Place(ResetToastWindow window) =>
+        CornerWindowPlacer.Place(window, _environment, _preference, code => Log("usage.toast.display.fallback", code));
 
     // A window moved onto a monitor with another scale is placed again with that monitor's scale.
     private void OnDpiChanged(object sender, DpiChangedEventArgs e)

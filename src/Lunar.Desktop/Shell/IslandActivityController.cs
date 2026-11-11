@@ -58,6 +58,9 @@ public sealed class IslandActivityController : IDisposable
     /// <summary>What the collapsed island shows now.</summary>
     public IslandActivity Current { get; private set; }
 
+    /// <summary>A recording or a focus session started or ended (<see cref="Current"/> changed). The update prompt waits for these (FE-38).</summary>
+    public event EventHandler? Changed;
+
     public void Dispose()
     {
         if (_disposed)
@@ -89,6 +92,7 @@ public sealed class IslandActivityController : IDisposable
 
     private void Update()
     {
+        var previous = Current;
         Current = IslandActivitySelector.Choose(_records.ShowsInIsland, _focus.IsActive);
         _island.IdleWidth = IslandLayout.IdleWidthFor(Current);
         _shell.SetIdleActivity(Current switch
@@ -97,6 +101,8 @@ public sealed class IslandActivityController : IDisposable
             IslandActivity.FocusCountdown => _focusView,
             _ => null
         });
+        if (Current != previous)
+            Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private void AnnounceRecording()

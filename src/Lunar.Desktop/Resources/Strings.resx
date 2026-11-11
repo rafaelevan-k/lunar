@@ -477,4 +477,25 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Pomodoro.AnnounceResumed" xml:space="preserve"><value>Focus timer resumed</value></data>
   <data name="Pomodoro.AnnounceStopped" xml:space="preserve"><value>Focus timer stopped</value></data>
   <data name="Pomodoro.AnnounceFinished" xml:space="preserve"><value>Focus time is over</value></data>
+  <data name="Update.Title" xml:space="preserve"><value>A new version of Lunar</value></data>
+  <data name="Update.Available" xml:space="preserve"><value>Lunar {0} is ready to install. You have {1}.</value></data>
+  <data name="Update.AvailableBusy" xml:space="preserve"><value>Lunar {0} is ready. It can be installed once the focus session or recording ends.</value></data>
+  <data name="Update.Downloading" xml:space="preserve"><value>Downloading and checking… {0}%</value></data>
+  <data name="Update.AnnounceDownloading" xml:space="preserve"><value>Downloading the new version</value></data>
+  <data name="Update.Installing" xml:space="preserve"><value>Installing. Lunar closes now and starts again by itself.</value></data>
+  <data name="Update.UpToDate" xml:space="preserve"><value>You have Lunar {0}, the latest version.</value></data>
+  <data name="Update.Off" xml:space="preserve"><value>You have Lunar {0}. Checking for updates is off.</value></data>
+  <data name="Update.InstallNow" xml:space="preserve"><value>Install now</value></data>
+  <data name="Update.TryAgain" xml:space="preserve"><value>Try again</value></data>
+  <data name="Update.Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Update.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Update.CancelName" xml:space="preserve"><value>Cancel the download</value></data>
+  <data name="Update.ProgressName" xml:space="preserve"><value>Download progress</value></data>
+  <data name="Update.FailedMismatch" xml:space="preserve"><value>The downloaded file did not match the release, so it was deleted and nothing was installed.</value></data>
+  <data name="Update.FailedNetwork" xml:space="preserve"><value>The new version could not be downloaded. Check the connection and try again.</value></data>
+  <data name="Update.FailedSave" xml:space="preserve"><value>Lunar could not save the new version on this PC.</value></data>
+  <data name="Update.FailedStart" xml:space="preserve"><value>Windows Installer could not be started.</value></data>
+  <data name="Settings.UpdatesTitle" xml:space="preserve"><value>Updates</value></data>
+  <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings.UpdatesHint" xml:space="preserve"><value>Once a day Lunar asks GitHub whether a newer version was released. Nothing is installed until you choose Install now.</value></data>
 </root>

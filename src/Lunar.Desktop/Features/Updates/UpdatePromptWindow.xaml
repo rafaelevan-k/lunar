@@ -1,0 +1,55 @@
+<Window x:Class="Lunar.Desktop.Features.Updates.UpdatePromptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        Title="{res:Text Update.Title}"
+        Width="340" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False" ShowActivated="False"
+        WindowStartupLocation="Manual" UseLayoutRounding="True"
+        automation:AutomationProperties.Name="{Binding Title}">
+  <!--
+    FE-38, ADR-0025: the new-version prompt, bottom right. It never takes focus (WS_EX_NOACTIVATE), so it cannot interrupt typing; the same actions
+    are in Settings for the keyboard. Lunar's own tokens, so dark, light and High Contrast follow the app. Buttons appear for the state:
+    Install now and Later; Cancel while downloading; Try again and Later after a failure; none while Windows Installer starts.
+  -->
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+  </Window.Resources>
+  <Border x:Name="Card" Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="2"
+          CornerRadius="16" Padding="14,12">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- A download arrow in an accent disc: says "new version" without relying on colour. -->
+      <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="{DynamicResource Lunar.Brush.Accent}" VerticalAlignment="Top">
+        <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource Lunar.Brush.OnAccent}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+      </Border>
+
+      <StackPanel Grid.Column="1" Margin="12,0,0,0">
+        <TextBlock x:Name="TitleText" Text="{Binding Title}" Style="{DynamicResource Lunar.Text.Body}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock x:Name="MessageText" Text="{Binding Message}" Style="{DynamicResource Lunar.Text.Secondary}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <ProgressBar x:Name="DownloadBar" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}" Height="6" Margin="0,8,0,0"
+                     BorderThickness="0" Foreground="{DynamicResource Lunar.Brush.Accent}" Background="{DynamicResource Lunar.Brush.TextDisabled}"
+                     Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text Update.ProgressName}" />
+
+        <WrapPanel Margin="0,10,0,0" HorizontalAlignment="Right">
+          <Button x:Name="LaterButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Update.Later}" Command="{Binding LaterCommand}"
+                  Visibility="{Binding ShowLater, Converter={StaticResource BoolToVisible}}" Margin="0,0,8,0"
+                  automation:AutomationProperties.Name="{res:Text Update.Later}" />
+          <Button x:Name="CancelButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Update.Cancel}" Command="{Binding CancelCommand}"
+                  Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisible}}"
+                  automation:AutomationProperties.Name="{res:Text Update.CancelName}" />
+          <Button x:Name="InstallButton" Style="{DynamicResource Lunar.Style.PrimaryButton}" Content="{Binding InstallText}" Command="{Binding InstallCommand}"
+                  Visibility="{Binding ShowLater, Converter={StaticResource BoolToVisible}}"
+                  automation:AutomationProperties.Name="{Binding InstallText}" />
+        </WrapPanel>
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

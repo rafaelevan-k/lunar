@@ -74,6 +74,8 @@ public partial class App : System.Windows.Application
     private UsageLifetime? _usageLifetime;
     private UsageResetNotifier? _resetToasts;
     private ResetToastPresenter? _toastPresenter;
+    private Lunar.Desktop.Features.Updates.UpdatePromptViewModel? _updatePrompt;
+    private Lunar.Desktop.Features.Updates.UpdatePromptPresenter? _updatePresenter;
     private SettingsService? _settingsService;
     private ThemeApplier? _theme;
     private SettingsApplier? _settingsApplier;
@@ -324,6 +326,18 @@ public partial class App : System.Windows.Application
         _window.PreviewKeyDown += OnIslandPreviewKeyDown;
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
+        // ADR-0025, FE-38: the new-version prompt, held back while a recording or a focus session shows in the island. After Install now has handed
+        // over to Windows Installer, Lunar closes the usual way so its files can be replaced; the MSI starts it again.
+        _updatePrompt = new Lunar.Desktop.Features.Updates.UpdatePromptViewModel(
+            _services.GetRequiredService<Lunar.Application.Updates.UpdateService>(),
+            toUi,
+            () => _activity?.Current is IslandActivity.Recording or IslandActivity.FocusCountdown,
+            () => Shutdown(0),
+            _log);
+        _activity.Changed += (_, _) => _updatePrompt?.Refresh();
+        _settingsService.Changed += (_, _) => toUi(() => _updatePrompt?.Refresh()); // the Settings line follows the switch
+        _updatePresenter = new Lunar.Desktop.Features.Updates.UpdatePromptPresenter(
+            _updatePrompt, _services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log, _capture);
         // Settings: its own window from the tray, and every saved change takes effect at once (ADR-0016). The same Apply runs now for the saved values.
         // One Start with Windows switch shared by the Settings window and the tray, so both always show the same state (FE-26, BE-29).
         _startupSwitch = new StartupSwitch(_services.GetRequiredService<IStartupRegistration>(), _log);
@@ -335,14 +349,19 @@ public partial class App : System.Windows.Application
             _services.GetRequiredService<DiagnosticsRun>().Enabled,
             _log,
             startup: _startupSwitch,
-            capture: _capture);
+            capture: _capture,
+            updates: _updatePrompt);
         _settingsApplier = new SettingsApplier(
             _settingsService,
             toUi,
             () => SystemParameters.ClientAreaAnimation,
             _theme,
             island => _position?.UpdatePreference(island),
-            (island, off) => _toastPresenter?.Update(island, off),
+            (island, off) =>
+            {
+                _toastPresenter?.Update(island, off);
+                _updatePresenter?.Update(island, off);
+            },
             off =>
             {
                 _shell?.SetReduceMotion(off);
@@ -462,6 +481,10 @@ public partial class App : System.Windows.Application
         _mediaLifetime = null;
         _resetToasts?.Dispose();
         _resetToasts = null;
+        _updatePresenter?.Dispose();
+        _updatePresenter = null;
+        _updatePrompt?.Dispose();
+        _updatePrompt = null;
         _usageLifetime?.Dispose();
         _usageLifetime = null;
         _usage?.Dispose();

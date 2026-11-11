@@ -6,6 +6,7 @@ using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Settings;
 using Lunar.Application.Settings.Models;
 using Lunar.Desktop.Features.Converter;
+using Lunar.Desktop.Features.Updates;
 using Lunar.Desktop.Resources;
 using Lunar.Desktop.Shell;
 using Lunar.Domain.Shared;
@@ -34,6 +35,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private readonly bool _diagnosticsInUse;
     private readonly StartupSwitch? _startup;
     private readonly CaptureExclusionGuard? _capture;
+    private readonly UpdatePromptViewModel? _updates;
     private readonly CancellationTokenSource _lifetime = new();
 
     private IReadOnlyList<SettingsChoice> _themes = [];
@@ -48,6 +50,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     /// <param name="diagnosticsInUse">Whether verbose diagnostics are on in this run; the saved choice applies from the next start.</param>
     /// <param name="startup">The shared Start with Windows switch; null shows the row as unavailable.</param>
     /// <param name="capture">Whether Lunar is hidden from screen sharing (ADR-0019); null hides the line (tests only).</param>
+    /// <param name="updates">The update line and its Install now (FE-38); null shows only the switch.</param>
     public SettingsViewModel(
         SettingsService settings,
         IWindowEnvironment environment,
@@ -56,7 +59,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         bool diagnosticsInUse,
         IDiagnosticLog? log = null,
         StartupSwitch? startup = null,
-        CaptureExclusionGuard? capture = null)
+        CaptureExclusionGuard? capture = null,
+        UpdatePromptViewModel? updates = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(environment);
@@ -70,11 +74,13 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         _log = log;
         _startup = startup;
         _capture = capture;
+        _updates = updates;
 
         var lifetime = _lifetime.Token;
         ToggleReduceMotionCommand = Save(s => s with { Appearance = s.Appearance with { ReduceMotion = !s.Appearance.ReduceMotion } }, lifetime);
         ToggleEyesCommand = Save(s => s with { Appearance = s.Appearance with { EyeAnimationEnabled = !s.Appearance.EyeAnimationEnabled } }, lifetime);
         ToggleDiagnosticsCommand = Save(s => s with { Privacy = s.Privacy with { DiagnosticsEnabled = !s.Privacy.DiagnosticsEnabled } }, lifetime);
+        ToggleUpdatesCommand = Save(s => s with { Updates = s.Updates with { Check = !s.Updates.Check } }, lifetime);
         OffsetUpCommand = Save(
             s => s with { Island = s.Island with { TopOffsetDip = Math.Min(SettingsRules.MaxTopOffsetDip, s.Island.TopOffsetDip + OffsetStep) } },
             lifetime,
@@ -136,6 +142,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
 
     public bool DiagnosticsEnabled => _settings.Current.Privacy.DiagnosticsEnabled;
 
+    /// <summary>Lunar asks GitHub once a day for a newer version (ADR-0025).</summary>
+    public bool UpdatesEnabled => _settings.Current.Updates.Check;
+
+    /// <summary>The update line and its buttons (FE-38), shared with the pop-up; null in tests that do not need it.</summary>
+    public UpdatePromptViewModel? Updates => _updates;
+
+    public bool HasUpdates => _updates is not null;
+
     /// <summary>True when the saved diagnostics choice is not what this run is using yet.</summary>
     public bool DiagnosticsNeedsRestart => DiagnosticsEnabled != _diagnosticsInUse;
 
@@ -189,6 +203,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ToggleEyesCommand { get; }
 
     public ICommand ToggleDiagnosticsCommand { get; }
+
+    public ICommand ToggleUpdatesCommand { get; }
 
     public ICommand OffsetUpCommand { get; }
 
@@ -384,7 +400,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private void Changed()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty)); // every property: the window is small
-        foreach (var command in new[] { OffsetUpCommand, OffsetDownCommand, ClearFolderCommand, ConfirmResetCommand, ChooseFolderCommand, ToggleReduceMotionCommand, ToggleEyesCommand, ToggleDiagnosticsCommand })
+        foreach (var command in new[] { OffsetUpCommand, OffsetDownCommand, ClearFolderCommand, ConfirmResetCommand, ChooseFolderCommand, ToggleReduceMotionCommand, ToggleEyesCommand, ToggleDiagnosticsCommand, ToggleUpdatesCommand })
             ((AsyncRelayCommand)command).NotifyCanExecuteChanged();
 
         ((RelayCommand)AskResetCommand).NotifyCanExecuteChanged();
