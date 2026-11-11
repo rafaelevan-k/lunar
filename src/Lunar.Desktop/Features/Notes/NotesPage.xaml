@@ -15,6 +15,8 @@
   -->
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+    <!-- Thicker outlines on this page, at the owner's request (2026-11-12): every button here that draws Lunar.Thickness.Outline follows it. -->
+    <Thickness x:Key="Lunar.Thickness.Outline">2.4</Thickness>
 
     <!-- A compact pill button for the header and the message rows. -->
     <Style x:Key="NotesButton" TargetType="Button">
@@ -32,7 +34,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="Face" CornerRadius="12" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
-                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Lunar.Brush.TextSecondary}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>

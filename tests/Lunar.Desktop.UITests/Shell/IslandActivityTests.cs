@@ -100,7 +100,7 @@ public sealed class IslandActivityTests
             Service = new RecordingService(Engine, new RecordsPageTests.FakeCatalog(), new RecordsPageTests.FakeFiles(), Settings, new RecordsPageTests.Clock(), null, Time);
             Records = new RecordsViewModel(Service, new RecordsPageTests.FakeFolders(), new RecordsPageTests.FakeRevealer(), new RecordsPageTests.FakeLauncher(), post, Time);
             Island = new IslandViewModel();
-            var navigation = new PageNavigationViewModel(["One", "Two", "Three", "Four", "Five"]);
+            var navigation = new PageNavigationViewModel(["One", "Two", "Three", "Four", "Five", "Six"]);
             var swiper = new SwiperView();
             Eyes = new EyesView();
             Shell = new IslandShellView(Eyes, swiper, Island, reduceMotion);

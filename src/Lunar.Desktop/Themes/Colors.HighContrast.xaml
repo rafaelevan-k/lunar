@@ -17,5 +17,9 @@
   <x:Static x:Key="Lunar.Color.Border" Member="SystemColors.WindowTextColor" />
   <x:Static x:Key="Lunar.Color.Error" Member="SystemColors.WindowTextColor" />
   <x:Static x:Key="Lunar.Color.Recording" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.EggOutline" Member="SystemColors.WindowTextColor" />
+  <x:Static x:Key="Lunar.Color.EggWhite" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Lunar.Color.EggShade" Member="SystemColors.WindowColor" />
+  <x:Static x:Key="Lunar.Color.EggYolk" Member="SystemColors.HighlightColor" />
   <x:Static x:Key="Lunar.Color.Success" Member="SystemColors.WindowTextColor" />
 </ResourceDictionary>

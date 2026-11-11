@@ -12,5 +12,9 @@
   <Color x:Key="Lunar.Color.Border">#3A3E52</Color>
   <Color x:Key="Lunar.Color.Error">#FF737E</Color>
   <Color x:Key="Lunar.Color.Recording">#FF453A</Color>
+  <Color x:Key="Lunar.Color.EggOutline">#C9A46A</Color>
+  <Color x:Key="Lunar.Color.EggWhite">#FFF7E8</Color>
+  <Color x:Key="Lunar.Color.EggShade">#E8D4B0</Color>
+  <Color x:Key="Lunar.Color.EggYolk">#FFB627</Color>
   <Color x:Key="Lunar.Color.Success">#86D7B0</Color>
 </ResourceDictionary>

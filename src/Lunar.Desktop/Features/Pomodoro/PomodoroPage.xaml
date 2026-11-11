@@ -1,0 +1,126 @@
+<UserControl x:Class="Lunar.Desktop.Features.Pomodoro.PomodoroPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Lunar.Desktop.Resources"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+             xmlns:c="clr-namespace:Lunar.Desktop.Controls"
+             Focusable="False" IsTabStop="False" Background="Transparent"
+             automation:AutomationProperties.Name="{res:Text Nav.Pomodoro}">
+  <!-- FE-36, ADR-0023: the focus timer. It only binds to PomodoroPageViewModel. Like the other pages it keeps 40 DIP clear on both sides for the arrows. -->
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+    <!-- Thicker outlines on this page, at the owner's request (2026-11-11): every button here that draws Lunar.Thickness.Outline follows it. -->
+    <Thickness x:Key="Lunar.Thickness.Outline">2.4</Thickness>
+
+    <Style x:Key="SmallButton" TargetType="Button">
+      <Setter Property="c:Squish.Enabled" Value="True" />
+      <Setter Property="Focusable" Value="True" />
+      <Setter Property="IsTabStop" Value="True" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="MinWidth" Value="40" />
+      <Setter Property="Padding" Value="10,1" />
+      <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+      <Setter Property="FontFamily" Value="{DynamicResource Lunar.Font.Family}" />
+      <Setter Property="FontSize" Value="{DynamicResource Lunar.Font.Size.Caption}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Face" CornerRadius="12" Padding="{TemplateBinding Padding}" Background="{DynamicResource Lunar.Brush.Surface}"
+                    BorderBrush="{DynamicResource Lunar.Brush.TextSecondary}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Lunar.Brush.Accent}" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Face" Property="Opacity" Value="0.4" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="PresetButton" TargetType="Button" BasedOn="{StaticResource SmallButton}">
+      <Setter Property="Margin" Value="3,0" />
+      <Setter Property="MinWidth" Value="48" />
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="40,4,40,2" VerticalAlignment="Center">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- A whole egg that hops a little while the time runs, and a sunny-side-up egg when it is over. Decorative only. -->
+    <Grid Grid.Row="0" Height="44" Margin="0,0,0,4">
+      <c:PixelArtView x:Name="Egg" IntroFrames="{Binding EggIntroFrames}" Rows="{Binding EggRows}" IsBouncing="{Binding IsEggBouncing}" PixelSize="3" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                      OutlineBrush="{DynamicResource Lunar.Brush.EggOutline}" WhiteBrush="{DynamicResource Lunar.Brush.EggWhite}"
+                      ShadeBrush="{DynamicResource Lunar.Brush.EggShade}" YolkBrush="{DynamicResource Lunar.Brush.EggYolk}" />
+    </Grid>
+
+    <!-- Presets, in minutes; the chosen one is filled. -->
+    <ItemsControl x:Name="Presets" Grid.Row="1" ItemsSource="{Binding Presets}" Focusable="False" IsTabStop="False" HorizontalAlignment="Center" Margin="0,0,0,6"
+                  Visibility="{Binding CanChooseMinutes, Converter={StaticResource BoolToVisible}}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Button x:Name="PresetButton" Style="{StaticResource PresetButton}" Command="{Binding SelectCommand}" automation:AutomationProperties.Name="{Binding Name}">
+            <TextBlock Text="{Binding Text}" />
+          </Button>
+          <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+              <Setter TargetName="PresetButton" Property="Foreground" Value="{DynamicResource Lunar.Brush.Accent}" />
+              <Setter TargetName="PresetButton" Property="FontWeight" Value="SemiBold" />
+            </DataTrigger>
+          </DataTemplate.Triggers>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- The time: the length to start with, or what is left. Minus and plus change the length before a session. -->
+    <Grid Grid.Row="2" Margin="0,0,0,6">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <c:IconButton x:Name="LessButton" Grid.Column="0" Glyph="&#xE738;" Label="{res:Text Pomodoro.Less}" Command="{Binding LessCommand}" VerticalAlignment="Center"
+                    Visibility="{Binding CanChooseMinutes, Converter={StaticResource BoolToVisible}}" />
+      <TextBlock x:Name="TimeText" Grid.Column="1" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Display}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 automation:AutomationProperties.Name="{Binding TimeName}" />
+      <c:IconButton x:Name="MoreButton" Grid.Column="2" Glyph="&#xE710;" Label="{res:Text Pomodoro.More}" Command="{Binding MoreCommand}" VerticalAlignment="Center"
+                    Visibility="{Binding CanChooseMinutes, Converter={StaticResource BoolToVisible}}" />
+    </Grid>
+
+    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+      <Button x:Name="StartButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Pomodoro.Start}" Command="{Binding StartCommand}"
+              automation:AutomationProperties.Name="{res:Text Pomodoro.StartName}"
+              Visibility="{Binding CanStart, Converter={StaticResource BoolToVisible}}" />
+      <Button x:Name="PauseButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{Binding PauseResumeText}" Command="{Binding PauseResumeCommand}" Margin="0,0,8,0"
+              Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}" />
+      <Button x:Name="StopButton" Style="{DynamicResource Lunar.Style.ActionButton}" Content="{res:Text Pomodoro.Stop}" Command="{Binding StopCommand}"
+              automation:AutomationProperties.Name="{res:Text Pomodoro.StopName}"
+              Visibility="{Binding IsActive, Converter={StaticResource BoolToVisible}}" />
+    </StackPanel>
+
+    <DockPanel Grid.Row="4" LastChildFill="True">
+      <Button x:Name="OpenSettingsButton" DockPanel.Dock="Right" Style="{StaticResource SmallButton}" Content="{res:Text Pomodoro.OpenSettings}" Command="{Binding OpenSettingsCommand}"
+              VerticalAlignment="Top" automation:AutomationProperties.Name="{res:Text Pomodoro.OpenSettingsName}"
+              Visibility="{Binding ShowOpenSettings, Converter={StaticResource BoolToVisible}}" />
+      <TextBlock x:Name="FocusText" Text="{Binding FocusText}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,4,0"
+                 automation:AutomationProperties.LiveSetting="Polite" />
+    </DockPanel>
+  </Grid>
+</UserControl>

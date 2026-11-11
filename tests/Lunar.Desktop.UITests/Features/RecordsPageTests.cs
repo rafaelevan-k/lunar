@@ -600,14 +600,23 @@ public sealed class RecordsPageTests
 
         public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
         {
-            var timer = new ManualTimer2(callback, state, period == RecordsViewModel.TickInterval);
+            var timer = new ManualTimer2(callback, state, period == RecordsViewModel.TickInterval, period);
             _timers.Add(timer);
             return timer;
         }
 
-        private sealed class ManualTimer2(TimerCallback callback, object? state, bool isTick) : ITimer
+        /// <summary>Fires every live timer created with this period.</summary>
+        public void FireTicks(TimeSpan period)
+        {
+            foreach (var timer in _timers.Where(t => !t.IsDisposed && t.Period == period).ToList())
+                timer.Fire();
+        }
+
+        private sealed class ManualTimer2(TimerCallback callback, object? state, bool isTick, TimeSpan period) : ITimer
         {
             public bool IsTick { get; } = isTick;
+
+            public TimeSpan Period { get; } = period;
 
             public bool IsDisposed { get; private set; }
 

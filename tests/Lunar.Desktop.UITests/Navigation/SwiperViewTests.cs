@@ -30,7 +30,7 @@ public sealed class SwiperViewTests
 
     private static Rig Create(bool reduceMotion = true)
     {
-        var navigation = new PageNavigationViewModel(["System", "Media", "File converter", "Notes", "Usage"]);
+        var navigation = new PageNavigationViewModel(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
         var slider = new Slider { Minimum = 0, Maximum = 100, Value = 50, Name = "VolumeSlider" };
         var button = new Button { Content = "Go" };
         var pages = new FrameworkElement[]
@@ -39,7 +39,8 @@ public sealed class SwiperViewTests
             new TextBlock { Text = "two" },
             new TextBlock { Text = "three" },
             new TextBlock { Text = "four" },
-            new TextBlock { Text = "five" }
+            new TextBlock { Text = "five" },
+            new TextBlock { Text = "six" }
         };
 
         var view = new SwiperView();
@@ -93,16 +94,16 @@ public sealed class SwiperViewTests
     // ---- layout and pages ------------------------------------------------------------------------------------------
 
     [Fact]
-    public void FivePagesSitSideBySideEachAsWideAsTheViewportAndTheFirstIsShown() => RunOnSta(() =>
+    public void SixPagesSitSideBySideEachAsWideAsTheViewportAndTheFirstIsShown() => RunOnSta(() =>
     {
         using var rig = Create();
 
         var strip = (StackPanel)rig.View.FindName("Strip");
-        Assert.Equal(5, strip.Children.Count);
+        Assert.Equal(6, strip.Children.Count);
         var viewport = (Grid)rig.View.FindName("Viewport");
         Assert.True(viewport.ActualWidth > 300);
         Assert.All(strip.Children.OfType<FrameworkElement>(), page => Assert.Equal(viewport.ActualWidth, page.Width, 3));
-        Assert.Equal(viewport.ActualWidth * 5, strip.Width, 3);
+        Assert.Equal(viewport.ActualWidth * 6, strip.Width, 3);
         Assert.Equal(0, rig.View.StripX);
     });
 
@@ -113,7 +114,7 @@ public sealed class SwiperViewTests
 
         rig.View.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
-        // Only the arrows and the five dots ask for width (about 110 DIP), far below the island's 380 DIP; the pages never do.
+        // Only the arrows and the six dots ask for width (about 110 DIP), far below the island's 380 DIP; the pages never do.
         Assert.True(rig.View.DesiredSize.Width < 150, $"Desired width was {rig.View.DesiredSize.Width}.");
     });
 
@@ -121,7 +122,7 @@ public sealed class SwiperViewTests
     public void InitializeValidatesAndOnlyRunsOnce() => RunOnSta(() =>
     {
         var view = new SwiperView();
-        var navigation = new PageNavigationViewModel(["a", "b", "c", "d", "e"]);
+        var navigation = new PageNavigationViewModel(["a", "b", "c", "d", "e", "f"]);
 
         Assert.Throws<ArgumentNullException>(() => view.Initialize(null!, [], true));
         Assert.Throws<ArgumentNullException>(() => view.Initialize(navigation, null!, true));
@@ -188,7 +189,7 @@ public sealed class SwiperViewTests
         {
             var from = random.Next(0, 378);
             Drag(rig.View, from, from + random.Next(-400, 400), random.Next(10, 600));
-            Assert.InRange(rig.Navigation.SelectedIndex, 0, 4);
+            Assert.InRange(rig.Navigation.SelectedIndex, 0, 5);
         }
     });
 
@@ -274,13 +275,14 @@ public sealed class SwiperViewTests
         rig.View.RaiseEvent(Key(rig.Window, rig.View, System.Windows.Input.Key.Right));
         rig.View.RaiseEvent(Key(rig.Window, rig.View, System.Windows.Input.Key.Right));
         rig.View.RaiseEvent(Key(rig.Window, rig.View, System.Windows.Input.Key.Right));
+        rig.View.RaiseEvent(Key(rig.Window, rig.View, System.Windows.Input.Key.Right));
         var past = Key(rig.Window, rig.View, System.Windows.Input.Key.Right);
         rig.View.RaiseEvent(past);
         Assert.False(past.Handled); // nothing to do at the end: the key is left for others
-        Assert.Equal(4, rig.Navigation.SelectedIndex);
+        Assert.Equal(5, rig.Navigation.SelectedIndex);
 
         rig.View.RaiseEvent(Key(rig.Window, rig.View, System.Windows.Input.Key.Left));
-        Assert.Equal(3, rig.Navigation.SelectedIndex);
+        Assert.Equal(4, rig.Navigation.SelectedIndex);
     });
 
     [Fact]
@@ -348,10 +350,10 @@ public sealed class SwiperViewTests
         Assert.Equal(1, rig.Navigation.SelectedIndex);
         Assert.True(previous.IsEnabled);
 
-        rig.Navigation.GoTo(4);
+        rig.Navigation.GoTo(5);
         Assert.False(next.IsEnabled);
         previous.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-        Assert.Equal(3, rig.Navigation.SelectedIndex);
+        Assert.Equal(4, rig.Navigation.SelectedIndex);
     });
 
     [Fact]
@@ -360,15 +362,15 @@ public sealed class SwiperViewTests
         using var rig = Create();
         var dots = ((StackPanel)rig.View.FindName("Dots")).Children.OfType<RadioButton>().ToList();
 
-        Assert.Equal(5, dots.Count);
-        Assert.Equal(["System page", "Media page", "File converter page", "Notes page", "Usage page"], dots.Select(System.Windows.Automation.AutomationProperties.GetName));
-        Assert.Equal([true, false, false, false, false], dots.Select(d => d.IsChecked == true));
+        Assert.Equal(6, dots.Count);
+        Assert.Equal(["System page", "Media page", "Pomodoro page", "File converter page", "Notes page", "Usage page"], dots.Select(System.Windows.Automation.AutomationProperties.GetName));
+        Assert.Equal([true, false, false, false, false, false], dots.Select(d => d.IsChecked == true));
 
         dots[2].IsChecked = true; // clicking a dot, or arrowing to it with the keyboard
         Assert.Equal(2, rig.Navigation.SelectedIndex);
 
         rig.Navigation.GoTo(1);
-        Assert.Equal([false, true, false, false, false], dots.Select(d => d.IsChecked == true));
+        Assert.Equal([false, true, false, false, false, false], dots.Select(d => d.IsChecked == true));
     });
 
     // ---- touchpad --------------------------------------------------------------------------------------------------

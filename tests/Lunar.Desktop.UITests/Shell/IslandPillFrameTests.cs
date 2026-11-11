@@ -120,7 +120,7 @@ public sealed class IslandPillFrameTests
             var dpi = (int)GetDpiForSystem();
             var display = new DisplayInfo("DISPLAY1", true, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1020), dpi, dpi);
             var viewModel = new IslandViewModel();
-            var navigation = new PageNavigationViewModel(["One", "Two", "Three", "Four", "Five"]);
+            var navigation = new PageNavigationViewModel(["One", "Two", "Three", "Four", "Five", "Six"]);
             var swiper = new SwiperView();
             var shell = new IslandShellView(new EyesView(), swiper, viewModel, reduceMotion: false);
             var window = new IslandWindow { DataContext = viewModel };

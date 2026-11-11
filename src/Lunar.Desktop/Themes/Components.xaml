@@ -16,6 +16,10 @@
   <SolidColorBrush x:Key="Lunar.Brush.Border" Color="{DynamicResource Lunar.Color.Border}" />
   <SolidColorBrush x:Key="Lunar.Brush.Error" Color="{DynamicResource Lunar.Color.Error}" />
   <SolidColorBrush x:Key="Lunar.Brush.Recording" Color="{DynamicResource Lunar.Color.Recording}" />
+  <SolidColorBrush x:Key="Lunar.Brush.EggOutline" Color="{DynamicResource Lunar.Color.EggOutline}" />
+  <SolidColorBrush x:Key="Lunar.Brush.EggWhite" Color="{DynamicResource Lunar.Color.EggWhite}" />
+  <SolidColorBrush x:Key="Lunar.Brush.EggShade" Color="{DynamicResource Lunar.Color.EggShade}" />
+  <SolidColorBrush x:Key="Lunar.Brush.EggYolk" Color="{DynamicResource Lunar.Color.EggYolk}" />
   <SolidColorBrush x:Key="Lunar.Brush.Success" Color="{DynamicResource Lunar.Color.Success}" />
 
   <!-- The width of every outline on a button, chip or switch. 1.6 DIP becomes a whole 2 device pixels on the common display scales (100%, 125%, 150%),

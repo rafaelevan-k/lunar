@@ -447,4 +447,27 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Records.AnnouncePaused" xml:space="preserve"><value>Perekaman dijeda</value></data>
   <data name="Records.AnnounceResumed" xml:space="preserve"><value>Perekaman dilanjutkan</value></data>
   <data name="Records.AnnounceEnded" xml:space="preserve"><value>Perekaman dihentikan</value></data>
+  <data name="Nav.Pomodoro" xml:space="preserve"><value>Pomodoro</value></data>
+  <data name="Pomodoro.PresetName" xml:space="preserve"><value>{0} menit</value></data>
+  <data name="Pomodoro.TimeLeftName" xml:space="preserve"><value>Sisa waktu: {0}</value></data>
+  <data name="Pomodoro.LengthName" xml:space="preserve"><value>Lama fokus: {0} menit</value></data>
+  <data name="Pomodoro.Less" xml:space="preserve"><value>Lebih singkat</value></data>
+  <data name="Pomodoro.More" xml:space="preserve"><value>Lebih lama</value></data>
+  <data name="Pomodoro.Start" xml:space="preserve"><value>Mulai</value></data>
+  <data name="Pomodoro.StartName" xml:space="preserve"><value>Mulai fokus</value></data>
+  <data name="Pomodoro.Pause" xml:space="preserve"><value>Jeda</value></data>
+  <data name="Pomodoro.Resume" xml:space="preserve"><value>Lanjut</value></data>
+  <data name="Pomodoro.Stop" xml:space="preserve"><value>Berhenti</value></data>
+  <data name="Pomodoro.StopName" xml:space="preserve"><value>Akhiri sesi fokus</value></data>
+  <data name="Pomodoro.OpenSettings" xml:space="preserve"><value>Buka pengaturan</value></data>
+  <data name="Pomodoro.OpenSettingsName" xml:space="preserve"><value>Buka pengaturan notifikasi Windows</value></data>
+  <data name="Pomodoro.Hint" xml:space="preserve"><value>Memulai juga menyalakan Jangan Ganggu sampai waktunya habis.</value></data>
+  <data name="Pomodoro.TurningOn" xml:space="preserve"><value>Menyalakan Jangan Ganggu…</value></data>
+  <data name="Pomodoro.On" xml:space="preserve"><value>Jangan Ganggu menyala. Alarm dan aplikasi prioritas mungkin tetap muncul.</value></data>
+  <data name="Pomodoro.AlreadyOn" xml:space="preserve"><value>Jangan Ganggu sudah menyala. Lunar membiarkannya.</value></data>
+  <data name="Pomodoro.Unavailable" xml:space="preserve"><value>Windows tidak mengizinkan Lunar menyalakan Jangan Ganggu. Timer tetap berjalan.</value></data>
+  <data name="Pomodoro.Unsupported" xml:space="preserve"><value>Versi Windows ini tidak mengizinkan Lunar menyalakan Jangan Ganggu. Timer tetap berjalan.</value></data>
+  <data name="Pomodoro.Off" xml:space="preserve"><value>Jangan Ganggu mati.</value></data>
+  <data name="Pomodoro.Finished" xml:space="preserve"><value>Waktu fokus selesai. Jangan Ganggu kembali seperti semula.</value></data>
+  <data name="Pomodoro.PausedOff" xml:space="preserve"><value>Dijeda. Jangan Ganggu mati sampai Anda melanjutkan.</value></data>
 </root>

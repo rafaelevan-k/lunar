@@ -447,4 +447,27 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Records.AnnouncePaused" xml:space="preserve"><value>Recording paused</value></data>
   <data name="Records.AnnounceResumed" xml:space="preserve"><value>Recording resumed</value></data>
   <data name="Records.AnnounceEnded" xml:space="preserve"><value>Recording stopped</value></data>
+  <data name="Nav.Pomodoro" xml:space="preserve"><value>Pomodoro</value></data>
+  <data name="Pomodoro.PresetName" xml:space="preserve"><value>{0} minutes</value></data>
+  <data name="Pomodoro.TimeLeftName" xml:space="preserve"><value>Time left: {0}</value></data>
+  <data name="Pomodoro.LengthName" xml:space="preserve"><value>Focus length: {0} minutes</value></data>
+  <data name="Pomodoro.Less" xml:space="preserve"><value>Shorter</value></data>
+  <data name="Pomodoro.More" xml:space="preserve"><value>Longer</value></data>
+  <data name="Pomodoro.Start" xml:space="preserve"><value>Start</value></data>
+  <data name="Pomodoro.StartName" xml:space="preserve"><value>Start focusing</value></data>
+  <data name="Pomodoro.Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Pomodoro.Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Pomodoro.Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Pomodoro.StopName" xml:space="preserve"><value>End the focus session</value></data>
+  <data name="Pomodoro.OpenSettings" xml:space="preserve"><value>Open settings</value></data>
+  <data name="Pomodoro.OpenSettingsName" xml:space="preserve"><value>Open the notification settings of Windows</value></data>
+  <data name="Pomodoro.Hint" xml:space="preserve"><value>Starting also turns on Do Not Disturb until the time is up.</value></data>
+  <data name="Pomodoro.TurningOn" xml:space="preserve"><value>Turning on Do Not Disturb…</value></data>
+  <data name="Pomodoro.On" xml:space="preserve"><value>Do Not Disturb is on. Alarms and priority apps may still come through.</value></data>
+  <data name="Pomodoro.AlreadyOn" xml:space="preserve"><value>Do Not Disturb was already on. Lunar leaves it as it is.</value></data>
+  <data name="Pomodoro.Unavailable" xml:space="preserve"><value>Windows did not let Lunar turn on Do Not Disturb. The timer still runs.</value></data>
+  <data name="Pomodoro.Unsupported" xml:space="preserve"><value>This version of Windows doesn't let Lunar turn on Do Not Disturb. The timer still runs.</value></data>
+  <data name="Pomodoro.Off" xml:space="preserve"><value>Do Not Disturb is off.</value></data>
+  <data name="Pomodoro.Finished" xml:space="preserve"><value>Focus time is over. Do Not Disturb is back as it was.</value></data>
+  <data name="Pomodoro.PausedOff" xml:space="preserve"><value>Paused. Do Not Disturb is off until you resume.</value></data>
 </root>

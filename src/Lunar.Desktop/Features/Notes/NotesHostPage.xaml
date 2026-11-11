@@ -24,8 +24,9 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
+            <!-- Thicker than elsewhere, like the buttons of the Records view below it (owner's request, 2026-11-11). -->
             <Border x:Name="Face" CornerRadius="12" Padding="12,1" Background="Transparent"
-                    BorderBrush="{DynamicResource Lunar.Brush.Border}" BorderThickness="1">
+                    BorderBrush="{DynamicResource Lunar.Brush.TextSecondary}" BorderThickness="2.4">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>

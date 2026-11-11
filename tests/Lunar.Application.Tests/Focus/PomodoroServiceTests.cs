@@ -117,7 +117,7 @@ public sealed class PomodoroServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task PauseHoldsTheTimeAndKeepsDoNotDisturb()
+    public async Task PauseHoldsTheTimeAndTurnsDoNotDisturbOffUntilResume()
     {
         await _service.StartAsync(25, Ct);
         Advance(TimeSpan.FromMinutes(5));
@@ -126,14 +126,50 @@ public sealed class PomodoroServiceTests : IDisposable
         Advance(TimeSpan.FromMinutes(30));
 
         Assert.Equal(TimeSpan.FromMinutes(20), _service.Remaining);
-        Assert.Equal(Alarms, _focus.Profile);
+        Assert.Equal(Off, _focus.Profile);
+        Assert.Equal(FocusModeStatus.NotRequested, _service.Current.FocusStatus);
+        Assert.Null(_marker.Token); // nothing to repair while paused
         Assert.False(_time.Running);
 
         await _service.ResumeAsync(Ct);
+        Assert.Equal(Alarms, _focus.Profile);
+        Assert.Equal(FocusModeStatus.On, _service.Current.FocusStatus);
+        Assert.Equal(Off, _marker.Token);
         Assert.Equal(TimeSpan.FromMinutes(20), _service.Remaining);
         Advance(TimeSpan.FromMinutes(1));
         Assert.Equal(TimeSpan.FromMinutes(19), _service.Remaining);
         Assert.True(_time.Running);
+
+        await _service.StopAsync();
+        Assert.Equal(Off, _focus.Profile);
+    }
+
+    [Fact]
+    public async Task PauseLeavesADoNotDisturbTheUserAlreadyHadAlone()
+    {
+        _focus.Profile = Priority;
+        await _service.StartAsync(25, Ct);
+
+        await _service.PauseAsync(Ct);
+
+        Assert.Equal(Priority, _focus.Profile);
+        Assert.Equal(FocusModeStatus.AlreadyOn, _service.Current.FocusStatus);
+        await _service.ResumeAsync(Ct);
+        Assert.Equal(FocusModeStatus.AlreadyOn, _service.Current.FocusStatus);
+        Assert.Equal(0, _focus.TurnOns);
+        Assert.Equal(0, _focus.Restores);
+    }
+
+    [Fact]
+    public async Task StoppingWhilePausedLeavesItOff()
+    {
+        await _service.StartAsync(25, Ct);
+        await _service.PauseAsync(Ct);
+
+        await _service.StopAsync();
+
+        Assert.Equal(Off, _focus.Profile);
+        Assert.Equal(PomodoroPhase.Idle, _service.Current.Phase);
     }
 
     [Fact]

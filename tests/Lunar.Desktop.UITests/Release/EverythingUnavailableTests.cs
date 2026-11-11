@@ -124,6 +124,26 @@ public sealed class EverythingUnavailableTests
         }
     }
 
+    private sealed class NoFocusMode : IFocusModeControl
+    {
+        private static readonly OperationError Error = new(ErrorCode.Unsupported, "No quiet-hours service.");
+
+        public Task<Result<FocusModeState>> ReadAsync(CancellationToken ct) => Task.FromResult(Result.Failure<FocusModeState>(Error));
+
+        public Task<Result> TurnOnAsync(CancellationToken ct) => Task.FromResult(Result.Failure(Error));
+
+        public Task<Result> RestoreAsync(string restoreToken, CancellationToken ct) => Task.FromResult(Result.Failure(Error));
+    }
+
+    private sealed class NoMarker : IFocusSessionMarker
+    {
+        public Task<Result<string?>> ReadAsync(CancellationToken ct) => Task.FromResult(Result.Success<string?>(null));
+
+        public Task<Result> SaveAsync(string restoreToken, CancellationToken ct) => Task.FromResult(Result.Success());
+
+        public Task<Result> ClearAsync(CancellationToken ct) => Task.FromResult(Result.Success());
+    }
+
     private sealed class NoSettingsApp : ISystemSettingsLauncher
     {
         public Task<Result> OpenAsync(SettingsPage page, CancellationToken ct) =>
@@ -251,6 +271,8 @@ public sealed class EverythingUnavailableTests
             s.AddSingleton<IStartupRegistration>(startupEntry);
             s.AddSingleton<INotesRepository>(new Lunar.Desktop.UITests.Features.FakeNotesRepository { FailLoadWith = ErrorCode.IoFailure });
             s.AddSingleton<IBrightnessService>(new Lunar.Desktop.UITests.Features.FakeBrightnessService { FailReadWith = ErrorCode.IoFailure });
+            s.AddSingleton<IFocusModeControl>(new NoFocusMode());
+            s.AddSingleton<IFocusSessionMarker>(new NoMarker());
             s.AddSingleton<ICaptureExclusion>(new Lunar.Desktop.UITests.Shell.CaptureExclusionGuardTests.FakeExclusion { Refuse = true, RefuseWatch = true });
         });
 
@@ -261,7 +283,7 @@ public sealed class EverythingUnavailableTests
         // Composed in the order and with the parts App.OnStartup uses (no tray, single-instance or diagnostics files here).
         var viewModel = services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
-        var navigation = new PageNavigationViewModel(["System", "Media", "Converter", "Notes", "Usage"]);
+        var navigation = new PageNavigationViewModel(["System", "Media", "Pomodoro", "Converter", "Notes", "Usage"]);
         // Sprint 8 (BE-38): screen-sharing exclusion refused by Windows, brightness unreadable, notes unreadable.
         using var capture = new CaptureExclusionGuard(services.GetRequiredService<ICaptureExclusion>());
         capture.StartWatching();
@@ -286,10 +308,13 @@ public sealed class EverythingUnavailableTests
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
         pages[0] = new SystemPage { DataContext = system };
         pages[1] = new MediaPage { DataContext = media };
-        pages[2] = new ConverterPage { DataContext = converter };
+        var pomodoro = services.GetRequiredService<Lunar.Application.Focus.PomodoroService>();
+        using var pomodoroPage = new Lunar.Desktop.Features.Pomodoro.PomodoroPageViewModel(pomodoro, services.GetRequiredService<ISystemSettingsLauncher>(), toUi, log: log);
+        pages[2] = new Lunar.Desktop.Features.Pomodoro.PomodoroPage { DataContext = pomodoroPage };
+        pages[3] = new ConverterPage { DataContext = converter };
         using var notes = new NotesPageViewModel(services.GetRequiredService<NotesService>(), toUi, new DispatcherOneShotTimer(), new DispatcherOneShotTimer(), log: log);
-        pages[3] = new NotesPage { DataContext = notes };
-        pages[4] = new UsagePage { DataContext = usagePage };
+        pages[4] = new NotesPage { DataContext = notes };
+        pages[5] = new UsagePage { DataContext = usagePage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, reduceMotion);
         var shell = new IslandShellView(eyesView, swiper, viewModel, reduceMotion);
@@ -352,6 +377,11 @@ public sealed class EverythingUnavailableTests
             Assert.True(brightness.ShowSettingsLink);
             Assert.Equal("The brightness couldn't be read.", brightness.Note);
             Assert.True(capture.IsRefused); // Windows refused to hide Lunar: the Settings window says so, and the island still works
+            Wait(pomodoro.StartAsync(1, CancellationToken.None)); // Do Not Disturb that Windows will not change: the timer runs and the page says so
+            Pump();
+            Assert.Equal(Lunar.Application.Focus.FocusModeStatus.Unavailable, pomodoro.Current.FocusStatus);
+            Assert.True(pomodoroPage.ShowOpenSettings);
+            Wait(pomodoro.StopAsync());
 
             Assert.True(viewModel.Collapse());
             Pump(() => viewModel.State == IslandVisualState.Idle, 3000);

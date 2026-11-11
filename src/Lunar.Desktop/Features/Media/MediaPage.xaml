@@ -16,6 +16,8 @@
   -->
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+    <!-- Thicker outlines on this page, at the owner's request (2026-11-12): the buttons and the artwork frame follow it. -->
+    <Thickness x:Key="Lunar.Thickness.Outline">2.4</Thickness>
 
 
   </UserControl.Resources>
@@ -68,8 +70,12 @@
 
         <!-- Fixed square: the image when there is one, otherwise a music note on the surface colour. -->
         <Border x:Name="ArtworkFrame" Grid.Column="0" Width="72" Height="72" CornerRadius="18" ClipToBounds="True"
-                Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="1">
-          <Grid>
+                Background="{DynamicResource Lunar.Brush.Surface}" BorderBrush="{DynamicResource Lunar.Brush.Accent}" BorderThickness="{DynamicResource Lunar.Thickness.Outline}">
+          <!-- The picture is cut to the rounded inside of the frame (72 less the 2.4 DIP outline on each side, corner 18 less 2.4), so no corner sticks out. -->
+          <Grid x:Name="ArtworkClip">
+            <Grid.Clip>
+              <RectangleGeometry Rect="0,0,67.2,67.2" RadiusX="15.6" RadiusY="15.6" />
+            </Grid.Clip>
             <TextBlock x:Name="ArtworkPlaceholder" Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28"
                        HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource Lunar.Brush.Accent}">
               <TextBlock.Style>

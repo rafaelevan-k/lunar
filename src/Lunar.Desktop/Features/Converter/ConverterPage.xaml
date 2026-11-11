@@ -8,6 +8,8 @@
              Focusable="False" IsTabStop="False" Background="Transparent" AllowDrop="True"
              automation:AutomationProperties.Name="{res:Text X.FileConverter}">
   <UserControl.Resources>
+    <!-- Thicker outlines on this page, at the owner's request (2026-11-12): every button here that draws Lunar.Thickness.Outline follows it. -->
+    <Thickness x:Key="Lunar.Thickness.Outline">2.4</Thickness>
     <BooleanToVisibilityConverter x:Key="BoolToVisible" />
 
 

@@ -234,14 +234,14 @@ public sealed class NotesPageTests
     [Fact]
     public void TypingInANoteNeverSwipesThePagesEvenAtTheEndOfTheText() => RunOnSta(() =>
     {
-        var navigation = new PageNavigationViewModel(["System", "Media", "File converter", "Notes", "Usage"]);
+        var navigation = new PageNavigationViewModel(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
         var swiper = new SwiperView();
         var notesHost = new ContentControl();
-        var pages = new FrameworkElement[] { new TextBlock { Text = "one" }, new TextBlock { Text = "two" }, new TextBlock { Text = "three" }, notesHost, new TextBlock { Text = "five" } };
+        var pages = new FrameworkElement[] { new TextBlock { Text = "one" }, new TextBlock { Text = "two" }, new TextBlock { Text = "three" }, new TextBlock { Text = "four" }, notesHost, new TextBlock { Text = "six" } };
         swiper.Initialize(navigation, pages, reduceMotion: true);
         using var rig = new Rig(host: swiper);
         notesHost.Content = rig.Page;
-        navigation.GoTo(3);
+        navigation.GoTo(4);
         Pump();
         rig.Run(rig.Model.NewNoteCommand);
         var editor = rig.Named<TextBox>("Editor");
@@ -253,7 +253,7 @@ public sealed class NotesPageTests
         {
             var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(editor)!, 0, key) { RoutedEvent = Keyboard.KeyDownEvent };
             editor.RaiseEvent(args); // a key the box did not use bubbles up to the swiper
-            Assert.Equal(3, navigation.SelectedIndex);
+            Assert.Equal(4, navigation.SelectedIndex);
         }
 
         Assert.True(SwiperView.GetBlocksSwipe(editor));

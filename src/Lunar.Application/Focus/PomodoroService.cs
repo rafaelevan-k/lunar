@@ -9,7 +9,7 @@ namespace Lunar.Application.Focus;
 
 /// <summary>
 /// The one focus timer (ADR-0023). It counts toward a stored end time, so a late tick or a sleep corrects itself and time asleep counts as elapsed. It turns
-/// Do Not Disturb on for the session and puts back what was there: a user who already had it on keeps it, and a change made by hand during the session is
+/// Do Not Disturb on while the timer runs (not while paused) and puts back what was there: a user who already had it on keeps it, and a change made by hand during the session is
 /// respected. A marker on disk repairs an unexpected stop at the next start. Calls are serialized; <see cref="Changes"/> follows ADR-0006.
 /// </summary>
 public sealed class PomodoroService : IDisposable
@@ -121,7 +121,10 @@ public sealed class PomodoroService : IDisposable
         }
     }
 
-    /// <summary>Holds the time left. Do Not Disturb stays as it is.</summary>
+    /// <summary>
+    /// Holds the time left and puts Do Not Disturb back as it was until <see cref="ResumeAsync"/> (the owner's decision, 2026-11-11). One that was
+    /// already on before the session is left alone.
+    /// </summary>
     public async Task<Result> PauseAsync(CancellationToken ct)
     {
         if (!await EnterAsync(ct).ConfigureAwait(false))
@@ -132,7 +135,9 @@ public sealed class PomodoroService : IDisposable
                 return Result.Success();
             _pausedRemaining = Max(_endsAt - _clock.LocalNow);
             StopTicking();
-            Publish(Current with { Phase = PomodoroPhase.Paused });
+            var alreadyOn = Current.FocusStatus == FocusModeStatus.AlreadyOn;
+            await RestoreFocusAsync().ConfigureAwait(false);
+            Publish(new PomodoroSnapshot(PomodoroPhase.Paused, alreadyOn ? FocusModeStatus.AlreadyOn : FocusModeStatus.NotRequested));
             return Result.Success();
         }
         finally
@@ -151,7 +156,8 @@ public sealed class PomodoroService : IDisposable
                 return Result.Success();
             _endsAt = _clock.LocalNow + _pausedRemaining;
             StartTicking();
-            Publish(Current with { Phase = PomodoroPhase.Running });
+            Publish(new PomodoroSnapshot(PomodoroPhase.Running, FocusModeStatus.TurningOn));
+            await TurnFocusOnAsync(ct).ConfigureAwait(false);
             return Result.Success();
         }
         finally

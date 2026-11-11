@@ -217,6 +217,12 @@ public sealed class MediaPageTests
     public void MissingArtworkShowsAPlaceholderInTheSameSquare() => RunOnSta(() =>
     {
         using var rig = Create(sessions: S(artwork: []));
+        var clip = Assert.IsType<System.Windows.Media.RectangleGeometry>(Named<Grid>(rig, "ArtworkClip").Clip);
+        Assert.True(clip.RadiusX > 0); // the picture is cut to the rounded frame, not only to its square bounds
+        var frameBorder = Named<Border>(rig, "ArtworkFrame").BorderThickness.Left;
+        Assert.Equal(2.4, frameBorder, 3); // the thicker outline the owner asked for
+        Assert.Equal(new Rect(0, 0, 72 - (2 * frameBorder), 72 - (2 * frameBorder)), clip.Rect); // exactly the inside of the frame
+        Assert.Equal(new Thickness(2.4), (Thickness)rig.Page.FindResource("Lunar.Thickness.Outline")); // the buttons on this page too
         var frame = Named<Border>(rig, "ArtworkFrame");
 
         Assert.Equal(Visibility.Visible, Named<TextBlock>(rig, "ArtworkPlaceholder").Visibility);

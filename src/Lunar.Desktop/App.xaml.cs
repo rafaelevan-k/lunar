@@ -67,6 +67,7 @@ public partial class App : System.Windows.Application
     private Lunar.Desktop.Features.Recorder.RecordsViewModel? _records;
     private IslandActivityController? _activity;
     private Lunar.Application.Focus.PomodoroService? _pomodoro;
+    private Lunar.Desktop.Features.Pomodoro.PomodoroPageViewModel? _pomodoroPage;
     private Lunar.Application.Recording.RecordingService? _recording;
     private NotesLifetime? _notesLifetime;
     private UsagePageViewModel? _usage;
@@ -207,8 +208,8 @@ public partial class App : System.Windows.Application
         _eyes.Start();
         // Clicking the eyes toggles the island; the state machine decides and IslandTransitionController animates it.
         eyesView.ClickCommand = viewModel.ToggleCommand;
-        var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Notes"), Strings.Get("Nav.Usage")]);
-        // Five pages; Notes sits between Converter and Usage (ADR-0020).
+        var navigation = new PageNavigationViewModel([Strings.Get("Nav.System"), Strings.Get("Nav.Media"), Strings.Get("Nav.Pomodoro"), Strings.Get("Nav.Converter"), Strings.Get("Nav.Notes"), Strings.Get("Nav.Usage")]);
+        // Six pages: Pomodoro sits between Media and Converter (ADR-0023), Notes between Converter and Usage (ADR-0020).
         // Brightness of the display the island is on (FE-32, ADR-0021); the display is the one the position controller placed the island on.
         var brightnessService = _services.GetRequiredService<IBrightnessService>();
         _brightnessWriter = new BrightnessWriter(brightnessService);
@@ -255,7 +256,14 @@ public partial class App : System.Windows.Application
         var pages = IslandShellView.CreatePlaceholderPages(navigation.Titles).ToList();
         pages[0] = new SystemPage { DataContext = _system };
         pages[1] = new MediaPage { DataContext = _media };
-        pages[2] = new ConverterPage { DataContext = _converter };
+        _pomodoroPage = new Lunar.Desktop.Features.Pomodoro.PomodoroPageViewModel(
+            _services.GetRequiredService<Lunar.Application.Focus.PomodoroService>(),
+            _services.GetRequiredService<ISystemSettingsLauncher>(),
+            toUi,
+            TimeProvider.System,
+            _log);
+        pages[2] = new Lunar.Desktop.Features.Pomodoro.PomodoroPage { DataContext = _pomodoroPage };
+        pages[3] = new ConverterPage { DataContext = _converter };
         _usage = new UsagePageViewModel(
             _services.GetRequiredService<UsageMonitor>(),
             _settingsService,
@@ -276,8 +284,8 @@ public partial class App : System.Windows.Application
             toUi,
             TimeProvider.System,
             _log);
-        pages[3] = new NotesHostPage { DataContext = new NotesHostViewModel(_notes, _records, _lifetime.Token) };
-        pages[4] = new UsagePage { DataContext = _usage };
+        pages[4] = new NotesHostPage { DataContext = new NotesHostViewModel(_notes, _records, _lifetime.Token) };
+        pages[5] = new UsagePage { DataContext = _usage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, motionOff);
         _shell = new IslandShellView(eyesView, swiper, viewModel, motionOff);
@@ -450,6 +458,8 @@ public partial class App : System.Windows.Application
         _usage = null;
         _notesLifetime?.Dispose();
         _notesLifetime = null;
+        _pomodoroPage?.Dispose();
+        _pomodoroPage = null;
         _activity?.Dispose();
         _activity = null;
         _records?.Dispose();

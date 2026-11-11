@@ -511,7 +511,7 @@ public sealed class ControlsTests
     public void TheIslandShellShowsItsViewModelErrorInlineAndDismissClearsIt() => RunOnSta(() =>
     {
         var viewModel = new IslandViewModel();
-        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Notes", "Usage"]);
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
         var swiper = new Lunar.Desktop.Navigation.SwiperView();
         var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
         var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: true);
@@ -536,7 +536,7 @@ public sealed class ControlsTests
     public void TheShellFollowsAChangeOfTheMotionSettingWhileItRuns() => RunOnSta(() =>
     {
         var viewModel = new IslandViewModel();
-        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Notes", "Usage"]);
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
         var swiper = new Lunar.Desktop.Navigation.SwiperView();
         var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
         var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: false);
@@ -564,7 +564,7 @@ public sealed class ControlsTests
     public void ThePagesAreHiddenWhileTheIslandIsOnlyThePillAndAnimationsBelowThemStop() => RunOnSta(() =>
     {
         var viewModel = new IslandViewModel();
-        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "File converter", "Notes", "Usage"]);
+        var navigation = new Lunar.Desktop.Navigation.PageNavigationViewModel(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
         var swiper = new Lunar.Desktop.Navigation.SwiperView();
         var eyes = new Lunar.Desktop.Features.Eyes.EyesView();
         var shell = new IslandShellView(eyes, swiper, viewModel, reduceMotion: false);

@@ -6,7 +6,7 @@ namespace Lunar.Desktop.UITests.Navigation;
 // Pure logic: no WPF is touched.
 public sealed class NavigationLogicTests
 {
-    private static PageNavigationViewModel Navigation() => new(["System", "Media", "File converter", "Notes", "Usage"]);
+    private static PageNavigationViewModel Navigation() => new(["System", "Media", "Pomodoro", "File converter", "Notes", "Usage"]);
 
     // ---- PageNavigationViewModel -----------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ public sealed class NavigationLogicTests
 
     [Theory]
     [InlineData(-1)]
-    [InlineData(5)]
+    [InlineData(6)]
     [InlineData(int.MinValue)]
     [InlineData(int.MaxValue)]
     [InlineData(0)] // already selected
@@ -49,10 +49,12 @@ public sealed class NavigationLogicTests
         Assert.True(nav.Next());
         Assert.True(nav.Next());
         Assert.True(nav.Next());
+        Assert.True(nav.Next());
         Assert.False(nav.Next());
-        Assert.Equal(4, nav.SelectedIndex);
+        Assert.Equal(5, nav.SelectedIndex);
         Assert.False(nav.CanGoNext);
         Assert.True(nav.CanGoPrevious);
+        Assert.True(nav.Previous());
         Assert.True(nav.Previous());
         Assert.True(nav.Previous());
         Assert.True(nav.Previous());
@@ -70,14 +72,14 @@ public sealed class NavigationLogicTests
         nav.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
         nav.NextCommand.CanExecuteChanged += (_, _) => nextNotices++;
 
-        nav.GoTo(4);
+        nav.GoTo(5);
 
         Assert.Equal(["SelectedIndex", "SelectedTitle", "CanGoNext", "CanGoPrevious"], changes);
         Assert.Equal(1, nextNotices);
         Assert.False(nav.NextCommand.CanExecute(null));
         Assert.True(nav.PreviousCommand.CanExecute(null));
         nav.PreviousCommand.Execute(null);
-        Assert.Equal(3, nav.SelectedIndex);
+        Assert.Equal(4, nav.SelectedIndex);
     }
 
     [Fact]
@@ -95,18 +97,18 @@ public sealed class NavigationLogicTests
                 default: nav.GoTo(random.Next(-5, 9)); break;
             }
 
-            Assert.InRange(nav.SelectedIndex, 0, 4);
+            Assert.InRange(nav.SelectedIndex, 0, 5);
         }
     }
 
     [Theory]
-    [InlineData(4)]
-    [InlineData(6)]
-    public void ExactlyFiveTitlesAreRequired(int count)
+    [InlineData(5)]
+    [InlineData(7)]
+    public void ExactlySixTitlesAreRequired(int count)
     {
         Assert.Throws<ArgumentException>(() => new PageNavigationViewModel(Enumerable.Repeat("x", count).ToList()));
         Assert.Throws<ArgumentNullException>(() => new PageNavigationViewModel(null!));
-        Assert.Throws<ArgumentException>(() => new PageNavigationViewModel(["a", " ", "c", "d", "e"]));
+        Assert.Throws<ArgumentException>(() => new PageNavigationViewModel(["a", " ", "c", "d", "e", "f"]));
     }
 
     // ---- SwipeRules ------------------------------------------------------------------------------------------------
@@ -265,10 +267,10 @@ public sealed class NavigationLogicTests
             swiper.Begin(300, i * 2000L);
             swiper.Move(100, (i * 2000L) + 500);
             swiper.End((i * 2000L) + 600);
-            Assert.InRange(nav.SelectedIndex, 0, 4);
+            Assert.InRange(nav.SelectedIndex, 0, 5);
         }
 
-        Assert.Equal(4, nav.SelectedIndex);
+        Assert.Equal(5, nav.SelectedIndex);
     }
 
     [Fact]
