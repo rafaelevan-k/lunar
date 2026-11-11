@@ -463,7 +463,7 @@ public sealed class IslandActivityTests
         rig.Pass(TimeSpan.FromMinutes(3) + TimeSpan.FromSeconds(15));
         Assert.Equal("21:45", rig.Countdown.Text);
         var middle = rig.Countdown.TranslatePoint(new Point(rig.Countdown.ActualWidth / 2, 0), rig.FocusPill).X;
-        Assert.Equal(rig.FocusPill.ActualWidth / 2, middle, 0); // centred in the pill
+        Assert.InRange(middle, (rig.FocusPill.ActualWidth / 2) - 1, (rig.FocusPill.ActualWidth / 2) + 1); // centred in the pill, within layout rounding (CI saw 78.5 against 79)
     });
 
     [Fact]
