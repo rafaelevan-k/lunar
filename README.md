@@ -2,7 +2,7 @@
 
 **A Dynamic Island for Windows 11, with a pair of eyes that watch over your desktop.**
 
-[![Latest release](https://img.shields.io/github/v/release/rafaelevan-k/lunar?label=download&color=6f42c1)](https://github.com/rafaelevan-k/lunar/releases/latest)
+[![Download the latest release](https://img.shields.io/badge/download-latest%20release-6f42c1?logo=github)](https://github.com/rafaelevan-k/lunar/releases/latest)
 ![Windows 11 x64](https://img.shields.io/badge/Windows%2011-x64-0078D4)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
