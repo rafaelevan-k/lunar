@@ -42,11 +42,12 @@ internal sealed class UsageResetNotifier : IDisposable
     private readonly IOneShotTimer _showTimer;
     private readonly Action<Action> _post;
     private readonly List<UsageLimitReset> _pending = [];
+    private readonly Func<bool>? _isHeldBack;
     private IDisposable? _resets;
     private IDisposable? _changes;
     private bool _disposed;
 
-    public UsageResetNotifier(UsageMonitor monitor, IResetToastPresenter presenter, IOneShotTimer collectTimer, IOneShotTimer showTimer, Action<Action> post)
+    public UsageResetNotifier(UsageMonitor monitor, IResetToastPresenter presenter, IOneShotTimer collectTimer, IOneShotTimer showTimer, Action<Action> post, Func<bool>? isHeldBack = null)
     {
         ArgumentNullException.ThrowIfNull(monitor);
         ArgumentNullException.ThrowIfNull(presenter);
@@ -57,6 +58,7 @@ internal sealed class UsageResetNotifier : IDisposable
         _collectTimer = collectTimer;
         _showTimer = showTimer;
         _post = post;
+        _isHeldBack = isHeldBack;
         presenter.CloseRequested += OnCloseRequested;
         presenter.PointerEntered += OnPointerEntered;
         presenter.PointerLeft += OnPointerLeft;
@@ -97,7 +99,8 @@ internal sealed class UsageResetNotifier : IDisposable
     // Internal so tests can drive it without a monitor thread.
     internal void OnReset(UsageLimitReset reset)
     {
-        if (_disposed || reset.DetectedAt - reset.ResetAt > MaxAge)
+        // During a focus session Lunar keeps quiet too (ADR-0023); like a reset noticed late, this one is simply not told.
+        if (_disposed || reset.DetectedAt - reset.ResetAt > MaxAge || _isHeldBack?.Invoke() == true)
             return;
 
         var first = _pending.Count == 0;

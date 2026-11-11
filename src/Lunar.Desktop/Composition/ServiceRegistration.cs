@@ -8,6 +8,7 @@ using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
+using Lunar.Application.Focus;
 using Lunar.Application.Media.UseCases;
 using Lunar.Application.Notes;
 using Lunar.Application.Recording;
@@ -20,6 +21,7 @@ using Lunar.Conversion.Planning;
 using Lunar.Conversion.Providers;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Shell;
+using Lunar.Infrastructure.Focus;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Notes;
 using Lunar.Infrastructure.Recording;
@@ -30,6 +32,7 @@ using Lunar.Windows.Audio;
 using Lunar.Windows.Bluetooth;
 using Lunar.Windows.Display;
 using Lunar.Windows.Environment;
+using Lunar.Windows.Focus;
 using Lunar.Windows.Media;
 using Lunar.Windows.Network;
 using Lunar.Windows.Pdf;
@@ -89,6 +92,16 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsRepository>(sp => new JsonSettingsRepository(null, sp.GetRequiredService<IDiagnosticLog>()));
         // The one writer of the settings and the announcer of changes (ADR-0016); the theme source tells when Windows changes light or dark.
         services.AddSingleton<SettingsService>(sp => new SettingsService(sp.GetRequiredService<ISettingsRepository>()));
+        // Pomodoro (ADR-0023, BE-41/BE-42). Do Not Disturb is touched only while a session runs, or once at start to repair a crash.
+        services.AddSingleton<IFocusModeControl, WindowsFocusModeControl>();
+        services.AddSingleton<IFocusSessionMarker>(_ => new FileFocusSessionMarker());
+        services.AddSingleton<PomodoroService>(sp => new PomodoroService(
+            sp.GetRequiredService<IFocusModeControl>(),
+            sp.GetRequiredService<IFocusSessionMarker>(),
+            sp.GetRequiredService<SettingsService>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IDiagnosticLog>()));
+
         // Recorder (ADR-0022, BE-39/BE-40). Nothing opens a microphone until the user presses Record.
         services.AddSingleton<WindowsAudioInputCatalog>();
         services.AddSingleton<IAudioInputCatalog>(sp => sp.GetRequiredService<WindowsAudioInputCatalog>());

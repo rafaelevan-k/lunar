@@ -176,6 +176,17 @@ public sealed class ResetToastTests
     }
 
     [Fact]
+    public void NothingIsShownDuringAFocusSession()
+    {
+        var collect = new ManualTimer();
+        using var quiet = new UsageResetNotifier(_monitor, new FakePresenter(), collect, new ManualTimer(), work => work(), () => true);
+
+        quiet.OnReset(Reset(UsageWindowKind.FiveHour));
+
+        Assert.Null(collect.Pending); // not even waiting to be shown
+    }
+
+    [Fact]
     public void AResetIsShownAfterAShortWaitAndGoesByItselfAfterTenSeconds()
     {
         _notifier.OnReset(Reset(UsageWindowKind.FiveHour));

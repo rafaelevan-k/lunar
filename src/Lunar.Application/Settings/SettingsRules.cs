@@ -1,4 +1,5 @@
 using Lunar.Application.Settings.Models;
+using Lunar.Domain.Focus;
 
 namespace Lunar.Application.Settings;
 
@@ -26,6 +27,7 @@ public static class SettingsRules
         var conversion = settings.Conversion ?? new ConversionSettings();
         var privacy = settings.Privacy ?? new PrivacySettings();
         var recorder = settings.Recorder ?? new RecorderSettings();
+        var focus = settings.Focus ?? new FocusSettings();
 
         var normalized = settings with
         {
@@ -49,7 +51,8 @@ public static class SettingsRules
             {
                 OutputDirectory = Token(recorder.OutputDirectory, MaxPathLength),
                 InputDeviceId = Token(recorder.InputDeviceId, MaxPathLength)
-            }
+            },
+            Focus = focus with { LastMinutes = FocusTimerRules.IsValid(focus.LastMinutes) ? focus.LastMinutes : FocusTimerRules.DefaultMinutes }
         };
 
         changed = normalized != settings;

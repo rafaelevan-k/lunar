@@ -65,6 +65,7 @@ public sealed class SettingsSecretsTests
             [
                 "appearance", "appearance.autoCollapse", "appearance.eyeAnimationEnabled", "appearance.reduceMotion", "appearance.theme",
                 "conversion", "conversion.outputDirectory",
+                "focus", "focus.lastMinutes",
                 "island", "island.preferredMonitorId", "island.topOffsetDip",
                 "launchAtStartup", "locale",
                 "media", "media.preferredSessionId",

@@ -1,3 +1,5 @@
+using Lunar.Domain.Focus;
+
 namespace Lunar.Application.Settings.Models;
 
 /// <summary>Preferred colour theme; the System value follows Windows.</summary>
@@ -63,6 +65,12 @@ public sealed record RecorderSettings
     public string? InputDeviceId { get; init; }
 }
 
+public sealed record FocusSettings
+{
+    /// <summary>The minutes of the last focus session (ADR-0023).</summary>
+    public int LastMinutes { get; init; } = FocusTimerRules.DefaultMinutes;
+}
+
 /// <summary>
 /// User preferences (ADR-0011). Immutable; every default is a safe value, so a missing file or field is never an
 /// error. Values are checked and repaired by <see cref="SettingsRules.Normalize"/>.
@@ -89,4 +97,6 @@ public sealed record LunarSettings
     public UsageSettings Usage { get; init; } = new();
 
     public RecorderSettings Recorder { get; init; } = new();
+
+    public FocusSettings Focus { get; init; } = new();
 }

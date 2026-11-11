@@ -66,6 +66,7 @@ public partial class App : System.Windows.Application
     private NotesPageViewModel? _notes;
     private Lunar.Desktop.Features.Recorder.RecordsViewModel? _records;
     private IslandActivityController? _activity;
+    private Lunar.Application.Focus.PomodoroService? _pomodoro;
     private Lunar.Application.Recording.RecordingService? _recording;
     private NotesLifetime? _notesLifetime;
     private UsagePageViewModel? _usage;
@@ -298,12 +299,14 @@ public partial class App : System.Windows.Application
         _usageLifetime = new UsageLifetime(viewModel, _usage);
         _notesLifetime = new NotesLifetime(viewModel, _notes); // the open note is saved when the island collapses
         // A limit that resets gets a small pop-up at the bottom right; Escape in the island closes it (it never takes focus itself).
+        _pomodoro = _services.GetRequiredService<Lunar.Application.Focus.PomodoroService>();
         _resetToasts = new UsageResetNotifier(
             _services.GetRequiredService<UsageMonitor>(),
             _toastPresenter = new ResetToastPresenter(_services.GetRequiredService<IWindowEnvironment>(), settings.Island, motionOff, _log, _capture),
             new DispatcherOneShotTimer(),
             new DispatcherOneShotTimer(),
-            toUi);
+            toUi,
+            () => _pomodoro?.IsSessionActive == true); // no pop-up of our own during a focus session (ADR-0023)
         _window.PreviewKeyDown += OnIslandPreviewKeyDown;
         _converterGuards = new ConverterGuardLink(viewModel, _converter);
         _converterBusy = new ConverterBusyLink(viewModel, _converterQueue);
@@ -352,6 +355,7 @@ public partial class App : System.Windows.Application
             _notes.InitializeAsync(_lifetime.Token),
             RemoveLegacyUsageTokenAsync(),
             (_recording = _services.GetRequiredService<Lunar.Application.Recording.RecordingService>()).RecoverAsync(_lifetime.Token),
+            _pomodoro!.RecoverAsync(_lifetime.Token),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
     }
 
@@ -397,6 +401,17 @@ public partial class App : System.Windows.Application
         catch (AggregateException ex)
         {
             _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "notes.exit.flush.failed", "App", "Exit", ErrorCode.Unexpected,
+                ExceptionType: ex.InnerException?.GetType()));
+        }
+
+        // Do Not Disturb is put back, whatever else happens at exit (ADR-0023). As for the note above, nothing here comes back to this thread.
+        try
+        {
+            _pomodoro?.ShutdownAsync().Wait(TimeSpan.FromSeconds(6));
+        }
+        catch (AggregateException ex)
+        {
+            _log?.Write(new DiagnosticEvent(DiagnosticLevel.Warning, "pomodoro.exit.failed", "App", "Exit", ErrorCode.Unexpected,
                 ExceptionType: ex.InnerException?.GetType()));
         }
 
