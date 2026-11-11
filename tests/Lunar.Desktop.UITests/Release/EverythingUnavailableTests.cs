@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Threading;
+using Lunar.Application.Abstractions.Audio;
 using Lunar.Application.Abstractions.Conversion;
 using Lunar.Application.Abstractions.Diagnostics;
 using Lunar.Application.Abstractions.Media;
@@ -9,6 +10,7 @@ using Lunar.Application.Abstractions.Notes;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Abstractions.Updates;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Media.Models;
@@ -274,6 +276,15 @@ public sealed class EverythingUnavailableTests
             s.AddSingleton<IFocusModeControl>(new NoFocusMode());
             s.AddSingleton<IFocusSessionMarker>(new NoMarker());
             s.AddSingleton<ICaptureExclusion>(new Lunar.Desktop.UITests.Shell.CaptureExclusionGuardTests.FakeExclusion { Refuse = true, RefuseWatch = true });
+            // Sprint 9 (BE-43): no microphone at all and microphone access refused; GitHub out of reach.
+            s.AddSingleton<IAudioInputCatalog>(new RecordsPageTests.FakeCatalog { Inputs = [] });
+            s.AddSingleton<IVoiceCaptureEngine>(new RecordsPageTests.FakeEngine { FailWith = new OperationError(ErrorCode.AccessDenied, "Microphone access is off.") });
+            s.AddSingleton<IRecordingFiles>(new RecordsPageTests.FakeFiles());
+            s.AddSingleton<IUpdateFeed>(new UpdatePromptTests.FakeFeed
+            {
+                Next = Result.Failure<ReleaseInfo?>(new OperationError(ErrorCode.DeviceUnavailable, "GitHub could not be reached.", retryable: true))
+            });
+            s.AddSingleton<IUpdateInstaller>(new UpdatePromptTests.FakeInstaller());
         });
 
         var settingsService = services.GetRequiredService<SettingsService>();
@@ -313,7 +324,10 @@ public sealed class EverythingUnavailableTests
         pages[2] = new Lunar.Desktop.Features.Pomodoro.PomodoroPage { DataContext = pomodoroPage };
         pages[3] = new ConverterPage { DataContext = converter };
         using var notes = new NotesPageViewModel(services.GetRequiredService<NotesService>(), toUi, new DispatcherOneShotTimer(), new DispatcherOneShotTimer(), log: log);
-        pages[4] = new NotesPage { DataContext = notes };
+        using var records = new Lunar.Desktop.Features.Recorder.RecordsViewModel(
+            services.GetRequiredService<Lunar.Application.Recording.RecordingService>(), new RecordsPageTests.FakeFolders(), new RecordsPageTests.FakeRevealer(),
+            services.GetRequiredService<ISystemSettingsLauncher>(), toUi, TimeProvider.System, log);
+        pages[4] = new NotesHostPage { DataContext = new NotesHostViewModel(notes, records) };
         pages[5] = new UsagePage { DataContext = usagePage };
         var swiper = new SwiperView();
         swiper.Initialize(navigation, pages, reduceMotion);
@@ -326,6 +340,13 @@ public sealed class EverythingUnavailableTests
         var position = new IslandPositionController(window, viewModel, services.GetRequiredService<IWindowEnvironment>(), log, settingsService.Current.Island);
         var transition = new IslandTransitionController(window, viewModel, reduceMotion);
         var startup = new StartupSwitch(services.GetRequiredService<IStartupRegistration>(), log);
+        using var activity = new IslandActivityController(viewModel, shell, records,
+            new Lunar.Desktop.Features.Recorder.RecordingPillView { DataContext = records, ExpandCommand = viewModel.ToggleCommand }, pomodoroPage,
+            new Lunar.Desktop.Features.Pomodoro.FocusPillView { DataContext = pomodoroPage, ExpandCommand = viewModel.ToggleCommand });
+        var updateService = services.GetRequiredService<Lunar.Application.Updates.UpdateService>();
+        var exits = 0;
+        using var updates = new Lunar.Desktop.Features.Updates.UpdatePromptViewModel(updateService, toUi,
+            () => activity.Current != IslandActivity.Eyes, () => exits++, log);
         try
         {
             position.Start();
@@ -338,7 +359,8 @@ public sealed class EverythingUnavailableTests
             using var brightnessLifetime = new BrightnessLifetime(viewModel, navigation, brightness);
             using var guards = new ConverterGuardLink(viewModel, converter);
             using var busy = new ConverterBusyLink(viewModel, queue);
-            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync(), notes.InitializeAsync(), brightness.InitializeAsync()));
+            Wait(Task.WhenAll(system.InitializeAsync(), media.InitializeAsync(), usagePage.InitializeAsync(), notes.InitializeAsync(), brightness.InitializeAsync(),
+                records.RefreshInputsAsync(CancellationToken.None)));
             Wait(converter.WhenCheckedAsync());
 
             // Open the island and visit every page, as a keyboard user would with the page arrows.
@@ -381,7 +403,26 @@ public sealed class EverythingUnavailableTests
             Pump();
             Assert.Equal(Lunar.Application.Focus.FocusModeStatus.Unavailable, pomodoro.Current.FocusStatus);
             Assert.True(pomodoroPage.ShowOpenSettings);
+            Pump();
+            Assert.Equal(IslandActivity.FocusCountdown, activity.Current); // the countdown still takes the collapsed island
             Wait(pomodoro.StopAsync());
+            Pump();
+            Assert.Equal(IslandActivity.Eyes, activity.Current);
+
+            // No microphone: Record is off and the page says why; nothing reaches the island.
+            Assert.True(records.HasNoInputs);
+            Assert.False(records.CanRecord);
+            Assert.True(records.IsProblem);
+            Assert.False(records.ShowsInIsland);
+
+            // GitHub out of reach: the check fails quietly and nothing is offered or shown.
+            var check = updateService.CheckAsync(CancellationToken.None);
+            Wait(check);
+            Assert.True(check.Result.IsSuccess);
+            Pump();
+            Assert.Equal(Lunar.Application.Updates.UpdatePhase.Idle, updates.Phase);
+            Assert.False(updates.IsPromptVisible);
+            Assert.Equal(0, exits);
 
             Assert.True(viewModel.Collapse());
             Pump(() => viewModel.State == IslandVisualState.Idle, 3000);

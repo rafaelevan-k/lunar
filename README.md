@@ -2,8 +2,9 @@
 
 Lunar is a floating "Dynamic Island" for Windows 11 (x64). A small always-on-top pill sits at the top centre of the
 screen and shows an animated pair of eyes while idle. Click it to open quick controls: the system, media, a file
-converter, notes, and an optional Claude usage page. It runs locally, with no account, no telemetry and no update
-checker, and it stays out of screen sharing and screenshots.
+converter, notes with a voice recorder, a Pomodoro focus timer, and an optional Claude usage page. It runs locally, with no
+account and no telemetry, checks GitHub once a day for a newer version (asking before it installs anything), and it stays
+out of screen sharing and screenshots.
 
 > **Status: 1.0.5 released** ([download](https://github.com/rafaelevan-k/lunar/releases/latest)). All planned features
 > are built and tested, including notes, brightness and hiding from screen sharing (Sprint 8). Known limitations are
@@ -17,14 +18,16 @@ checker, and it stays out of screen sharing and screenshots.
 | System | Clock in your regional format; volume and mute and display brightness that follow outside changes; Wi-Fi and Bluetooth status and switches where Windows allows them, otherwise a link to Windows Settings |
 | Media | The playing app's title, artist and artwork; play/pause, previous and next only when the app supports them; seeking only on seekable timelines; switching between several apps |
 | File converter | Local conversions between PNG, JPG/JPEG and PDF, and pictures into Word (DOCX), with notes about what each route keeps or loses. Batch queue with cancel, retry and "show in folder". Originals are never changed |
-| Notes | Plain-text notes kept on this PC: create, edit, delete with Undo, saved on their own; the list scrolls without limit |
+| Pomodoro | A focus timer (1–180 minutes) that turns on Windows Do Not Disturb while it runs and puts it back after; the countdown shows in the closed island |
+| Notes and recordings | Plain-text notes kept on this PC (create, edit, delete with Undo, saved on their own). A voice recorder saves MP3 files to a folder you choose, with Pause and Stop and live sound lines in the closed island |
+| Updates | Once a day Lunar asks GitHub for the newest release and offers Install now or Later; the download must match the release's SHA-256 before it runs. Can be turned off |
 | Usage (opt-in) | Claude 5-hour and weekly limits, read with the Claude Code sign-in on this PC; off by default, and no network request before it is turned on |
 | Settings | Theme (Windows, dark, light), reduced motion, eye animation, display and position, Start with Windows, default output folder, English or Bahasa Indonesia, diagnostics |
 | Screen sharing | Every Lunar window is left out of screen sharing, screenshots and recordings while staying on your own screen; always on |
 | Accessibility | Keyboard navigation, screen-reader names, High Contrast palette, Windows animation setting respected |
 
 Not in this version: Word (DOCX) to PDF or pictures (held until a layout engine is verified), PDF to editable Word,
-OCR, voice assistant, cloud features and automatic updates.
+OCR, voice assistant, cloud features, and updates installed without asking.
 
 ## Install
 
@@ -32,7 +35,7 @@ Download `Lunar.msi` from the [latest release](https://github.com/rafaelevan-k/l
 (or build it yourself with `scripts/package-installer.ps1`, or `scripts\package-installer.cmd` from Command Prompt). It
 installs for the current user only, to `%LocalAppData%\Programs\Lunar`, without administrator rights, and adds a Start
 menu shortcut. The installer shows a short progress bar and closes by itself when it is done.
-- **Upgrade:** a newer MSI replaces the program and keeps the settings, the notes and the Start with Windows choice.
+- **Upgrade:** from 1.0.6 on, Lunar offers new versions itself (Install now or Later). A newer MSI run by hand also replaces the program. Settings, notes, recordings and the Start with Windows choice are kept.
 - **Uninstall:** Windows Settings → Apps. Lunar asks whether to delete its settings, notes and logs too.
 - **Signing:** the installer is not signed, so expect a SmartScreen warning.
 - **Docs:** the [user guide](docs/USER_GUIDE.md) and the [privacy notice](docs/PRIVACY.md) are installed next to the
@@ -45,6 +48,8 @@ menu shortcut. The installer shows a short progress bar and closes by itself whe
 - Wi-Fi and Bluetooth switches depend on Windows and the device driver. Seeking depends on the media app.
 - External monitor brightness needs DDC/CI and was not tested on a real external monitor.
 - Lunar cannot be screenshotted or recorded, by design; notes are stored unencrypted in the user profile.
+- Do Not Disturb is turned on through an interface Microsoft does not document; if Windows refuses, the timer still runs and says so.
+- Updates are checked against the release's SHA-256 (integrity), not a code signature (the MSI is unsigned).
 - The Usage page relies on an Anthropic address that is not officially documented, and it may stop working. Lunar is
   not affiliated with Anthropic.
 - Tested on Windows 11 26H2 (build 26300) with one 125 % monitor. Not yet checked on a stable 24H2/25H2 build, with a

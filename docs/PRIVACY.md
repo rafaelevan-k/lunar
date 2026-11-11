@@ -1,13 +1,16 @@
 # Lunar privacy and diagnostics
 
-This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page), ADR-0019 (screen sharing), ADR-0020 (notes) and ADR-0021 (brightness).
+This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page), ADR-0019 (screen sharing), ADR-0020 (notes), ADR-0021 (brightness), ADR-0022 (recordings), ADR-0023 (Pomodoro and Do Not Disturb) and ADR-0025 (update check).
 
 ## Summary
 
-- Lunar has **no telemetry**, no update check and no upload of your files. Nothing leaves your computer, with one opt-in exception: the Usage page (off by default, see below) contacts Anthropic, and only after you turn it on.
+- Lunar has **no telemetry** and no upload of your files. Nothing about you or your files leaves your computer.
+- Lunar contacts the internet in only two ways:
+  - **the update check:** once a day it asks GitHub for the newest Lunar release (on by default, switch in Settings), and downloads it only when you choose Install now;
+  - **the Usage page:** off by default; it contacts Anthropic only after you turn it on.
 - Lunar writes a small local log of **what happened**, never **what you were doing**.
 - Diagnostics (extra detail) are **off** unless you turn them on.
-- Your **notes** stay in one file on this PC and are never logged or sent anywhere.
+- Your **notes** and **recordings** stay on this PC and are never logged or sent anywhere.
 - Every Lunar window is **kept out of screen sharing, screenshots and recordings**, always.
 
 ## What is logged
@@ -27,7 +30,7 @@ There is **no free-text message field and no parameter field** in the logging AP
 
 ## What is never logged
 
-File names and paths, document or image contents, note text, PDF passwords, Wi-Fi network names (SSIDs) or passwords, Bluetooth device names, media titles, artists or listening history, clipboard content, exception messages or stack traces, user names, and window titles of other applications.
+File names and paths, document or image contents, note text, recorded audio, sound levels, microphone names, PDF passwords, Wi-Fi network names (SSIDs) or passwords, Bluetooth device names, media titles, artists or listening history, clipboard content, exception messages or stack traces, user names, and window titles of other applications.
 
 ## Where and for how long
 
@@ -42,7 +45,7 @@ A file can exceed its size limit by at most one log line (the size is checked be
 
 ## Settings file
 
-Preferences are stored in `%LocalAppData%\Lunar\settings.json` (with `settings.json.bak`, the previous good copy, and `settings.corrupt.json`, the last unusable file, kept so nothing is lost silently). They hold only choices you make: startup, island position, theme and motion, language, a preferred media app id, a conversion output folder and the diagnostics switch. They never hold passwords, Wi-Fi names, document content or media titles or history, and the settings store writes no values or paths to the logs. Deleting the folder resets Lunar to defaults.
+Preferences are stored in `%LocalAppData%\Lunar\settings.json` (with `settings.json.bak`, the previous good copy, and `settings.corrupt.json`, the last unusable file, kept so nothing is lost silently). They hold only choices you make: startup, island position, theme and motion, language, a preferred media app id, a conversion output folder, the recordings folder and the chosen microphone's Windows id, the last focus length, the update-check switch and the diagnostics switch. They never hold passwords, Wi-Fi names, document content or media titles or history, and the settings store writes no values or paths to the logs. Deleting the folder resets Lunar to defaults.
 
 ## Notes
 
@@ -56,6 +59,26 @@ The Notes page (ADR-0020) stores your notes in `%LocalAppData%\Lunar\notes.json`
 ## Hidden from screen sharing
 
 Lunar asks Windows to leave every one of its windows out of screen capture (ADR-0019): the island, the Settings window, the reset notice, tooltips, the tray menu and Lunar's dialogs. You still see them; screen sharing, screenshots and recordings that use Windows' capture features do not. This is always on. It is a privacy convenience, not a security boundary: a phone camera, or software built to ignore this Windows setting, can still see Lunar, and the tray icon (part of the Windows taskbar) stays visible. If Windows refuses, **Settings → Privacy** says that Lunar may be visible, and the log records only an error code.
+
+## Recordings (ADR-0022)
+
+- **No microphone is opened** until you press Record, and Windows shows its own microphone sign while Lunar records. If Windows privacy settings block microphones for desktop apps, Lunar says so and never works around it.
+- **Where they go:** MP3 files in the folder you choose (normally `Music\Lunar Recordings`). While recording, the sound goes to a hidden part file (`~….lunar-part`) in that folder, renamed to the finished `.mp3` at the end. A part file left by a crash is recovered or left in place, never deleted silently.
+- **Never sent or logged.** Audio, the sound levels shown in the island, microphone names and file paths are never sent anywhere and never written to the log; log events carry fixed names and an error category only.
+- **Not encrypted.** Recordings are ordinary files protected by your Windows account's permissions.
+- **Uninstalling never deletes them**, because they are in your own folder.
+- **Consent is yours to get.** Tell people before you record them; in many places recording without consent is against the law.
+
+## Pomodoro and Do Not Disturb (ADR-0023)
+
+During a focus session Lunar turns on Windows Do Not Disturb (alarms only) and afterwards puts back the state it found. To repair an unexpected stop, it keeps a small marker, `%LocalAppData%\Lunar\focus.marker`, holding only the earlier Do Not Disturb setting; it is deleted when the session ends. Lunar does not read, store or see your notifications. The last focus length is saved in the settings. Nothing about sessions is sent anywhere; the log has fixed event names only.
+
+## Update check (ADR-0025)
+
+- **What is sent:** once shortly after Lunar starts and then every 24 hours, one HTTPS request to `api.github.com` asks for the newest release of `rafaelevan-k/lunar`. It carries no account, no identifier and nothing about you, your files or how you use Lunar, only a fixed product name. Like any website, GitHub sees your IP address and the time.
+- **When you choose Install now**, Lunar downloads `Lunar.msi` from GitHub's own servers into `%LocalAppData%\Lunar\Updates`. It runs the file only if its size and SHA-256 fingerprint match the release, and deletes it otherwise. The downloaded installer is deleted the next time Lunar starts.
+- **Turning it off:** **Settings → Updates → Check for updates**. When it is off, Lunar makes no request to GitHub at all.
+- **Logs:** fixed event names only, never an address, a version history or a file path.
 
 ## Display brightness
 
@@ -71,7 +94,7 @@ Lunar never uploads logs. A way to export logs for support would need its own re
 
 ## Uninstalling
 
-When you uninstall Lunar from Windows Settings, it asks whether to delete your settings, notes and logs too (`%LocalAppData%\Lunar`). If you choose **No**, or uninstall silently, they are kept for a later reinstall, and you can delete the folder yourself at any time. Uninstalling always removes Lunar from Start with Windows.
+When you uninstall Lunar from Windows Settings, it asks whether to delete your settings, notes and logs too (`%LocalAppData%\Lunar`). Recordings are in your own folder and are never deleted by uninstalling. If you choose **No**, or uninstall silently, they are kept for a later reinstall, and you can delete the folder yourself at any time. Uninstalling always removes Lunar from Start with Windows.
 
 ## Not controlled by Lunar
 

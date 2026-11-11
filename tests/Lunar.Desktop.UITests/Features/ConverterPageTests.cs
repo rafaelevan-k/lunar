@@ -306,7 +306,7 @@ public sealed class ConverterPageTests
         Assert.True(((Button)page.FindName("FolderButton")).IsEnabled);
     });
 
-    private static void PumpUntil(Func<bool> condition)
+    private static void PumpUntil(Func<bool> condition, Func<string>? describe = null)
     {
         var end = DateTime.UtcNow.AddSeconds(30);
         while (!condition() && DateTime.UtcNow < end)
@@ -315,8 +315,12 @@ public sealed class ConverterPageTests
             Thread.Sleep(5);
         }
 
-        Assert.True(condition(), "The condition was not met in time.");
+        Assert.True(condition(), "The condition was not met in time." + (describe is null ? string.Empty : " " + describe()));
     }
+
+    /// <summary>What the queue shows, for a failure message: the intermittent Sprint 7 time-out is still undiagnosed (BE-43).</summary>
+    private static string Rows(ConverterRig rig) =>
+        "Rows: [" + string.Join("; ", rig.Queue.Rows.Select(r => r.State + " / " + r.AutomationName)) + "]";
 
     [Theory]
     [InlineData("Colors.Dark.xaml")]
@@ -364,7 +368,7 @@ public sealed class ConverterPageTests
         Pump(rig.Page.WhenCheckedAsync());
 
         ((Button)page.FindName("ConvertButton")).Command.Execute(null);
-        PumpUntil(() => rig.Queue.Rows.Count == 1 && rig.Queue.Rows[0].IsFinal);
+        PumpUntil(() => rig.Queue.Rows.Count == 1 && rig.Queue.Rows[0].IsFinal, () => Rows(rig));
         Settle(window);
 
         var list = (ItemsControl)page.FindName("JobList");

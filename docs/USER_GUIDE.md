@@ -3,13 +3,14 @@
 Lunar is a small "island" at the top of your screen, with a pair of eyes. Click it to open quick controls:
 - your sound, screen brightness, Wi-Fi and Bluetooth;
 - what is playing;
+- a Pomodoro focus timer that turns on Do Not Disturb;
 - a file converter;
-- notes;
+- notes and a voice recorder;
 - optionally, your Claude usage limits.
 
 Lunar stays out of screen sharing, screenshots and recordings: you see it, the people you share your screen with do not (see 2).
 
-It works on your PC only. It has no account, no telemetry and no automatic updates.
+It works on your PC only. It has no account and no telemetry. Once a day it asks GitHub whether a newer Lunar was released, and it never installs one unless you choose **Install now** (see 1).
 
 Version 1.0.x · Windows 11 x64.
 
@@ -25,9 +26,11 @@ Version 1.0.x · Windows 11 x64.
 
 **Start with Windows.** This is off by default. Turn it on in **Settings** or from the tray menu (**Start with Windows**). Windows' own **Task Manager → Startup apps** can switch it off as well; Lunar shows whatever Windows has.
 
-**Update.** Exit Lunar, then run the newer `Lunar.msi` (there is no need to remove the old version first). It replaces the old version. Your settings, your notes and your Start with Windows choice are kept.
+**Update.** When a newer Lunar is released, a small notice appears at the bottom right: **Install now** downloads it, checks that the file is exactly the one released, closes Lunar, installs the update and starts Lunar again. **Later** asks again the next day. The notice waits while a focus session or a recording is running. The same choice is in **Settings → Updates**, where **Check for updates** can also be turned off. You can still update by hand: exit Lunar, then run the newer `Lunar.msi` (there is no need to remove the old version first). Either way your settings, notes, recordings and Start with Windows choice are kept.
 
-**Remove.** Go to **Windows Settings → Apps → Installed apps → Lunar → Uninstall**. Lunar asks whether to also delete your settings, notes and logs. Choose **No** to keep them for a later reinstall. Lunar also removes itself from Start with Windows.
+> Lunar 1.0.5 and older have no update notice: install 1.0.6 by hand once.
+
+**Remove.** Go to **Windows Settings → Apps → Installed apps → Lunar → Uninstall**. Lunar asks whether to also delete your settings, notes and logs. Choose **No** to keep them for a later reinstall. Your recordings are in your own folder (normally `Music\Lunar Recordings`) and are never deleted by uninstalling. Lunar also removes itself from Start with Windows.
 
 ## 2. The island
 
@@ -36,11 +39,19 @@ Version 1.0.x · Windows 11 x64.
 | Click the eyes | The island opens. Click again to close it |
 | **Esc** | Closes the open island |
 | Tray icon → **Open** | Opens the island with the keyboard ready |
-| **← / →**, or the arrows and dots at the sides and bottom | Moves between the pages: **System**, **Media**, **File converter**, **Notes**, **Usage** |
+| **← / →**, or the arrows and dots at the sides and bottom | Moves between the pages: **System**, **Media**, **Pomodoro**, **File converter**, **Notes**, **Usage** |
 | Drag a page sideways with the mouse | Moves to the next or previous page (dragging a slider never changes the page) |
 | Tray icon → **Exit** | Closes Lunar completely |
 
 While closed, the eyes blink and look around. You can turn that off (see Settings).
+
+### While recording or focusing
+
+While the island is closed it shows what is running instead of the eyes:
+- **Recording:** Pause and Stop at the left, red sound lines in the middle, the recorded time at the right. The island is a little wider. Pause and Stop work without opening the island; a click on the lines opens it.
+- **Focus session:** the time left in the middle. While paused, the time is dimmed with a pause symbol. A click opens the island.
+
+A recording is shown before a focus session when both run. Opening the island shows the eyes again. When the focus time is over, the eyes come back and smile.
 
 ### Hidden from screen sharing
 
@@ -73,7 +84,25 @@ The Media page shows what a media app is playing: the title, the artist, the app
 
 Lunar does not keep a history of what you play.
 
-## 5. File converter
+## 5. Pomodoro (focus timer)
+
+The **Pomodoro** page is the third page.
+
+- Choose a length (15, 25, 45 or 60 minutes, or **−** and **+** for 1 to 180 minutes), then **Start**. Lunar remembers the last length.
+- While the time runs, Lunar turns on Windows **Do Not Disturb** (alarms only). A line on the page says whether Windows really turned it on.
+- **Pause** stops the time and turns Do Not Disturb off until you **Resume**. **Stop** ends the session.
+- At the end, or when you stop, Do Not Disturb goes back to exactly how it was. If you already had it on, it stays on. If you change it yourself during a session, Lunar leaves your choice alone.
+- If Lunar is closed unexpectedly during a session, it puts Do Not Disturb back the next time it starts.
+
+What Do Not Disturb does is Windows' choice, not Lunar's:
+- Windows holds back notification banners and keeps them in the notification centre.
+- Alarms, and apps on your Windows priority list, can still come through.
+- Apps that draw their own pop-up windows are not affected.
+- If Windows does not let Lunar turn it on, the timer still runs, the page says so, and **Open focus settings** takes you to Windows' own setting.
+
+The way Lunar turns on Do Not Disturb is not officially documented by Microsoft, so a Windows update may stop it working; the page then says so.
+
+## 6. File converter
 
 Your original files are **never changed**. Results are new files.
 
@@ -116,7 +145,7 @@ These limits protect your PC from damaged or hostile files:
 
 A file outside the limits, of the wrong type, or damaged is refused with a reason. A cancelled or failed conversion leaves no partial file behind.
 
-## 6. Notes
+## 7. Notes and recordings
 
 The **Notes** page keeps short plain-text notes on this PC.
 
@@ -130,7 +159,18 @@ Limits: up to 100,000 characters per note and 10,000 notes. Lunar tells you when
 
 Notes are stored only on this PC in `%LocalAppData%\Lunar\notes.json`, with the previous version kept as `notes.json.bak`. They are not encrypted: anyone who can open your Windows account's files can read them. If the file is damaged, Lunar keeps it aside as `notes.corrupt.json`, opens the last good copy and tells you. You can back up your notes by copying `notes.json`.
 
-## 7. Usage page (optional, off by default)
+### Records (voice recorder)
+
+The **Notes | Records** switch at the top of the page opens the recorder.
+
+- **Microphone:** **Automatic** uses the Windows default microphone and follows it. You can pick another one; Lunar remembers it. The microphone cannot be changed during a recording.
+- **Record** starts. **Pause**/**Resume** and **Stop** are on the page and in the closed island. Stop saves at once.
+- **Where:** recordings are saved as MP3 files named by date and time, for example `Recording 2026-11-09 14-30-05.mp3`, in `Music\Lunar Recordings` unless you choose another folder. A name already taken gets ` (2)`. **Show in folder** opens it.
+- **Nothing is lost silently:** if the microphone disappears, the PC sleeps or something fails, what was recorded so far is saved and Lunar tells you. Exiting Lunar during a recording saves it first. A recording stops on its own after 12 hours, or when the folder's drive has less than 100 MB free.
+- **Microphone permission:** if Windows privacy settings block microphones for desktop apps, the page says so and **Open microphone settings** takes you there. Lunar opens no microphone until you press **Record**, and Windows shows its own microphone sign while it is recording.
+- **Ask first.** Tell people before you record them. In many places recording a conversation without everyone's consent is against the law.
+
+## 8. Usage page (optional, off by default)
 
 This page shows your **Claude** 5-hour and weekly limits: the percentage used and when each resets. It needs **Claude Code** signed in on this PC.
 
@@ -142,7 +182,7 @@ This page shows your **Claude** 5-hour and weekly limits: the percentage used an
 
 Lunar is not made by, or affiliated with, Anthropic.
 
-## 8. Settings
+## 9. Settings
 
 Open it from the tray icon → **Settings**. Changes apply at once, except where noted.
 
@@ -154,23 +194,25 @@ Open it from the tray icon → **Settings**. Changes apply at once, except where
 | Conversions | The default folder for converted files |
 | Language | Match Windows, English or Bahasa Indonesia (applies the next time Lunar starts) |
 | Privacy | **Detailed diagnostics**: more detail in the local log files (applies the next time Lunar starts). A line says whether Lunar is hidden from screen sharing (always on, no switch) |
+| Updates | **Check for updates** (on by default): once a day Lunar asks GitHub for the newest release. The line below says which version you have, or offers **Install now** when a newer one is out |
 | Reset all settings | Every setting goes back to its default. This also turns the Usage page off |
 
 Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If that file is damaged, Lunar uses the last good copy or the defaults and tells you so.
 
-## 9. Privacy in short
+## 10. Privacy in short
 
-- No telemetry, no automatic updates, and none of your files are uploaded. Conversions run on your PC.
-- Notes stay on this PC and are never logged or sent anywhere. Lunar windows are kept out of screen sharing and screenshots.
-- The only network use is the Usage page, and only after you turn it on.
+- No telemetry, and none of your files are uploaded. Conversions run on your PC.
+- Notes and recordings stay on this PC and are never logged or sent anywhere. Lunar windows are kept out of screen sharing and screenshots.
+- Network use: the daily update check (GitHub sees your IP address and that Lunar asked; you can turn it off), the update download when you choose **Install now**, and the Usage page only after you turn it on.
 - Local logs (`%LocalAppData%\Lunar\Logs`, at most about 7 MB) record what happened, never what you were doing. They never contain file names, file contents, note text, passwords, Wi-Fi names or what you play.
 - The full notice is `PRIVACY.md` in the program folder (`%LocalAppData%\Programs\Lunar`), next to this guide.
 
-## 10. Known limitations of this version
+## 11. Known limitations of this version
 
 - **Windows 11 x64 only.** Windows 10 is not supported.
 - **Word (DOCX) files cannot be converted to PDF or pictures, and PDF cannot be converted to editable Word.** Word files can only be made from pictures.
-- **The installer is not signed.** Expect a SmartScreen warning.
+- **The installer is not signed.** Expect a SmartScreen warning. An update is checked against the file GitHub lists for the release, which proves it arrived intact, not who published it.
+- **Do Not Disturb** is turned on in a way Microsoft does not document, so a Windows update may stop it; the timer then still works and the page says so.
 - **Wi-Fi and Bluetooth switches** depend on Windows and your device's driver. Where they are not allowed, Lunar sends you to Windows Settings.
 - **Seeking** depends on the media app.
 - **External monitor brightness** depends on the monitor (DDC/CI) and was not tested on a real external monitor.
@@ -182,7 +224,7 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
   - Remote Desktop.
 - **Languages:** English and Bahasa Indonesia.
 
-## 11. If something goes wrong
+## 12. If something goes wrong
 
 | Problem | Try |
 |---|---|
@@ -193,6 +235,9 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
 | Typing in a note goes to another app | Click inside the note first; the island takes the keyboard only after that click |
 | The brightness row says it can't be changed | Your display does not allow it from Lunar. Use **Settings** in that row (Windows display settings) or the monitor's own buttons |
 | Lunar does not start with Windows | Turn it on in Settings, and check **Task Manager → Startup apps** |
+| Record is greyed out or says the microphone is blocked | Connect a microphone, or use **Open microphone settings** and allow desktop apps to use it |
+| Do Not Disturb did not turn on | The Pomodoro page says why. Use **Open focus settings**, or turn it on yourself; the timer works either way |
+| An update says the file did not match | Nothing was installed. Try again later, or download `Lunar.msi` from the releases page and run it |
 | Something else | Turn on **Detailed diagnostics**, restart Lunar, reproduce the problem, and look in `%LocalAppData%\Lunar\Logs` |
 
 Lunar is licensed under the Apache License, Version 2.0. The program folder (`%LocalAppData%\Programs\Lunar`) holds:
