@@ -34,17 +34,39 @@ public sealed partial class SecurityGovernanceTests
             .Select(Rel)
             .Order(StringComparer.Ordinal);
 
-    // ---- no network except the one disclosed address ----------------------------------------------------------------
+    // ---- no network except the disclosed addresses (Usage, ADR-0014; the update check, ADR-0025) ----------------------
 
     [Fact]
-    public void OnlyTheUsageAdapterTouchesTheNetwork()
+    public void OnlyTheUsageAndUpdateAdaptersTouchTheNetwork()
     {
         var offenders = FilesContaining(
             ProductionFiles(".cs"),
             "System.Net.Http", "HttpClient", "WebClient", "WebRequest", "System.Net.Sockets", "TcpClient", "UdpClient", "ClientWebSocket", "System.Net.Mail", "SmtpClient")
             .ToList();
 
-        Assert.Equal(["src/Lunar.Infrastructure/Usage/AnthropicUsageSource.cs"], offenders);
+        Assert.Equal(
+            [
+                "src/Lunar.Infrastructure/Updates/GitHubReleaseFeed.cs", // ADR-0025: the latest release, once a day, switch in Settings
+                "src/Lunar.Infrastructure/Usage/AnthropicUsageSource.cs",
+                "src/Lunar.Windows/Updates/MsiUpdateInstaller.cs"        // ADR-0025: the installer, only after Install now
+            ],
+            offenders);
+    }
+
+    [Fact]
+    public void TheUpdateCodeOnlyKnowsGitHubOverHttps()
+    {
+        foreach (var file in new[] { Path.Combine("src", "Lunar.Infrastructure", "Updates", "GitHubReleaseFeed.cs"), Path.Combine("src", "Lunar.Windows", "Updates", "MsiUpdateInstaller.cs") })
+        {
+            var text = File.ReadAllText(Path.Combine(Root, file));
+            var addresses = AbsoluteUrl().Matches(text).Select(m => m.Value.TrimEnd('"', ')', ';', ',')).Distinct().ToList();
+            Assert.All(addresses, address => Assert.StartsWith("https://api.github.com/repos/rafaelevan-k/lunar/", address, StringComparison.Ordinal));
+            Assert.DoesNotContain("http://", text, StringComparison.Ordinal);
+        }
+
+        var hosts = File.ReadAllText(Path.Combine(Root, "src", "Lunar.Windows", "Updates", "MsiUpdateInstaller.cs"));
+        foreach (var host in new[] { "\"github.com\"", "\"objects.githubusercontent.com\"", "\"release-assets.githubusercontent.com\"" })
+            Assert.Contains(host, hosts, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -59,14 +81,15 @@ public sealed partial class SecurityGovernanceTests
     }
 
     [Fact]
-    public void NoCodeChecksForUpdatesOrDownloadsAnything()
+    public void OnlyTheUpdateFeedChecksForUpdatesAndNothingElseDownloads()
     {
         var offenders = FilesContaining(
             ProductionFiles(".cs", ".xaml"),
             "DownloadFile", "DownloadString", "DownloadData", "GetByteArrayAsync", "releases/latest", "api.github.com", "ApplicationDeployment", "Squirrel", "AutoUpdater", "CheckForUpdate")
             .ToList();
 
-        Assert.Empty(offenders);
+        // ADR-0025: the one place that names GitHub's release address. The installer downloads through its own checked loop, not these helpers.
+        Assert.Equal(["src/Lunar.Infrastructure/Updates/GitHubReleaseFeed.cs"], offenders);
     }
 
     // ---- other programs are started from exactly three places --------------------------------------------------------
@@ -80,7 +103,8 @@ public sealed partial class SecurityGovernanceTests
             [
                 "src/Lunar.Conversion/Providers/LibreOfficeRendererProvider.cs", // the optional layout engine, argument list, no shell
                 "src/Lunar.Windows/Environment/WindowsOutputRevealer.cs",        // Explorer, to show a result
-                "src/Lunar.Windows/Environment/WindowsSettingsLauncher.cs"       // a fixed ms-settings address
+                "src/Lunar.Windows/Environment/WindowsSettingsLauncher.cs",      // a fixed ms-settings address
+                "src/Lunar.Windows/Updates/MsiUpdateInstaller.cs"                // ADR-0025: System32 msiexec on a checked MSI, argument list, no shell
             ],
             offenders);
     }

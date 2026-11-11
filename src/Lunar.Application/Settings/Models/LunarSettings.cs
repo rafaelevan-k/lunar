@@ -71,6 +71,12 @@ public sealed record FocusSettings
     public int LastMinutes { get; init; } = FocusTimerRules.DefaultMinutes;
 }
 
+public sealed record UpdateSettings
+{
+    /// <summary>Lunar asks GitHub once a day whether a newer version was released (ADR-0025). On by default; off means no request at all.</summary>
+    public bool Check { get; init; } = true;
+}
+
 /// <summary>
 /// User preferences (ADR-0011). Immutable; every default is a safe value, so a missing file or field is never an
 /// error. Values are checked and repaired by <see cref="SettingsRules.Normalize"/>.
@@ -99,4 +105,6 @@ public sealed record LunarSettings
     public RecorderSettings Recorder { get; init; } = new();
 
     public FocusSettings Focus { get; init; } = new();
+
+    public UpdateSettings Updates { get; init; } = new();
 }

@@ -52,7 +52,8 @@ public static class SettingsRules
                 OutputDirectory = Token(recorder.OutputDirectory, MaxPathLength),
                 InputDeviceId = Token(recorder.InputDeviceId, MaxPathLength)
             },
-            Focus = focus with { LastMinutes = FocusTimerRules.IsValid(focus.LastMinutes) ? focus.LastMinutes : FocusTimerRules.DefaultMinutes }
+            Focus = focus with { LastMinutes = FocusTimerRules.IsValid(focus.LastMinutes) ? focus.LastMinutes : FocusTimerRules.DefaultMinutes },
+            Updates = settings.Updates ?? new UpdateSettings()
         };
 
         changed = normalized != settings;

@@ -18,6 +18,8 @@
     * Upgrades: MajorUpgrade (afterInstallInitialize) removes the older version inside the same transaction;
       Windows Installer rolls the whole transaction back, old version included, if any step fails. %LocalAppData%\Lunar (settings, logs) is never touched by the
       installer itself, so settings survive upgrade and rollback; only the user's Yes in the cleanup deletes them.
+    * Updates (ADR-0025): Lunar's updater runs this MSI with LUNAR_RELAUNCH=1; only then LunarRelaunchAfterUpdate starts Lunar again at the
+      end. An install by hand behaves as before.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="Lunar"
@@ -65,8 +67,16 @@
                   Execute="deferred"
                   Impersonate="yes"
                   Return="ignore" />
+    <!-- ADR-0025. Only when Lunar's own updater ran the MSI (it passes LUNAR_RELAUNCH=1): start the new Lunar once everything is installed.
+         Immediate, after InstallFinalize, so it runs as the user and only after a successful install; asyncNoWait, so the MSI does not wait for it. -->
+    <CustomAction Id="LunarRelaunchAfterUpdate"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]Lunar.Desktop.exe&quot;"
+                  Execute="immediate"
+                  Return="asyncNoWait" />
     <InstallExecuteSequence>
       <Custom Action="LunarUninstallCleanup" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="LunarRelaunchAfterUpdate" After="InstallFinalize" Condition="LUNAR_RELAUNCH=&quot;1&quot; AND NOT REMOVE" />
     </InstallExecuteSequence>
 
     <Feature Id="Main" Title="Lunar" Level="1">

@@ -107,6 +107,21 @@ try {
         Add-Result 'Uninstall clean-up action' $false "found $($cleanup.Count) LunarUninstallCleanup actions"
     }
 
+    # Start again after an update (ADR-0025): async no-wait (0x40 + 0x80), never deferred, only when Lunar's updater asked for it.
+    $relaunch = @($actions | Where-Object { $_[0] -eq 'LunarRelaunchAfterUpdate' })
+    if ($relaunch.Count -eq 1) {
+        $type = [int]$relaunch[0][1]
+        $immediate = ($type -band 0x400) -eq 0
+        $noWait = ($type -band 0xC0) -eq 0xC0
+        Add-Result 'Relaunch after update action' ($immediate -and $noWait -and $relaunch[0][2] -match 'Lunar\.Desktop\.exe') "Type=$type immediate=$immediate noWait=$noWait"
+        $condition = (Get-Rows 'SELECT `Condition` FROM `InstallExecuteSequence` WHERE `Action`=''LunarRelaunchAfterUpdate''' 1)
+        $text = if ($condition.Count -gt 0) { $condition[0][0] } else { '' }
+        Add-Result 'Relaunch only when the updater asks' ($text -match 'LUNAR_RELAUNCH="1"' -and $text -match 'NOT REMOVE') "Condition='$text'"
+    }
+    else {
+        Add-Result 'Relaunch after update action' $false "found $($relaunch.Count) LunarRelaunchAfterUpdate actions"
+    }
+
     $sequence = @{}
     foreach ($row in (Get-Rows 'SELECT `Action`, `Sequence` FROM `InstallExecuteSequence`' 2)) { $sequence[$row[0]] = [int]$row[1] }
     $rep = $sequence['RemoveExistingProducts']; $init = $sequence['InstallInitialize']

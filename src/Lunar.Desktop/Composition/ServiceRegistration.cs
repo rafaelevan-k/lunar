@@ -6,6 +6,7 @@ using Lunar.Application.Abstractions.Notes;
 using Lunar.Application.Abstractions.Settings;
 using Lunar.Application.Abstractions.Shell;
 using Lunar.Application.Abstractions.System;
+using Lunar.Application.Abstractions.Updates;
 using Lunar.Application.Abstractions.Usage;
 using Lunar.Application.Conversion.UseCases;
 using Lunar.Application.Focus;
@@ -14,6 +15,7 @@ using Lunar.Application.Notes;
 using Lunar.Application.Recording;
 using Lunar.Application.Settings;
 using Lunar.Application.Shell.UseCases;
+using Lunar.Application.Updates;
 using Lunar.Application.Usage;
 using Lunar.Conversion.Output;
 using Lunar.Conversion.Pipeline;
@@ -21,12 +23,14 @@ using Lunar.Conversion.Planning;
 using Lunar.Conversion.Providers;
 using Lunar.Desktop.Features.Converter;
 using Lunar.Desktop.Shell;
+using Lunar.Domain.Updates;
 using Lunar.Infrastructure.Focus;
 using Lunar.Infrastructure.Logging;
 using Lunar.Infrastructure.Notes;
 using Lunar.Infrastructure.Recording;
 using Lunar.Infrastructure.Settings;
 using Lunar.Infrastructure.Startup;
+using Lunar.Infrastructure.Updates;
 using Lunar.Infrastructure.Usage;
 using Lunar.Windows.Audio;
 using Lunar.Windows.Bluetooth;
@@ -38,6 +42,7 @@ using Lunar.Windows.Network;
 using Lunar.Windows.Pdf;
 using Lunar.Windows.Security;
 using Lunar.Windows.Shell;
+using Lunar.Windows.Updates;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lunar.Desktop.Composition;
@@ -100,6 +105,16 @@ public static class ServiceRegistration
             sp.GetRequiredService<IFocusSessionMarker>(),
             sp.GetRequiredService<SettingsService>(),
             sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IDiagnosticLog>()));
+
+        // Update check (ADR-0025, BE-44): one request to GitHub a day unless the user turned it off; nothing is downloaded or run until Install now.
+        services.AddSingleton<IUpdateFeed>(sp => new GitHubReleaseFeed(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IUpdateInstaller>(sp => new MsiUpdateInstaller(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<UpdateService>(sp => new UpdateService(
+            sp.GetRequiredService<IUpdateFeed>(),
+            sp.GetRequiredService<IUpdateInstaller>(),
+            sp.GetRequiredService<SettingsService>(),
+            AppVersion.From(typeof(ServiceRegistration).Assembly.GetName().Version ?? new Version(0, 0, 0)),
             sp.GetRequiredService<IDiagnosticLog>()));
 
         // Recorder (ADR-0022, BE-39/BE-40). Nothing opens a microphone until the user presses Record.

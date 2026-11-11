@@ -371,6 +371,10 @@ public partial class App : System.Windows.Application
             (_recording = _services.GetRequiredService<Lunar.Application.Recording.RecordingService>()).RecoverAsync(_lifetime.Token),
             _pomodoro!.RecoverAsync(_lifetime.Token),
             _services.GetRequiredService<ConversionOrchestrator>().RecoverAbandonedAsync());
+
+        // ADR-0025: an installer left from an update is removed off the UI thread, then the daily check is scheduled (the first one after 30 s).
+        var updates = _services.GetRequiredService<Lunar.Application.Updates.UpdateService>();
+        await Task.Run(updates.Start);
     }
 
     // ADR-0015: a token pasted earlier (from "claude setup-token") can never read usage, so it is deleted once instead of staying on disk.

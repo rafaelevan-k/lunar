@@ -26,6 +26,7 @@ internal static class SettingsSerializer
         var usage = Section(root, "usage", ref reset);
         var recorder = Section(root, "recorder", ref reset);
         var focus = Section(root, "focus", ref reset);
+        var updates = Section(root, "updates", ref reset);
 
         var settings = new LunarSettings
         {
@@ -55,7 +56,8 @@ internal static class SettingsSerializer
                 OutputDirectory = Text(recorder, "outputDirectory", ref reset),
                 InputDeviceId = Text(recorder, "inputDeviceId", ref reset)
             },
-            Focus = new FocusSettings { LastMinutes = Int(focus, "lastMinutes", defaults.Focus.LastMinutes, ref reset) }
+            Focus = new FocusSettings { LastMinutes = Int(focus, "lastMinutes", defaults.Focus.LastMinutes, ref reset) },
+            Updates = new UpdateSettings { Check = Bool(updates, "check", defaults.Updates.Check, ref reset) }
         };
 
         valuesReset = reset;
@@ -91,7 +93,8 @@ internal static class SettingsSerializer
                 ["outputDirectory"] = settings.Recorder.OutputDirectory,
                 ["inputDeviceId"] = settings.Recorder.InputDeviceId
             },
-            ["focus"] = new JsonObject { ["lastMinutes"] = settings.Focus.LastMinutes }
+            ["focus"] = new JsonObject { ["lastMinutes"] = settings.Focus.LastMinutes },
+            ["updates"] = new JsonObject { ["check"] = settings.Updates.Check }
         };
 
         return new UTF8Encoding(false).GetBytes(root.ToJsonString(WriteOptions));

@@ -72,6 +72,7 @@ public sealed class SettingsSecretsTests
                 "privacy", "privacy.diagnosticsEnabled",
                 "recorder", "recorder.inputDeviceId", "recorder.outputDirectory",
                 "schemaVersion",
+                "updates", "updates.check", // ADR-0025: a yes/no switch, nothing private
                 "usage", "usage.enabled"
             ],
             names.Order(StringComparer.Ordinal).ToList());
