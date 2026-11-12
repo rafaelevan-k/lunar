@@ -189,6 +189,8 @@ public sealed class RecordsViewModel : INotifyPropertyChanged, IObserver<Recordi
                 return Strings.Get("Records.ErrorNoMicrophone");
             if (_noticeDismissed)
                 return null;
+            if (CouldNotOpen)
+                return Strings.Get("Records.ErrorCouldNotOpen");
             if (_snapshot.Error is { } error)
                 return RecorderText.Failure(error);
             var notice = RecorderText.Notice(_snapshot);
@@ -204,7 +206,13 @@ public sealed class RecordsViewModel : INotifyPropertyChanged, IObserver<Recordi
 
     public bool IsProblem => _snapshot.Error is not null || (HasNoInputs && !IsRecordingActive);
 
-    public bool ShowOpenMicrophoneSettings => !_noticeDismissed && _snapshot.Error?.Code == ErrorCode.AccessDenied;
+    public bool ShowOpenMicrophoneSettings => !_noticeDismissed && (_snapshot.Error?.Code == ErrorCode.AccessDenied || CouldNotOpen);
+
+    /// <summary>
+    /// Microphones are listed, yet Windows would not open the one asked for. That is not "no microphone": the device is there, and another app, its
+    /// driver or the microphone privacy settings refused it.
+    /// </summary>
+    private bool CouldNotOpen => _snapshot.Error?.Code == ErrorCode.DeviceUnavailable && _inputs is { Count: > 0 };
 
     public bool ShowFileButton => !_noticeDismissed && FileToShow is not null && !IsRecordingActive;
 

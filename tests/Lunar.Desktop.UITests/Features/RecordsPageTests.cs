@@ -344,8 +344,24 @@ public sealed class RecordsPageTests
         AssertFits(rig);
     });
 
+    // A friend's laptop (Intel Smart Sound microphone array, 2026-11-12) said "No microphone was found" with the microphone in the list.
+    [Fact]
+    public void AListedMicrophoneThatWindowsWillNotOpenIsNotCalledMissingAndOffersTheSettings() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.ShowRecords();
+        rig.Engine.FailWith = new OperationError(ErrorCode.DeviceUnavailable, "not for the user's eyes");
+
+        rig.Run(rig.Model.RecordCommand);
+
+        Assert.Equal(Strings.Get("Records.ErrorCouldNotOpen"), rig.Named<TextBlock>("StatusText").Text);
+        Assert.NotEqual(Strings.Get("Records.ErrorNoMicrophone"), rig.Named<TextBlock>("StatusText").Text);
+        Assert.Equal(Visibility.Visible, rig.Named<Button>("OpenSettingsButton").Visibility);
+        Assert.True(rig.Model.CanRecord); // try again, or with another microphone
+        AssertFits(rig);
+    });
+
     [Theory]
-    [InlineData(ErrorCode.DeviceUnavailable, "Records.ErrorNoMicrophone")]
     [InlineData(ErrorCode.DependencyMissing, "Records.ErrorNoEncoder")]
     [InlineData(ErrorCode.IoFailure, "Records.ErrorFolder")]
     [InlineData(ErrorCode.Unexpected, "Records.ErrorOther")]

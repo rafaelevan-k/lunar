@@ -498,4 +498,5 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Settings.UpdatesTitle" xml:space="preserve"><value>Updates</value></data>
   <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Settings.UpdatesHint" xml:space="preserve"><value>Once a day Lunar asks GitHub whether a newer version was released. Nothing is installed until you choose Install now.</value></data>
+  <data name="Records.ErrorCouldNotOpen" xml:space="preserve"><value>Windows couldn't open this microphone. It may be in use or blocked.</value></data>
 </root>

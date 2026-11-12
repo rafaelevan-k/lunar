@@ -498,4 +498,5 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Settings.UpdatesTitle" xml:space="preserve"><value>Update</value></data>
   <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Cek update</value></data>
   <data name="Settings.UpdatesHint" xml:space="preserve"><value>Sekali sehari Lunar menanyakan ke GitHub apakah ada versi yang lebih baru. Tidak ada yang diinstal sampai Anda memilih Instal sekarang.</value></data>
+  <data name="Records.ErrorCouldNotOpen" xml:space="preserve"><value>Windows tidak bisa membuka mikrofon ini. Mungkin sedang dipakai atau diblokir.</value></data>
 </root>
