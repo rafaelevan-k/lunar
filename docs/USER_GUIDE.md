@@ -236,6 +236,7 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
 | The brightness row says it can't be changed | Your display does not allow it from Lunar. Use **Settings** in that row (Windows display settings) or the monitor's own buttons |
 | Lunar does not start with Windows | Turn it on in Settings, and check **Task Manager → Startup apps** |
 | Record is greyed out or says the microphone is blocked | Connect a microphone, or use **Open microphone settings** and allow desktop apps to use it |
+| Record says Windows couldn't open the microphone | Close other apps that may be using it, pick another microphone in the list, or use **Open microphone settings** and allow desktop apps to use it |
 | Do Not Disturb did not turn on | The Pomodoro page says why. Use **Open focus settings**, or turn it on yourself; the timer works either way |
 | An update says the file did not match | Nothing was installed. Try again later, or download `Lunar.msi` from the releases page and run it |
 | Something else | Turn on **Detailed diagnostics**, restart Lunar, reproduce the problem, and look in `%LocalAppData%\Lunar\Logs` |
