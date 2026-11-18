@@ -46,6 +46,7 @@ public sealed partial class SecurityGovernanceTests
 
         Assert.Equal(
             [
+                "src/Lunar.Infrastructure/Translate/AzureTextTranslator.cs", // ADR-0028: recognised text, only after a key and consent
                 "src/Lunar.Infrastructure/Updates/GitHubReleaseFeed.cs", // ADR-0025: the latest release, once a day, switch in Settings
                 "src/Lunar.Infrastructure/Usage/AnthropicUsageSource.cs",
                 "src/Lunar.Windows/Updates/MsiUpdateInstaller.cs"        // ADR-0025: the installer, only after Install now
@@ -77,6 +78,16 @@ public sealed partial class SecurityGovernanceTests
 
         Assert.NotEmpty(addresses);
         Assert.All(addresses, address => Assert.StartsWith("https://api.anthropic.com/", address, StringComparison.Ordinal));
+        Assert.DoesNotContain("http://", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheTranslatorOnlyKnowsMicrosoftsTranslatorOverHttps()
+    {
+        var text = File.ReadAllText(Path.Combine(Root, "src", "Lunar.Infrastructure", "Translate", "AzureTextTranslator.cs"));
+        var addresses = AbsoluteUrl().Matches(text).Select(m => m.Value.TrimEnd('"', ')', ';', ',')).Distinct().ToList();
+
+        Assert.Equal(["https://api.cognitive.microsofttranslator.com/translate"], addresses);
         Assert.DoesNotContain("http://", text, StringComparison.Ordinal);
     }
 

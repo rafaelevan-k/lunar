@@ -41,7 +41,8 @@ public static class SettingsRules
             },
             Appearance = appearance with
             {
-                Theme = Enum.IsDefined(appearance.Theme) ? appearance.Theme : ThemePreference.System
+                Theme = Enum.IsDefined(appearance.Theme) ? appearance.Theme : ThemePreference.System,
+                IslandStyle = Enum.IsDefined(appearance.IslandStyle) ? appearance.IslandStyle : IslandStyle.Pill
             },
             Media = media with { PreferredSessionId = Token(media.PreferredSessionId, MaxIdLength) },
             Conversion = conversion with { OutputDirectory = Token(conversion.OutputDirectory, MaxPathLength) },
@@ -53,12 +54,21 @@ public static class SettingsRules
                 InputDeviceId = Token(recorder.InputDeviceId, MaxPathLength)
             },
             Focus = focus with { LastMinutes = FocusTimerRules.IsValid(focus.LastMinutes) ? focus.LastMinutes : FocusTimerRules.DefaultMinutes },
-            Updates = settings.Updates ?? new UpdateSettings()
+            Updates = settings.Updates ?? new UpdateSettings(),
+            Translate = NormalizeTranslate(settings.Translate ?? new TranslateSettings())
         };
 
         changed = normalized != settings;
         return normalized;
     }
+
+    private static TranslateSettings NormalizeTranslate(TranslateSettings translate) => translate with
+    {
+        Target = translate.Target is { } target && !Enum.IsDefined(target) ? null : translate.Target,
+        Shortcut = Lunar.Application.Translate.ShortcutRules.Parse(translate.Shortcut) is null ? TranslateSettings.DefaultShortcut : translate.Shortcut,
+        Provider = TranslateSettings.AzureProvider,
+        Region = Lunar.Application.Translate.TranslationKeyRules.ValidateRegion(translate.Region) is { IsSuccess: true } region ? region.Value : null
+    };
 
     /// <summary>Trimmed text of at most <paramref name="maxLength"/> characters without control characters, else null.</summary>
     private static string? Token(string? value, int maxLength)

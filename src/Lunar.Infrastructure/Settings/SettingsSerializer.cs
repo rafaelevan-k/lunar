@@ -27,6 +27,7 @@ internal static class SettingsSerializer
         var recorder = Section(root, "recorder", ref reset);
         var focus = Section(root, "focus", ref reset);
         var updates = Section(root, "updates", ref reset);
+        var translate = Section(root, "translate", ref reset);
 
         var settings = new LunarSettings
         {
@@ -42,9 +43,14 @@ internal static class SettingsSerializer
                 Theme = Theme(appearance, ref reset),
                 ReduceMotion = Bool(appearance, "reduceMotion", defaults.Appearance.ReduceMotion, ref reset),
                 EyeAnimationEnabled = Bool(appearance, "eyeAnimationEnabled", defaults.Appearance.EyeAnimationEnabled, ref reset),
-                AutoCollapse = Bool(appearance, "autoCollapse", defaults.Appearance.AutoCollapse, ref reset)
+                AutoCollapse = Bool(appearance, "autoCollapse", defaults.Appearance.AutoCollapse, ref reset),
+                IslandStyle = Name(appearance, "islandStyle", defaults.Appearance.IslandStyle, ref reset)
             },
-            Media = new MediaSettings { PreferredSessionId = Text(media, "preferredSessionId", ref reset) },
+            Media = new MediaSettings
+            {
+                PreferredSessionId = Text(media, "preferredSessionId", ref reset),
+                ShowInPill = Bool(media, "showInPill", defaults.Media.ShowInPill, ref reset)
+            },
             Conversion = new ConversionSettings { OutputDirectory = Text(conversion, "outputDirectory", ref reset) },
             Privacy = new PrivacySettings
             {
@@ -57,7 +63,16 @@ internal static class SettingsSerializer
                 InputDeviceId = Text(recorder, "inputDeviceId", ref reset)
             },
             Focus = new FocusSettings { LastMinutes = Int(focus, "lastMinutes", defaults.Focus.LastMinutes, ref reset) },
-            Updates = new UpdateSettings { Check = Bool(updates, "check", defaults.Updates.Check, ref reset) }
+            Updates = new UpdateSettings { Check = Bool(updates, "check", defaults.Updates.Check, ref reset) },
+            Translate = new TranslateSettings
+            {
+                Enabled = Bool(translate, "enabled", defaults.Translate.Enabled, ref reset),
+                Target = Text(translate, "target", ref reset) is null ? null : Name(translate, "target", Lunar.Application.Abstractions.Translate.TranslationLanguage.English, ref reset),
+                Shortcut = Text(translate, "shortcut", ref reset) ?? defaults.Translate.Shortcut,
+                Provider = Text(translate, "provider", ref reset) ?? defaults.Translate.Provider,
+                Region = Text(translate, "region", ref reset),
+                Consented = Bool(translate, "consented", defaults.Translate.Consented, ref reset)
+            }
         };
 
         valuesReset = reset;
@@ -82,9 +97,14 @@ internal static class SettingsSerializer
                 ["theme"] = settings.Appearance.Theme.ToString(),
                 ["reduceMotion"] = settings.Appearance.ReduceMotion,
                 ["eyeAnimationEnabled"] = settings.Appearance.EyeAnimationEnabled,
-                ["autoCollapse"] = settings.Appearance.AutoCollapse
+                ["autoCollapse"] = settings.Appearance.AutoCollapse,
+                ["islandStyle"] = settings.Appearance.IslandStyle.ToString()
             },
-            ["media"] = new JsonObject { ["preferredSessionId"] = settings.Media.PreferredSessionId },
+            ["media"] = new JsonObject
+            {
+                ["preferredSessionId"] = settings.Media.PreferredSessionId,
+                ["showInPill"] = settings.Media.ShowInPill
+            },
             ["conversion"] = new JsonObject { ["outputDirectory"] = settings.Conversion.OutputDirectory },
             ["privacy"] = new JsonObject { ["diagnosticsEnabled"] = settings.Privacy.DiagnosticsEnabled },
             ["usage"] = new JsonObject { ["enabled"] = settings.Usage.Enabled },
@@ -94,7 +114,16 @@ internal static class SettingsSerializer
                 ["inputDeviceId"] = settings.Recorder.InputDeviceId
             },
             ["focus"] = new JsonObject { ["lastMinutes"] = settings.Focus.LastMinutes },
-            ["updates"] = new JsonObject { ["check"] = settings.Updates.Check }
+            ["updates"] = new JsonObject { ["check"] = settings.Updates.Check },
+            ["translate"] = new JsonObject
+            {
+                ["enabled"] = settings.Translate.Enabled,
+                ["target"] = settings.Translate.Target?.ToString(),
+                ["shortcut"] = settings.Translate.Shortcut,
+                ["provider"] = settings.Translate.Provider,
+                ["region"] = settings.Translate.Region,
+                ["consented"] = settings.Translate.Consented
+            }
         };
 
         return new UTF8Encoding(false).GetBytes(root.ToJsonString(WriteOptions));
@@ -146,6 +175,20 @@ internal static class SettingsSerializer
 
         reset = true;
         return null;
+    }
+
+    /// <summary>An enum stored by name; a missing field is the default, an unknown or numeric one is the default and reported.</summary>
+    private static T Name<T>(JsonObject? owner, string field, T fallback, ref bool reset)
+        where T : struct, Enum
+    {
+        var text = Text(owner, field, ref reset);
+        if (text is null)
+            return fallback;
+        if (text.Length > 0 && char.IsAsciiLetter(text[0]) && Enum.TryParse<T>(text, ignoreCase: true, out var value) && Enum.IsDefined(value))
+            return value;
+
+        reset = true;
+        return fallback;
     }
 
     private static ThemePreference Theme(JsonObject? appearance, ref bool reset)

@@ -4,43 +4,54 @@ using Lunar.Application.Abstractions.Audio;
 namespace Lunar.Windows.Audio;
 
 /// <summary>
-/// Turns the latest samples into frequency bands (ADR-0024): a 1024-point FFT with a Hann window, logarithmic bands from 80 Hz to 8 kHz, each
-/// the loudest bin inside it mapped from -60 dB (0) to 0 dB (1). Allocates only the array it returns. Not thread-safe; the audio thread owns it.
+/// Turns the latest samples into frequency bands (ADR-0024, ADR-0026): a 1024-point FFT with a Hann window, logarithmic bands (by default 16 from
+/// 80 Hz to 8 kHz for the microphone), each the loudest bin inside it mapped from -60 dB (0) to 0 dB (1). Allocates only the array it returns.
+/// Not thread-safe; the audio thread owns it.
 /// </summary>
 internal sealed class SpectrumAnalyzer
 {
     internal const int FftSize = 1024;
-    private const double LowestHz = 80;
-    private const double HighestHz = 8000;
     private const double FloorDb = -60;
 
     private readonly float[] _ring = new float[FftSize];
     private readonly Complex[] _bins = new Complex[FftSize];
     private readonly double[] _window = new double[FftSize];
-    private readonly int[] _edges = new int[VoiceLevelBands.Count + 1];
+    private readonly int[] _edges;
+    private readonly int _bandCount;
     private int _next;
 
     public SpectrumAnalyzer(int sampleRate)
+        : this(sampleRate, VoiceLevelBands.Count, 80, 8000)
+    {
+    }
+
+    public SpectrumAnalyzer(int sampleRate, int bandCount, double lowestHz, double highestHz)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sampleRate);
+        ArgumentOutOfRangeException.ThrowIfLessThan(bandCount, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(bandCount, 64);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(lowestHz);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(highestHz, lowestHz);
+        _bandCount = bandCount;
+        _edges = new int[bandCount + 1];
         for (var i = 0; i < FftSize; i++)
             _window[i] = 0.5 * (1 - Math.Cos(2 * Math.PI * i / (FftSize - 1)));
 
         var hzPerBin = (double)sampleRate / FftSize;
-        var top = Math.Min(HighestHz, sampleRate / 2.0);
-        var ratio = Math.Pow(top / LowestHz, 1.0 / VoiceLevelBands.Count);
-        _edges[0] = Math.Max(1, (int)Math.Round(LowestHz / hzPerBin));
-        for (var band = 1; band <= VoiceLevelBands.Count; band++)
+        var top = Math.Min(highestHz, sampleRate / 2.0);
+        var ratio = Math.Max(1.0001, Math.Pow(top / lowestHz, 1.0 / bandCount));
+        _edges[0] = Math.Max(1, (int)Math.Round(lowestHz / hzPerBin));
+        for (var band = 1; band <= bandCount; band++)
         {
-            var bin = (int)Math.Round(LowestHz * Math.Pow(ratio, band) / hzPerBin);
-            _edges[band] = Math.Clamp(bin, _edges[band - 1] + 1, (FftSize / 2) - VoiceLevelBands.Count + band);
+            var bin = (int)Math.Round(lowestHz * Math.Pow(ratio, band) / hzPerBin);
+            _edges[band] = Math.Clamp(bin, _edges[band - 1] + 1, (FftSize / 2) - bandCount + band);
         }
     }
 
     /// <summary>The band a frequency falls in, or -1 outside the range. For tests and for reading the result.</summary>
     internal int BandOfBin(int bin)
     {
-        for (var band = 0; band < VoiceLevelBands.Count; band++)
+        for (var band = 0; band < _bandCount; band++)
         {
             if (bin >= _edges[band] && bin < _edges[band + 1])
                 return band;
@@ -71,7 +82,7 @@ internal sealed class SpectrumAnalyzer
 
         // A full-scale sine reads 1: the window passes half the signal and the energy is split between the two halves of the spectrum.
         var scale = 4.0 / FftSize;
-        var bands = new float[VoiceLevelBands.Count];
+        var bands = new float[_bandCount];
         for (var band = 0; band < bands.Length; band++)
         {
             var loudest = 0.0;

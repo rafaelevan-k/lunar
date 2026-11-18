@@ -21,9 +21,60 @@ public partial class IslandWindow : Window
         Pill.SizeChanged += OnPillSizeChanged;
     }
 
-    // The Border draws rounded corners but does not cut its content, so the content is cut to the same outline at every size the pill passes through (FE-33).
-    private void OnPillSizeChanged(object sender, SizeChangedEventArgs e)
+    private Lunar.Application.Settings.Models.IslandStyle _style;
+
+    /// <summary>The outline in use (ADR-0027).</summary>
+    internal Lunar.Application.Settings.Models.IslandStyle OutlineStyle => _style;
+
+    /// <summary>
+    /// Switches the outline (ADR-0027). The Pill is the stadium with a thin border. The Notch is square on top with shoulders that blend into the screen's edge
+    /// and rounded at the bottom; it has no border, because it is meant to look like part of the screen's edge. In High Contrast the Notch keeps a border
+    /// on the sides and bottom and has no shoulders, so its outline stays visible. Sizes and content do not change. UI thread only.
+    /// </summary>
+    /// <summary>
+    /// Loads the dark palette and the brushes that use it (set by the app). The Notch is always dark, like the notch-style islands it follows, so its
+    /// pages read the same whatever the theme; High Contrast keeps Windows' colours.
+    /// </summary>
+    internal Func<IReadOnlyList<ResourceDictionary>>? NotchPalette { get; set; }
+
+    private IReadOnlyList<ResourceDictionary> _notchPalette = [];
+
+    internal void ApplyStyle(Lunar.Application.Settings.Models.IslandStyle style)
     {
+        _style = style;
+        var notch = style == Lunar.Application.Settings.Models.IslandStyle.Notch;
+        foreach (var dictionary in _notchPalette)
+            Resources.MergedDictionaries.Remove(dictionary);
+        _notchPalette = notch && !SystemParameters.HighContrast && NotchPalette is { } load ? load() : [];
+        foreach (var dictionary in _notchPalette)
+            Resources.MergedDictionaries.Add(dictionary);
+        Pill.BorderThickness = IslandOutline.Border(style);
+        System.Windows.Data.BindingOperations.SetBinding(Pill, System.Windows.Controls.Border.CornerRadiusProperty,
+            new System.Windows.Data.Binding(nameof(ActualHeight))
+            {
+                RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.Self),
+                Converter = notch ? new NotchRadiusConverter() : new StadiumRadiusConverter()
+            });
+        UpdateClip();
+    }
+
+    // The Border draws rounded corners but does not cut its content, so the content is cut to the same outline at every size the pill passes through (FE-33).
+    private void OnPillSizeChanged(object sender, SizeChangedEventArgs e) => UpdateClip();
+
+    private void UpdateClip()
+    {
+        if (_style == Lunar.Application.Settings.Models.IslandStyle.Notch)
+        {
+            // The pill itself is cut to the Notch (which also keeps clicks off the shoulders' empty corners), and the content to the inside of its border.
+            var outline = IslandOutline.Notch(Pill.ActualWidth, Pill.ActualHeight, shoulders: !SystemParameters.HighContrast);
+            Pill.Clip = outline;
+            var inner = Pill.BorderThickness;
+            var content = IslandOutline.Notch(Math.Max(0, Pill.ActualWidth - inner.Left - inner.Right), Math.Max(0, Pill.ActualHeight - inner.Bottom), shoulders: !SystemParameters.HighContrast);
+            ViewHost.Clip = content;
+            return;
+        }
+
+        Pill.Clip = null;
         var border = Pill.BorderThickness;
         var width = Math.Max(0, Pill.ActualWidth - border.Left - border.Right);
         var height = Math.Max(0, Pill.ActualHeight - border.Top - border.Bottom);
@@ -127,7 +178,7 @@ public partial class IslandWindow : Window
     }
 
     /// <summary>Stops any animation. An idle pill rests at its own size in the middle of the window; an expanded one fills the window.</summary>
-    internal void ResetPill(bool idle, double idleWidth = IslandLayout.IdleWidth)
+    internal void ResetPill(bool idle, double idleWidth = IslandLayout.IdleWidth, double idleHeight = IslandLayout.IdleHeight)
     {
         _pillAnimation++; // invalidates a running animation's completion
         Pill.BeginAnimation(WidthProperty, null);
@@ -137,7 +188,7 @@ public partial class IslandWindow : Window
             Pill.HorizontalAlignment = HorizontalAlignment.Center;
             Pill.VerticalAlignment = VerticalAlignment.Top;
             Pill.Width = idleWidth;
-            Pill.Height = IslandLayout.IdleHeight;
+            Pill.Height = idleHeight;
             return;
         }
 

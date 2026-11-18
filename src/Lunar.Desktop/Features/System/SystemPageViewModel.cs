@@ -238,6 +238,11 @@ public sealed class SystemPageViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand ToggleMuteCommand { get; }
 
+    /// <summary>Translate the screen (ADR-0028 §1); null when translation is not wired in, and then the button is hidden.</summary>
+    public ICommand? TranslateCommand { get; init; }
+
+    public bool CanTranslate => TranslateCommand is not null;
+
     public ICommand DismissVolumeErrorCommand { get; }
 
     /// <summary>

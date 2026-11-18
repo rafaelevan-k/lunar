@@ -63,15 +63,17 @@ public sealed class SettingsSecretsTests
         // A new field is a reviewed decision: it must be added here, with a reason it is not private.
         Assert.Equal(
             [
-                "appearance", "appearance.autoCollapse", "appearance.eyeAnimationEnabled", "appearance.reduceMotion", "appearance.theme",
+                "appearance", "appearance.autoCollapse", "appearance.eyeAnimationEnabled", "appearance.islandStyle", "appearance.reduceMotion", "appearance.theme", // islandStyle: ADR-0027, a look
                 "conversion", "conversion.outputDirectory",
                 "focus", "focus.lastMinutes",
                 "island", "island.preferredMonitorId", "island.topOffsetDip",
                 "launchAtStartup", "locale",
-                "media", "media.preferredSessionId",
+                "media", "media.preferredSessionId", "media.showInPill", // ADR-0026: a yes/no switch, nothing private
                 "privacy", "privacy.diagnosticsEnabled",
                 "recorder", "recorder.inputDeviceId", "recorder.outputDirectory",
                 "schemaVersion",
+                // ADR-0028: switches, a language, a shortcut, the service's name and its data-centre region. The key is never in settings.
+                "translate", "translate.consented", "translate.enabled", "translate.provider", "translate.region", "translate.shortcut", "translate.target",
                 "updates", "updates.check", // ADR-0025: a yes/no switch, nothing private
                 "usage", "usage.enabled"
             ],

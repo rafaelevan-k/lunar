@@ -79,17 +79,57 @@
         </Setter.Value>
       </Setter>
     </Style>
+
+    <!--
+      ADR-0027 (amended 2026-11-18): in the Notch style the pages are tabs along the top of the open panel, as on the notch-style islands of current
+      MacBooks, instead of the side arrows and the dots. A tab is a radio button in its own group: a symbol, and the page's name when it is the current one.
+    -->
+    <Style x:Key="NotchTab" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Lunar.PageTabs" />
+      <Setter Property="Margin" Value="2,0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextSecondary}" />
+      <Setter Property="FocusVisualStyle" Value="{DynamicResource Lunar.Style.FocusVisual}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="Face" CornerRadius="13" Height="26" Padding="10,0" Background="Transparent">
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="Glyph" Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           FontSize="13" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}" />
+                <TextBlock x:Name="Label" Text="{TemplateBinding Content}" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center"
+                           Foreground="{TemplateBinding Foreground}" Visibility="Collapsed" />
+              </StackPanel>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="{DynamicResource Lunar.Brush.Surface}" />
+                <Setter TargetName="Label" Property="Visibility" Value="Visible" />
+                <Setter Property="Foreground" Value="{DynamicResource Lunar.Brush.TextPrimary}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </UserControl.Resources>
 
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
+    <StackPanel x:Name="Tabs" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,8" Visibility="Collapsed"
+                automation:AutomationProperties.Name="{res:Text X.Pages}" />
+
     <!-- The pages sit side by side on a canvas, which adds nothing to the control's desired size, so wide pages can never
          make the island ask for a wider window. -->
-    <Grid x:Name="Viewport" Grid.Row="0" ClipToBounds="True" Background="Transparent" MinHeight="0">
+    <Grid x:Name="Viewport" Grid.Row="1" ClipToBounds="True" Background="Transparent" MinHeight="0">
       <Canvas>
         <StackPanel x:Name="Strip" Orientation="Horizontal">
           <StackPanel.RenderTransform>
@@ -108,6 +148,6 @@
       </Button>
     </Grid>
 
-    <StackPanel x:Name="Dots" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,8" />
+    <StackPanel x:Name="Dots" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,8" />
   </Grid>
 </UserControl>

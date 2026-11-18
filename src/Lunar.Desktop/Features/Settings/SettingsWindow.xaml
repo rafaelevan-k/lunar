@@ -142,6 +142,8 @@
             <Button x:Name="OffsetUpButton" Content="+" Command="{Binding OffsetUpCommand}" MinWidth="36"
                     Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.MoveTheIslandFurtherFrom}" />
           </StackPanel>
+          <TextBlock x:Name="OffsetIgnoredHint" Text="{res:Text Settings.OffsetIgnoredInNotch}" Style="{StaticResource Hint}"
+                     Visibility="{Binding OffsetIgnored, Converter={StaticResource BoolToVisible}}" />
         </StackPanel>
       </Border>
 
@@ -160,6 +162,38 @@
                 <RadioButton Style="{StaticResource ChoiceRadio}" GroupName="Lunar.Settings.Theme" Content="{Binding Label}"
                              IsChecked="{Binding IsSelected, Mode=OneWay}" Command="{Binding Command}"
                              automation:AutomationProperties.Name="{Binding Label}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Text="{res:Text Settings.StyleHeading}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,12,0,6" />
+          <ItemsControl x:Name="IslandStyleList" ItemsSource="{Binding IslandStyles}" Focusable="False" IsTabStop="False" automation:AutomationProperties.Name="{res:Text Settings.StyleHeading}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <RadioButton Style="{StaticResource ChoiceRadio}" GroupName="Lunar.Settings.IslandStyle"
+                             IsChecked="{Binding IsSelected, Mode=OneWay}" Command="{Binding Command}"
+                             automation:AutomationProperties.Name="{Binding Label}">
+                  <StackPanel Orientation="Horizontal">
+                    <!-- ADR-0027: a small picture of each outline. The Notch's top is flat against a line that stands for the screen's top edge. -->
+                    <Grid Width="34" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                      <Rectangle x:Name="Edge" Height="1" VerticalAlignment="Top" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" Opacity="0.6" Visibility="Collapsed" />
+                      <Border x:Name="Shape" Width="30" Height="10" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" CornerRadius="5" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </RadioButton>
+                <DataTemplate.Triggers>
+                  <DataTrigger Binding="{Binding IsNotch}" Value="True">
+                    <Setter TargetName="Edge" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Shape" Property="CornerRadius" Value="0,0,5,5" />
+                    <Setter TargetName="Shape" Property="VerticalAlignment" Value="Top" />
+                  </DataTrigger>
+                </DataTemplate.Triggers>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -208,6 +242,20 @@
             <Button x:Name="EyesSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
                     c:SwitchState.IsOn="{Binding EyeAnimationEnabled}" Command="{Binding ToggleEyesCommand}"
                     automation:AutomationProperties.Name="{res:Text X.AnimatedEyes}" />
+          </Grid>
+
+          <Grid Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="{res:Text Settings.ShowMediaInPill}" Style="{DynamicResource Lunar.Text.Body}" />
+              <TextBlock Text="{res:Text Settings.ShowMediaInPillHint}" Style="{StaticResource Hint}" />
+            </StackPanel>
+            <Button x:Name="MediaPillSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
+                    c:SwitchState.IsOn="{Binding MediaPillEnabled}" Command="{Binding ToggleMediaPillCommand}"
+                    automation:AutomationProperties.Name="{res:Text Settings.ShowMediaInPill}" />
           </Grid>
         </StackPanel>
       </Border>
@@ -264,6 +312,78 @@
       </Border>
 
       <!-- FE-38, ADR-0025: the update switch, and the same Install now as the pop-up, reachable by keyboard. -->
+      <!-- ADR-0028, FE-41: screen translation with the user's own free Azure Translator key. -->
+      <Border x:Name="TranslationCard" Style="{StaticResource Card}" Visibility="{Binding HasTranslation, Converter={StaticResource BoolToVisible}}">
+        <StackPanel DataContext="{Binding Translation}">
+          <TextBlock Text="{res:Text Translate.SettingsTitle}" Style="{StaticResource SectionTitle}" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="{res:Text Translate.SettingsSwitch}" Style="{DynamicResource Lunar.Text.Body}" />
+              <TextBlock Text="{res:Text Translate.SettingsHint}" Style="{StaticResource Hint}" />
+            </StackPanel>
+            <Button x:Name="TranslationSwitch" Grid.Column="1" Style="{DynamicResource Lunar.Style.SwitchButton}" VerticalAlignment="Center"
+                    c:SwitchState.IsOn="{Binding Enabled}" Command="{Binding ToggleCommand}"
+                    automation:AutomationProperties.Name="{res:Text Translate.SettingsSwitch}" />
+          </Grid>
+
+          <TextBlock Text="{res:Text Translate.TargetHeading}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,12,0,6" />
+          <ItemsControl x:Name="TranslationTargets" ItemsSource="{Binding Targets}" Focusable="False" IsTabStop="False" automation:AutomationProperties.Name="{res:Text Translate.TargetHeading}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <RadioButton Style="{StaticResource ChoiceRadio}" GroupName="Lunar.Settings.TranslateTarget" Content="{Binding Label}"
+                             IsChecked="{Binding IsSelected, Mode=OneWay}" Command="{Binding Command}"
+                             automation:AutomationProperties.Name="{Binding Label}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Text="{res:Text Translate.KeyHeading}" Style="{DynamicResource Lunar.Text.Secondary}" Margin="0,12,0,4" />
+          <TextBlock x:Name="TranslationKeyStatus" Text="{Binding KeyStatus}" Style="{DynamicResource Lunar.Text.Body}" />
+          <TextBlock Text="{res:Text Translate.KeyHint}" Style="{StaticResource Hint}" />
+          <TextBox x:Name="TranslationSignUp" Text="{Binding SignUp, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                   Foreground="{DynamicResource Lunar.Brush.TextSecondary}" Margin="0,2,0,6" TextWrapping="Wrap"
+                   automation:AutomationProperties.Name="{res:Text Translate.SignUpLink}" />
+          <StackPanel Orientation="Horizontal">
+            <PasswordBox x:Name="TranslationKeyBox" Width="200" VerticalAlignment="Center" automation:AutomationProperties.Name="{res:Text Translate.KeyBox}" />
+            <Button x:Name="TranslationSaveKey" Content="{res:Text Translate.SaveKey}" Command="{Binding SaveKeyCommand}" CommandParameter="{Binding ElementName=TranslationKeyBox}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" Margin="8,0,0,0" />
+            <Button x:Name="TranslationTestKey" Content="{res:Text Translate.TestKey}" Command="{Binding TestKeyCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" Margin="8,0,0,0" />
+            <Button x:Name="TranslationRemoveKey" Content="{res:Text Translate.RemoveKey}" Command="{Binding RemoveKeyCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" Margin="8,0,0,0" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <TextBlock Text="{res:Text Translate.RegionLabel}" Style="{DynamicResource Lunar.Text.Body}" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <TextBox x:Name="TranslationRegion" Text="{Binding RegionText, UpdateSourceTrigger=PropertyChanged}" Width="140" VerticalAlignment="Center"
+                     automation:AutomationProperties.Name="{res:Text Translate.RegionLabel}" />
+            <Button x:Name="TranslationApplyRegion" Content="{res:Text Translate.Apply}" Command="{Binding ApplyRegionCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" Margin="8,0,0,0" />
+          </StackPanel>
+          <TextBlock x:Name="TranslationKeyMessage" Text="{Binding KeyMessage}" Style="{StaticResource Hint}" TextWrapping="Wrap"
+                     automation:AutomationProperties.LiveSetting="Polite" />
+
+          <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+            <TextBlock Text="{res:Text Translate.ShortcutLabel}" Style="{DynamicResource Lunar.Text.Body}" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <TextBox x:Name="TranslationShortcut" Text="{Binding ShortcutText, UpdateSourceTrigger=PropertyChanged}" Width="140" VerticalAlignment="Center"
+                     automation:AutomationProperties.Name="{res:Text Translate.ShortcutLabel}" />
+            <Button x:Name="TranslationApplyShortcut" Content="{res:Text Translate.Apply}" Command="{Binding ApplyShortcutCommand}"
+                    Style="{DynamicResource Lunar.Style.ActionButton}" Margin="8,0,0,0" />
+          </StackPanel>
+          <TextBlock x:Name="TranslationShortcutMessage" Text="{Binding ShortcutMessage}" Style="{StaticResource Hint}" TextWrapping="Wrap"
+                     automation:AutomationProperties.LiveSetting="Polite" />
+          <TextBlock Text="{res:Text Translate.PrivacyNote}" Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,8,0,0" />
+        </StackPanel>
+      </Border>
+
       <Border x:Name="UpdatesCard" Style="{StaticResource Card}">
         <StackPanel>
           <TextBlock Text="{res:Text Settings.UpdatesTitle}" Style="{StaticResource SectionTitle}" />

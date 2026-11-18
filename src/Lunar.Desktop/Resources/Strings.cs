@@ -48,7 +48,10 @@ internal static class Strings
     {
         // The set belongs to the ResourceManager, which caches it: it must not be disposed here.
         var culture = CultureInfo.GetCultureInfo(tag);
-        var set = Manager.GetResourceSet(culture, createIfNotExists: true, tryParents: false);
+        // English is the neutral language: its texts are the main resources, which a lookup without parents finds only once some earlier lookup has
+        // cached them under "en". Asking with parents makes the answer the same whatever ran before. Indonesian stays without parents, so only its
+        // own texts are listed.
+        var set = Manager.GetResourceSet(culture, createIfNotExists: true, tryParents: culture.TwoLetterISOLanguageName == "en");
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         if (set is null)
             return result;

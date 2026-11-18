@@ -35,6 +35,13 @@ public static class IslandPlacement
     }
 
     /// <summary>
+    /// The distance below the top of the work area the island keeps (ADR-0027): the user's offset for the Pill, none for the Notch, which is attached
+    /// to the top edge. The offset stays saved, so switching back to the Pill restores it.
+    /// </summary>
+    public static int TopOffsetFor(Lunar.Application.Settings.Models.IslandStyle style, int configuredOffsetDip) =>
+        style == Lunar.Application.Settings.Models.IslandStyle.Notch ? 0 : Math.Max(0, configuredOffsetDip);
+
+    /// <summary>
     /// Centers a <paramref name="widthDip"/> × <paramref name="heightDip"/> island horizontally in the work area,
     /// <paramref name="topOffsetDip"/> below its top edge, converted with the display's scale and then clamped so
     /// it lies entirely inside the work area (shrinking only if it cannot fit).

@@ -121,6 +121,21 @@ public static class ServiceRegistration
         services.AddSingleton<WindowsAudioInputCatalog>();
         services.AddSingleton<IAudioInputCatalog>(sp => sp.GetRequiredService<WindowsAudioInputCatalog>());
         services.AddSingleton<IVoiceCaptureEngine, WinRtVoiceCaptureEngine>();
+        // Screen translation (ADR-0028, BE-47/48/49): a picture only when the user asks, Windows OCR on this PC, the user's own Azure key, a global shortcut.
+        services.AddSingleton<Lunar.Application.Abstractions.Translate.IScreenCapture>(sp => new Lunar.Windows.Capture.GdiScreenCapture(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<Lunar.Application.Abstractions.Translate.IScreenTextReader>(sp => new Lunar.Windows.Ocr.WindowsScreenTextReader(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<Lunar.Application.Abstractions.Translate.ITextTranslator>(sp => new Lunar.Infrastructure.Translate.AzureTextTranslator(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<Lunar.Application.Abstractions.Translate.ITranslationKeyStore>(sp => new Lunar.Windows.Security.DpapiTranslationKeyStore(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton<IGlobalShortcut>(sp => new Lunar.Windows.Shell.WindowsGlobalShortcut(sp.GetRequiredService<IDiagnosticLog>()));
+        services.AddSingleton(sp => new Lunar.Application.Translate.ScreenTranslationService(
+            sp.GetRequiredService<Lunar.Application.Abstractions.Translate.IScreenCapture>(),
+            sp.GetRequiredService<Lunar.Application.Abstractions.Translate.IScreenTextReader>(),
+            sp.GetRequiredService<Lunar.Application.Abstractions.Translate.ITextTranslator>(),
+            sp.GetRequiredService<Lunar.Application.Abstractions.Translate.ITranslationKeyStore>(),
+            sp.GetRequiredService<SettingsService>(),
+            sp.GetRequiredService<IDiagnosticLog>()));
+        // Media pill (ADR-0026, BE-45): a loopback meter of what Windows plays, started only while the pill is on screen.
+        services.AddSingleton<IPlaybackLevelSource>(sp => new WasapiPlaybackLevelSource(sp.GetRequiredService<IDiagnosticLog>()));
         services.AddSingleton<IRecordingFiles>(_ => new RecordingFileStore());
         services.AddSingleton<RecordingService>(sp => new RecordingService(
             sp.GetRequiredService<IVoiceCaptureEngine>(),

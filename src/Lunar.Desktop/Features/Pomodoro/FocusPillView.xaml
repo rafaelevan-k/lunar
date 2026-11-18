@@ -4,7 +4,6 @@
              xmlns:res="clr-namespace:Lunar.Desktop.Resources"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              Focusable="False" IsTabStop="False" Background="Transparent" Cursor="Hand"
-             Width="158" Height="42"
              automation:AutomationProperties.Name="{res:Text Pomodoro.PillName}">
   <!--
     FE-37, ADR-0024: the collapsed island during a focus session. The time left sits in the middle of the normal pill; a click opens the island, as a click

@@ -66,6 +66,9 @@ public partial class App : System.Windows.Application
     private NotesPageViewModel? _notes;
     private Lunar.Desktop.Features.Recorder.RecordsViewModel? _records;
     private IslandActivityController? _activity;
+    private Lunar.Desktop.Features.MediaControls.MediaPillViewModel? _mediaPill;
+    private Lunar.Desktop.Features.Translate.TranslationSettingsViewModel? _translationSettings;
+    private Lunar.Desktop.Features.Translate.TranslateCoordinator? _translate;
     private Lunar.Application.Focus.PomodoroService? _pomodoro;
     private Lunar.Desktop.Features.Pomodoro.PomodoroPageViewModel? _pomodoroPage;
     private Lunar.Application.Recording.RecordingService? _recording;
@@ -197,7 +200,7 @@ public partial class App : System.Windows.Application
         _capture = new CaptureExclusionGuard(_services.GetRequiredService<ICaptureExclusion>());
         _capture.StartWatching();
 
-        var viewModel = _services.GetRequiredService<IslandViewModel>();
+        var viewModel = _islandViewModel = _services.GetRequiredService<IslandViewModel>();
         var eyesView = new EyesView();
         // Interface motion (slides, fades, confetti) is off when the Lunar setting says so or Windows has "Show animations" off; the eyes
         // also stop when idle eye animation is disabled. The same rule is applied again whenever the setting changes (SettingsApplier).
@@ -224,6 +227,26 @@ public partial class App : System.Windows.Application
             new DispatcherOneShotTimer(),
             TimeProvider.System,
             _log);
+        // ADR-0028, FE-41: screen translation. The shortcut, the System page button and the tray item all run the same trigger.
+        _translationSettings = new Lunar.Desktop.Features.Translate.TranslationSettingsViewModel(
+            _settingsService,
+            _services.GetRequiredService<Lunar.Application.Abstractions.Translate.ITranslationKeyStore>(),
+            _services.GetRequiredService<Lunar.Application.Abstractions.Translate.ITextTranslator>(),
+            _services.GetRequiredService<IGlobalShortcut>(),
+            toUi,
+            _log);
+        var capture = _capture;
+        _translate = new Lunar.Desktop.Features.Translate.TranslateCoordinator(
+            _services.GetRequiredService<Lunar.Application.Translate.ScreenTranslationService>(),
+            _services.GetRequiredService<IGlobalShortcut>(),
+            _settingsService,
+            _translationSettings,
+            toUi,
+            () => _settingsWindow?.Show(),
+            () => Strings.Culture.Name,
+            (message, needsSettings) => Lunar.Desktop.Features.Translate.TranslateNoticeWindow.Show(message, needsSettings ? () => _settingsWindow?.Show() : null, w => capture?.Attach(w)),
+            w => capture?.Attach(w),
+            log: _log);
         _system = new SystemPageViewModel(
             _services.GetRequiredService<IVolumeService>(),
             _services.GetRequiredService<IWifiService>(),
@@ -233,7 +256,8 @@ public partial class App : System.Windows.Application
             work => { if (Dispatcher.CheckAccess()) work(); else Dispatcher.BeginInvoke(work); },
             _log)
         {
-            Brightness = _brightness
+            Brightness = _brightness,
+            TranslateCommand = _translate.TranslateCommand
         };
         _media = new MediaPageViewModel(
             _services.GetRequiredService<MediaSessionTracker>(),
@@ -299,12 +323,40 @@ public partial class App : System.Windows.Application
             _records,
             new Lunar.Desktop.Features.Recorder.RecordingPillView { DataContext = _records, ExpandCommand = viewModel.ToggleCommand },
             _pomodoroPage,
-            new Lunar.Desktop.Features.Pomodoro.FocusPillView { DataContext = _pomodoroPage, ExpandCommand = viewModel.ToggleCommand });
+            new Lunar.Desktop.Features.Pomodoro.FocusPillView { DataContext = _pomodoroPage, ExpandCommand = viewModel.ToggleCommand },
+            _mediaPill = new Lunar.Desktop.Features.MediaControls.MediaPillViewModel(
+                _media,
+                _services.GetRequiredService<Lunar.Application.Abstractions.Audio.IPlaybackLevelSource>(),
+                _settingsService,
+                new DispatcherOneShotTimer(),
+                toUi,
+                _log),
+            new Lunar.Desktop.Features.MediaControls.MediaPillView
+            {
+                DataContext = _mediaPill,
+                ExpandCommand = new RelayCommand(() =>
+                {
+                    // ADR-0026 §7: the media pill opens the island on the Media page.
+                    navigation.GoTo(1);
+                    if (!viewModel.IsExpanded && viewModel.ToggleCommand.CanExecute(null))
+                        viewModel.ToggleCommand.Execute(null);
+                })
+            });
+        _activity.AttachTranslation(_translate, new Lunar.Desktop.Features.Translate.TranslatingPillView(_translate.CancelCommand));
         _window = new IslandWindow { DataContext = viewModel, ViewContent = _shell };
         _capture.Attach(_window); // excluded when its handle is created, before it is first shown
         MainWindow = _window;
         _position = new IslandPositionController(_window, viewModel, _services.GetRequiredService<IWindowEnvironment>(), _log, settings.Island);
         _transition = new IslandTransitionController(_window, viewModel, motionOff);
+        // ADR-0027: the outline before the first placement, so the Notch is never seen floating; it follows the setting and High Contrast after that.
+        _window.NotchPalette = () =>
+        [
+            new ResourceDictionary { Source = new Uri("Themes/" + ThemeApplier.Dark, UriKind.Relative) },
+            new ResourceDictionary { Source = new Uri("Themes/Components.xaml", UriKind.Relative) }
+        ];
+        IslandStyleApplier.Apply(settings.Appearance.IslandStyle, viewModel, _shell, _window, _position, place: false);
+        _settingsService.Changed += (_, e) => toUi(() => ApplyIslandStyle(e.Current.Appearance.IslandStyle));
+        SystemParameters.StaticPropertyChanged += OnSystemParameterChanged;
         _position.Start(); // placed before it is shown; a listener failure is logged inside and the window stays placed
         _window.Show();
 
@@ -350,7 +402,8 @@ public partial class App : System.Windows.Application
             _log,
             startup: _startupSwitch,
             capture: _capture,
-            updates: _updatePrompt);
+            updates: _updatePrompt,
+            translation: _translationSettings);
         _settingsApplier = new SettingsApplier(
             _settingsService,
             toUi,
@@ -374,7 +427,9 @@ public partial class App : System.Windows.Application
             },
             folder => _converter?.SetDefaultOutputFolder(folder));
         _settingsApplier.Apply(settings);
-        _tray = new TrayController(_window.OpenForKeyboard, Shutdown, openSettings: _settingsWindow.Show, startup: _startupSwitch);
+        _tray = new TrayController(_window.OpenForKeyboard, Shutdown, openSettings: _settingsWindow.Show, startup: _startupSwitch,
+            translate: () => _ = _translate?.TriggerAsync());
+        _ = _translate.StartAsync(); // registers the shortcut; a shortcut another app holds is said in Settings
         _instance.ActivationRequested += OnActivationRequested;
         _log.Write(new DiagnosticEvent(DiagnosticLevel.Information, "app.start.primary", "App", "Start"));
 
@@ -412,6 +467,54 @@ public partial class App : System.Windows.Application
         {
             // shutting down
         }
+    }
+
+    private Lunar.Application.Settings.Models.IslandStyle? _pendingStyle;
+    private IslandViewModel? _islandViewModel;
+
+    /// <summary>
+    /// The island style changed in Settings (ADR-0027 §6): an open island collapses first and takes the new outline once it is the pill again, so the
+    /// outline never changes in the middle of the panel. A recording or a focus session keeps running. UI thread only.
+    /// </summary>
+    private void ApplyIslandStyle(Lunar.Application.Settings.Models.IslandStyle style)
+    {
+        if (_window is null || _position is null || _islandViewModel is null)
+            return;
+        if (_window.OutlineStyle == style && _pendingStyle is null)
+            return;
+        if (_islandViewModel.State != IslandVisualState.Idle)
+        {
+            var wait = _pendingStyle is null;
+            _pendingStyle = style;
+            if (wait)
+                _islandViewModel.PropertyChanged += ApplyPendingStyle;
+            if (_islandViewModel.CollapseCommand.CanExecute(null))
+                _islandViewModel.CollapseCommand.Execute(null);
+            return;
+        }
+
+        IslandStyleApplier.Apply(style, _islandViewModel, _shell!, _window, _position);
+    }
+
+    private void ApplyPendingStyle(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(IslandViewModel.State) || _islandViewModel?.State != IslandVisualState.Idle || _pendingStyle is not { } style)
+            return;
+        _islandViewModel.PropertyChanged -= ApplyPendingStyle;
+        _pendingStyle = null;
+        if (_window is not null && _position is not null && _shell is not null)
+            IslandStyleApplier.Apply(style, _islandViewModel, _shell, _window, _position);
+    }
+
+    // High Contrast switched: the Notch takes or drops its border (ADR-0027 §7).
+    private void OnSystemParameterChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SystemParameters.HighContrast) && _window is not null)
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (_window is not null && _position is not null && _shell is not null && _islandViewModel is not null && _islandViewModel.State == IslandVisualState.Idle)
+                    IslandStyleApplier.Apply(_window.OutlineStyle, _islandViewModel, _shell, _window, _position);
+            });
     }
 
     private void OnIslandPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -493,7 +596,11 @@ public partial class App : System.Windows.Application
         _notesLifetime = null;
         _pomodoroPage?.Dispose();
         _pomodoroPage = null;
+        SystemParameters.StaticPropertyChanged -= OnSystemParameterChanged;
         _activity?.Dispose();
+        _mediaPill?.Dispose();
+        _translate?.Dispose();
+        _translationSettings?.Dispose();
         _activity = null;
         _records?.Dispose();
         _records = null;

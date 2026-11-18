@@ -499,4 +499,77 @@ Pilih Tidak untuk menyimpannya jika nanti memasang ulang.</value></data>
   <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Cek update</value></data>
   <data name="Settings.UpdatesHint" xml:space="preserve"><value>Sekali sehari Lunar menanyakan ke GitHub apakah ada versi yang lebih baru. Tidak ada yang diinstal sampai Anda memilih Instal sekarang.</value></data>
   <data name="Records.ErrorCouldNotOpen" xml:space="preserve"><value>Windows tidak bisa membuka mikrofon ini. Mungkin sedang dipakai atau diblokir.</value></data>
+  <data name="MediaPill.PlayingTitleArtist" xml:space="preserve"><value>Diputar: {0} oleh {1}</value></data>
+  <data name="MediaPill.PlayingTitle" xml:space="preserve"><value>Diputar: {0}</value></data>
+  <data name="MediaPill.PlayingFrom" xml:space="preserve"><value>Diputar di {0}</value></data>
+  <data name="Settings.ShowMediaInPill" xml:space="preserve"><value>Tampilkan musik di island yang tertutup</value></data>
+  <data name="Settings.ShowMediaInPillHint" xml:space="preserve"><value>Saat musik atau video diputar, pil menampilkan gambarnya dan bar suara sebagai ganti mata.</value></data>
+  <data name="Settings.StyleHeading" xml:space="preserve"><value>Gaya island</value></data>
+  <data name="Settings.StylePill" xml:space="preserve"><value>Pil</value></data>
+  <data name="Settings.StyleNotch" xml:space="preserve"><value>Notch</value></data>
+  <data name="Settings.OffsetIgnoredInNotch" xml:space="preserve"><value>Gaya Notch menempel di tepi atas, jadi jarak ini hanya berlaku untuk Pil.</value></data>
+  <data name="Tray.Translate" xml:space="preserve"><value>Terjemahkan layar</value></data>
+  <data name="Translate.Button" xml:space="preserve"><value>Terjemahkan layar</value></data>
+  <data name="Translate.Working" xml:space="preserve"><value>Menerjemahkan…</value></data>
+  <data name="Translate.Cancel" xml:space="preserve"><value>Batal</value></data>
+  <data name="Translate.Allow" xml:space="preserve"><value>Izinkan</value></data>
+  <data name="Translate.Close" xml:space="preserve"><value>Tutup</value></data>
+  <data name="Translate.OpenSettings" xml:space="preserve"><value>Buka Pengaturan</value></data>
+  <data name="Translate.OverlayTitle" xml:space="preserve"><value>Terjemahan layar Lunar</value></data>
+  <data name="Translate.Toolbar" xml:space="preserve"><value>Alat terjemahan</value></data>
+  <data name="Translate.ShowOriginal" xml:space="preserve"><value>Lihat asli (tahan)</value></data>
+  <data name="Translate.Copy" xml:space="preserve"><value>Salin teks</value></data>
+  <data name="Translate.Copied" xml:space="preserve"><value>Terjemahan disalin.</value></data>
+  <data name="Translate.CopyFailed" xml:space="preserve"><value>Aplikasi lain sedang memakai clipboard. Coba lagi.</value></data>
+  <data name="Translate.ToLanguage" xml:space="preserve"><value>Terjemahkan ke {0}</value></data>
+  <data name="Translate.NothingToTranslate" xml:space="preserve"><value>Semua teks di sini sudah dalam bahasa ini.</value></data>
+  <data name="Translate.English" xml:space="preserve"><value>English</value></data>
+  <data name="Translate.Indonesian" xml:space="preserve"><value>Indonesia</value></data>
+  <data name="Translate.Japanese" xml:space="preserve"><value>Jepang</value></data>
+  <data name="Translate.TargetAutomatic" xml:space="preserve"><value>Bahasa yang lain</value></data>
+  <data name="Translate.ConsentTitle" xml:space="preserve"><value>Kirim teks layar untuk diterjemahkan?</value></data>
+  <data name="Translate.ConsentBody" xml:space="preserve"><value>Untuk menerjemahkan, Lunar membaca teks di layar di PC ini dan hanya mengirim teks itu (tidak pernah gambar layar) ke Microsoft Azure AI Translator dengan key milik Anda. Lunar tidak menyimpan apa pun setelah terjemahan ditutup. Apa yang dilakukan Microsoft dengan teks itu mengikuti pernyataan privasinya:</value></data>
+  <data name="Translate.PrivacyLink" xml:space="preserve"><value>Alamat pernyataan privasi Microsoft</value></data>
+  <data name="Translate.ProblemNoKey" xml:space="preserve"><value>Tambahkan key Azure Translator gratis Anda di Pengaturan untuk menerjemahkan layar.</value></data>
+  <data name="Translate.ProblemNotConsented" xml:space="preserve"><value>Terjemahan memerlukan izin Anda untuk mengirim teks layar.</value></data>
+  <data name="Translate.ProblemKeyRefused" xml:space="preserve"><value>Azure tidak menerima key atau region-nya. Periksa di Pengaturan.</value></data>
+  <data name="Translate.ProblemFreeLimit" xml:space="preserve"><value>Kuota terjemahan gratis sudah habis untuk saat ini. Lunar tidak beralih ke paket berbayar.</value></data>
+  <data name="Translate.ProblemRateLimited" xml:space="preserve"><value>Terlalu banyak terjemahan dalam waktu singkat. Tunggu sebentar lalu coba lagi.</value></data>
+  <data name="Translate.ProblemNoNetwork" xml:space="preserve"><value>Azure Translator tidak dapat dihubungi. Periksa koneksi internet.</value></data>
+  <data name="Translate.ProblemProvider" xml:space="preserve"><value>Azure Translator memberi jawaban yang tidak dapat dipakai Lunar. Coba lagi.</value></data>
+  <data name="Translate.ProblemDisabled" xml:space="preserve"><value>Terjemahan layar dimatikan di Pengaturan.</value></data>
+  <data name="Translate.ProblemBusy" xml:space="preserve"><value>Terjemahan sedang berjalan.</value></data>
+  <data name="Translate.ProblemCapture" xml:space="preserve"><value>Windows tidak mengizinkan Lunar membaca layar.</value></data>
+  <data name="Translate.ProblemNoRecognizer" xml:space="preserve"><value>Windows tidak punya bahasa OCR untuk English atau Jepang. Tambahkan di Pengaturan &gt; Waktu dan bahasa &gt; Bahasa.</value></data>
+  <data name="Translate.ProblemProtected" xml:space="preserve"><value>Layar terbaca hitam. Video terlindungi dan beberapa aplikasi tidak dapat dibaca.</value></data>
+  <data name="Translate.ProblemNoText" xml:space="preserve"><value>Tidak ada teks yang ditemukan di layar.</value></data>
+  <data name="Translate.SettingsTitle" xml:space="preserve"><value>Terjemahan layar</value></data>
+  <data name="Translate.SettingsSwitch" xml:space="preserve"><value>Terjemahkan layar</value></data>
+  <data name="Translate.SettingsHint" xml:space="preserve"><value>Membaca layar aktif di PC ini lalu menerjemahkannya ke English, Indonesia, atau Jepang, di atas teks aslinya.</value></data>
+  <data name="Translate.TargetHeading" xml:space="preserve"><value>Terjemahkan ke</value></data>
+  <data name="Translate.KeyHeading" xml:space="preserve"><value>Key Azure Translator</value></data>
+  <data name="Translate.KeyHint" xml:space="preserve"><value>Buat resource Translator gratis (F0) di portal Azure, lalu tempel salah satu key-nya di sini. Key disimpan terenkripsi hanya di PC ini.</value></data>
+  <data name="Translate.SignUpLink" xml:space="preserve"><value>Alamat portal Azure untuk resource Translator</value></data>
+  <data name="Translate.KeyBox" xml:space="preserve"><value>Key terjemahan</value></data>
+  <data name="Translate.SaveKey" xml:space="preserve"><value>Simpan key</value></data>
+  <data name="Translate.TestKey" xml:space="preserve"><value>Tes</value></data>
+  <data name="Translate.RemoveKey" xml:space="preserve"><value>Hapus key</value></data>
+  <data name="Translate.KeySaved" xml:space="preserve"><value>Key sudah tersimpan.</value></data>
+  <data name="Translate.KeyMissing" xml:space="preserve"><value>Belum ada key yang tersimpan.</value></data>
+  <data name="Translate.KeySavedNow" xml:space="preserve"><value>Key disimpan.</value></data>
+  <data name="Translate.KeyInvalid" xml:space="preserve"><value>Itu tidak tampak seperti key Translator. Salin lagi dari portal Azure.</value></data>
+  <data name="Translate.KeyRemoved" xml:space="preserve"><value>Key dihapus.</value></data>
+  <data name="Translate.KeyRemoveFailed" xml:space="preserve"><value>Key tidak dapat dihapus. Coba lagi.</value></data>
+  <data name="Translate.KeyTesting" xml:space="preserve"><value>Menguji key dengan satu kata…</value></data>
+  <data name="Translate.KeyWorks" xml:space="preserve"><value>Key berfungsi.</value></data>
+  <data name="Translate.RegionLabel" xml:space="preserve"><value>Region (kosong untuk global)</value></data>
+  <data name="Translate.RegionInvalid" xml:space="preserve"><value>Region harus satu kata, misalnya southeastasia.</value></data>
+  <data name="Translate.RegionSaved" xml:space="preserve"><value>Region disimpan.</value></data>
+  <data name="Translate.Apply" xml:space="preserve"><value>Terapkan</value></data>
+  <data name="Translate.ShortcutLabel" xml:space="preserve"><value>Pintasan</value></data>
+  <data name="Translate.ShortcutWorks" xml:space="preserve"><value>{0} menerjemahkan layar.</value></data>
+  <data name="Translate.ShortcutTaken" xml:space="preserve"><value>Aplikasi lain sudah memakai pintasan ini. Pilih yang lain.</value></data>
+  <data name="Translate.ShortcutRefused" xml:space="preserve"><value>Windows tidak menerima pintasan ini.</value></data>
+  <data name="Translate.ShortcutInvalid" xml:space="preserve"><value>Tulis pintasan seperti Ctrl+Alt+T, dengan Ctrl, Alt, atau Win.</value></data>
+  <data name="Translate.PrivacyNote" xml:space="preserve"><value>Hanya teks yang terbaca yang dikirim, hanya saat Anda meminta, dan hanya setelah Anda mengizinkan sekali. Lunar tidak menyimpan gambar, teks, atau terjemahan.</value></data>
 </root>

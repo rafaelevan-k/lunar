@@ -30,6 +30,7 @@ public sealed class IslandPositionController : IDisposable
     private readonly IWindowEnvironment _environment;
     private readonly IDiagnosticLog _log;
     private IslandSettings _preference;
+    private Lunar.Application.Settings.Models.IslandStyle _style;
     private bool _started;
     private bool _disposed;
 
@@ -89,6 +90,18 @@ public sealed class IslandPositionController : IDisposable
             Apply();
     }
 
+    /// <summary>The outline changed (ADR-0027): the Notch sits at the top edge, the Pill at the user's offset. UI thread only.</summary>
+    internal void UpdateStyle(Lunar.Application.Settings.Models.IslandStyle style)
+    {
+        if (_disposed || style == _style)
+            return;
+        _style = style;
+        if (_started)
+            Apply();
+    }
+
+    private int TopOffset => IslandPlacement.TopOffsetFor(_style, _preference.TopOffsetDip);
+
     /// <summary>Re-reads the displays and moves the window. Safe to call repeatedly; must run on the UI thread.</summary>
     internal void Apply()
     {
@@ -98,14 +111,14 @@ public sealed class IslandPositionController : IDisposable
         var display = ChooseDisplay();
         CurrentDisplayId = ReferenceEquals(display, DisplayInfo.Fallback) ? null : display.Id;
         // Measured for the panel in both layouts, so the width (and with it the left edge) is the same whether the island is open or not (FE-33).
-        var panel = IslandLayout.WindowLimitsFor(expanded: true, display, _preference.TopOffsetDip);
-        var limits = IslandLayout.WindowLimitsFor(_viewModel.IsExpandedLayout, display, _preference.TopOffsetDip);
+        var panel = IslandLayout.WindowLimitsFor(expanded: true, display, TopOffset, _style);
+        var limits = IslandLayout.WindowLimitsFor(_viewModel.IsExpandedLayout, display, TopOffset, _style);
         var content = _window.MeasureContent(new System.Windows.Size(panel.MaxWidth, panel.MaxHeight));
         var (width, height) = IslandLayout.Fit(limits, content.Width, content.Height);
         if (!_viewModel.IsExpandedLayout)
-            _window.HoldPill(_viewModel.IdleWidth, IslandLayout.IdleHeight);
+            _window.HoldPill(_viewModel.IdleWidth, _viewModel.IdleHeight);
         _window.ApplySize(limits, width, height);
-        var rect = IslandPlacement.PlaceTopCenter(display, width, height, _preference.TopOffsetDip);
+        var rect = IslandPlacement.PlaceTopCenter(display, width, height, TopOffset);
 
         var dpi = VisualTreeHelper.GetDpi(_window);
         var (left, top) = ToWindowOrigin(rect, dpi.DpiScaleX, dpi.DpiScaleY);

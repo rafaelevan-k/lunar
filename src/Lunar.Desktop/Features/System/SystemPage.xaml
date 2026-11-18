@@ -87,27 +87,40 @@
   <!-- FE-32: the page fits the island in normal use and in every single worst case; only when several long reasons and an error show at
        once does a scroll bar appear (as on the Converter and Usage pages), so nothing is ever cut off. -->
   <ScrollViewer x:Name="PageScroll" Margin="38,0,38,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-  <Grid>
+  <Grid x:Name="Layout">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
+    <!-- One column normally; in the open Notch the volume card and the radio cards stand side by side (SystemPage.ApplyLayout). -->
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="0" />
+      <ColumnDefinition Width="0" />
+    </Grid.ColumnDefinitions>
 
-    <!-- Date and time. -->
-    <StackPanel x:Name="Clock" Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,4" Background="Transparent"
-                ToolTip="{Binding TimeZoneText}"
-                automation:AutomationProperties.Name="{Binding ClockLabel}"
-                automation:AutomationProperties.HelpText="{Binding TimeZoneText}">
-      <TextBlock x:Name="Time" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Title}" Foreground="{DynamicResource Lunar.Brush.Accent}" />
-      <TextBlock x:Name="Date" Text="{Binding DateText}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Bottom" Margin="10,0,0,3" />
-    </StackPanel>
+    <!-- The clock line: the time, then the date, which is cut with an ellipsis rather than run under the Translate button at the right end. -->
+    <DockPanel x:Name="Header" Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,4" LastChildFill="True">
+      <!-- ADR-0028: translate what is on screen. The same as the shortcut and the tray item. -->
+      <c:IconButton x:Name="TranslateButton" DockPanel.Dock="Right" VerticalAlignment="Center" Width="28" Height="28" Margin="8,0,0,0" Glyph="&#xE8C1;"
+                    Label="{res:Text Translate.Button}" Command="{Binding TranslateCommand}" ToolTip="{res:Text Translate.Button}"
+                    Visibility="{Binding CanTranslate, Converter={StaticResource BoolToVisible}}" />
+      <DockPanel x:Name="Clock" Margin="2,0,0,0" Background="Transparent" LastChildFill="True"
+                 ToolTip="{Binding TimeZoneText}"
+                 automation:AutomationProperties.Name="{Binding ClockLabel}"
+                 automation:AutomationProperties.HelpText="{Binding TimeZoneText}">
+        <TextBlock x:Name="Time" DockPanel.Dock="Left" Text="{Binding TimeText}" Style="{DynamicResource Lunar.Text.Title}" Foreground="{DynamicResource Lunar.Brush.Accent}" />
+        <TextBlock x:Name="Date" Text="{Binding DateText}" Style="{DynamicResource Lunar.Text.Secondary}" VerticalAlignment="Bottom" Margin="10,0,0,3"
+                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+      </DockPanel>
+    </DockPanel>
 
     <!-- Volume and mute, and under it the brightness of the display the island is on (FE-32), in one card as Windows pairs them. -->
-    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,4" automation:AutomationProperties.Name="{res:Text X.Volume}">
-      <StackPanel>
-        <Grid>
+    <Border x:Name="VolumeCard" Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Card}" Margin="0,0,0,4" VerticalAlignment="Top" automation:AutomationProperties.Name="{res:Text X.Volume}">
+      <StackPanel x:Name="VolumeStack">
+        <Grid x:Name="VolumeRow">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -220,18 +233,22 @@
     </Border>
 
     <!-- Wi-Fi and Bluetooth. -->
-    <Grid Grid.Row="2">
+    <Grid x:Name="Radios" Grid.Row="2" Grid.ColumnSpan="3">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="6" />
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
       <ContentControl x:Name="WifiCard" Grid.Column="0" Content="{Binding Wifi}" Focusable="False" IsTabStop="False" VerticalAlignment="Top" />
       <ContentControl x:Name="BluetoothCard" Grid.Column="2" Content="{Binding Bluetooth}" Focusable="False" IsTabStop="False" VerticalAlignment="Top" />
     </Grid>
 
     <!-- One shared error line for the page: errors take no room while there is none, and never push the cards. -->
-    <c:InlineError x:Name="PageError" Grid.Row="3" Margin="0,4,0,0" MaxHeight="44" ClipToBounds="True" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
+    <c:InlineError x:Name="PageError" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,4,0,0" MaxHeight="44" ClipToBounds="True" Message="{Binding ErrorMessage}" DismissCommand="{Binding DismissErrorCommand}" />
   </Grid>
   </ScrollViewer>
 </UserControl>

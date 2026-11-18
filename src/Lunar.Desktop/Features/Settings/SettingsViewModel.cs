@@ -16,6 +16,9 @@ namespace Lunar.Desktop.Features.Settings;
 /// <summary>One choice in a group (a theme, a display): its words, whether it is the saved one, and what choosing it does.</summary>
 public sealed record SettingsChoice(string Label, bool IsSelected, ICommand Command);
 
+/// <summary>One island style in the picker (ADR-0027), with what its small picture shows.</summary>
+public sealed record IslandStyleChoice(string Label, bool IsSelected, ICommand Command, bool IsNotch);
+
 /// <summary>
 /// The Settings window's state (FE-23, ADR-0016). It shows what is saved, never what was clicked: every control asks through a command, the
 /// <see cref="SettingsService"/> saves, and the window changes only when the saved value does (so a failed save leaves everything as it was
@@ -39,6 +42,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private readonly CancellationTokenSource _lifetime = new();
 
     private IReadOnlyList<SettingsChoice> _themes = [];
+    private IReadOnlyList<IslandStyleChoice> _islandStyles = [];
     private IReadOnlyList<SettingsChoice> _languages = [];
     private readonly string _languageInUse = Strings.Culture.TwoLetterISOLanguageName;
     private IReadOnlyList<SettingsChoice> _monitors = [];
@@ -81,14 +85,15 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         ToggleEyesCommand = Save(s => s with { Appearance = s.Appearance with { EyeAnimationEnabled = !s.Appearance.EyeAnimationEnabled } }, lifetime);
         ToggleDiagnosticsCommand = Save(s => s with { Privacy = s.Privacy with { DiagnosticsEnabled = !s.Privacy.DiagnosticsEnabled } }, lifetime);
         ToggleUpdatesCommand = Save(s => s with { Updates = s.Updates with { Check = !s.Updates.Check } }, lifetime);
+        ToggleMediaPillCommand = Save(s => s with { Media = s.Media with { ShowInPill = !s.Media.ShowInPill } }, lifetime);
         OffsetUpCommand = Save(
             s => s with { Island = s.Island with { TopOffsetDip = Math.Min(SettingsRules.MaxTopOffsetDip, s.Island.TopOffsetDip + OffsetStep) } },
             lifetime,
-            () => TopOffset < SettingsRules.MaxTopOffsetDip);
+            () => TopOffset < SettingsRules.MaxTopOffsetDip && !OffsetIgnored);
         OffsetDownCommand = Save(
             s => s with { Island = s.Island with { TopOffsetDip = Math.Max(SettingsRules.MinTopOffsetDip, s.Island.TopOffsetDip - OffsetStep) } },
             lifetime,
-            () => TopOffset > SettingsRules.MinTopOffsetDip);
+            () => TopOffset > SettingsRules.MinTopOffsetDip && !OffsetIgnored);
         ChooseFolderCommand = new AsyncRelayCommand(ChooseFolderAsync, () => !IsReadOnly, OnFault, lifetime);
         ClearFolderCommand = Save(s => s with { Conversion = s.Conversion with { OutputDirectory = null } }, lifetime, () => HasOutputFolder);
         AskResetCommand = new RelayCommand(() =>
@@ -145,10 +150,18 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>Lunar asks GitHub once a day for a newer version (ADR-0025).</summary>
     public bool UpdatesEnabled => _settings.Current.Updates.Check;
 
+    /// <summary>The collapsed island shows the playing track (ADR-0026).</summary>
+    public bool MediaPillEnabled => _settings.Current.Media.ShowInPill;
+
     /// <summary>The update line and its buttons (FE-38), shared with the pop-up; null in tests that do not need it.</summary>
     public UpdatePromptViewModel? Updates => _updates;
 
     public bool HasUpdates => _updates is not null;
+
+    /// <summary>The Translation card (ADR-0028), when screen translation is wired in.</summary>
+    public Lunar.Desktop.Features.Translate.TranslationSettingsViewModel? Translation { get; init; }
+
+    public bool HasTranslation => Translation is not null;
 
     /// <summary>True when the saved diagnostics choice is not what this run is using yet.</summary>
     public bool DiagnosticsNeedsRestart => DiagnosticsEnabled != _diagnosticsInUse;
@@ -176,6 +189,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     public bool HasScreenSharingLine => _capture is not null;
 
     public IReadOnlyList<SettingsChoice> Themes => _themes;
+
+    /// <summary>Pill or Notch (ADR-0027).</summary>
+    public IReadOnlyList<IslandStyleChoice> IslandStyles => _islandStyles;
+
+    /// <summary>The Notch sits at the top edge, so the distance setting is kept but does not apply (ADR-0027 §2).</summary>
+    public bool OffsetIgnored => _settings.Current.Appearance.IslandStyle == IslandStyle.Notch;
 
     /// <summary>The language choices (ADR-0017): follow Windows, English, Bahasa Indonesia.</summary>
     public IReadOnlyList<SettingsChoice> Languages => _languages;
@@ -205,6 +224,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ToggleDiagnosticsCommand { get; }
 
     public ICommand ToggleUpdatesCommand { get; }
+
+    public ICommand ToggleMediaPillCommand { get; }
 
     public ICommand OffsetUpCommand { get; }
 
@@ -349,6 +370,10 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
         Changed();
     });
 
+    private IslandStyleChoice Style(string label, IslandStyle style, LunarSettings current) =>
+        new(label, current.Appearance.IslandStyle == style,
+            Save(s => s with { Appearance = s.Appearance with { IslandStyle = style } }, _lifetime.Token), style == IslandStyle.Notch);
+
     private void Rebuild()
     {
         var current = _settings.Current;
@@ -357,6 +382,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
             Theme(Strings.Get("Settings.ThemeMatch"), ThemePreference.System, current),
             Theme(Strings.Get("Settings.ThemeDark"), ThemePreference.Dark, current),
             Theme(Strings.Get("Settings.ThemeLight"), ThemePreference.Light, current)
+        ];
+        _islandStyles =
+        [
+            Style(Strings.Get("Settings.StylePill"), IslandStyle.Pill, current),
+            Style(Strings.Get("Settings.StyleNotch"), IslandStyle.Notch, current)
         ];
         _languages =
         [
@@ -400,7 +430,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged, IDisposable
     private void Changed()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty)); // every property: the window is small
-        foreach (var command in new[] { OffsetUpCommand, OffsetDownCommand, ClearFolderCommand, ConfirmResetCommand, ChooseFolderCommand, ToggleReduceMotionCommand, ToggleEyesCommand, ToggleDiagnosticsCommand, ToggleUpdatesCommand })
+        foreach (var command in new[] { OffsetUpCommand, OffsetDownCommand, ClearFolderCommand, ConfirmResetCommand, ChooseFolderCommand, ToggleReduceMotionCommand, ToggleEyesCommand, ToggleDiagnosticsCommand, ToggleUpdatesCommand, ToggleMediaPillCommand })
             ((AsyncRelayCommand)command).NotifyCanExecuteChanged();
 
         ((RelayCommand)AskResetCommand).NotifyCanExecuteChanged();

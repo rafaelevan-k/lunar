@@ -69,6 +69,19 @@ public sealed class IslandShellView : Grid, IDisposable
 
     public SwiperView Swiper { get; }
 
+    /// <summary>
+    /// The outline changed (ADR-0027): the strip above the pages is the collapsed pill's height inside its border, what the collapsed island shows keeps
+    /// clear of the Notch's shoulders, and the open Notch shows its pages as tabs along the top. UI thread only.
+    /// </summary>
+    public void SetStyle(Lunar.Application.Settings.Models.IslandStyle style, double idleHeight, Thickness border)
+    {
+        var notch = style == Lunar.Application.Settings.Models.IslandStyle.Notch;
+        RowDefinitions[0].Height = new GridLength(Math.Max(0, idleHeight - border.Top - border.Bottom));
+        var inset = notch ? IslandOutline.Shoulder + 4 : 0;
+        _idleActivity.Margin = new Thickness(inset, 0, inset, 0);
+        Swiper.SetNotchChrome(notch);
+    }
+
     /// <summary>The motion setting changed (ADR-0016): the shell, its pages and every control below follow it at once. UI thread only.</summary>
     public void SetReduceMotion(bool reduceMotion)
     {

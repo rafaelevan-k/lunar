@@ -214,6 +214,18 @@ public sealed class IslandActivityTests
             Settle();
         }
 
+        public void UseStyle(Lunar.Application.Settings.Models.IslandStyle style)
+        {
+            IslandStyleApplier.Apply(style, Island, Shell, Window, Position);
+            Settle();
+        }
+
+        public void WaitForPillSize(double width, double height)
+        {
+            Pump(() => Math.Abs(PillBorder.ActualWidth - width) < 0.5 && Math.Abs(PillBorder.ActualHeight - height) < 0.5 && !PillBorder.HasAnimatedProperties);
+            Settle();
+        }
+
         public void WaitForPillWidth(double width)
         {
             Pump(() => Math.Abs(PillBorder.ActualWidth - width) < 0.5 && !PillBorder.HasAnimatedProperties);
@@ -641,5 +653,167 @@ public sealed class IslandActivityTests
         public void Write(DiagnosticEvent diagnosticEvent)
         {
         }
+    }
+
+    // ---- FE-40 (ADR-0027): the Notch style ------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheNotchOutlineIsFlatOnTopWithShouldersAndRoundedBelow()
+    {
+        var outline = IslandOutline.Notch(160, 44, shoulders: true)!;
+        Assert.True(outline.FillContains(new Point(4, 0.5)));         // the shoulder flares out along the top edge, into the screen's edge
+        Assert.True(outline.FillContains(new Point(156, 0.5)));
+        Assert.False(outline.FillContains(new Point(0.5, 4)));       // and thins to nothing at the very corner
+        Assert.False(outline.FillContains(new Point(1, 20)));         // below the shoulder the side is set in
+        Assert.False(outline.FillContains(new Point(159, 20)));
+        Assert.True(outline.FillContains(new Point(80, 43)));
+        Assert.False(outline.FillContains(new Point(8.5, 43.5)));     // the bottom corners are round
+        Assert.True(outline.FillContains(new Point(10, 20)));         // the content area starts right at the shoulder
+        Assert.Null(IslandOutline.Notch(0, 44, true));
+        Assert.Equal(new CornerRadius(0, 0, 13.2, 13.2), (CornerRadius)new NotchRadiusConverter().Convert(44d, typeof(CornerRadius), null, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(IslandOutline.MaxBottomRadius, IslandOutline.NotchBottomRadius(320));
+    }
+
+    [Fact]
+    public void TheNotchIsWiderAndShorterAtTheTopEdgeAndThePillGoesBack() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        var floating = rig.Window.Top;
+        Assert.True(floating > 100); // the rig's offset is 300 DIP
+
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Notch);
+        Assert.InRange(rig.Window.Top, -1, 1);
+        rig.WaitForPillSize(IslandLayout.NotchIdleWidth, IslandLayout.NotchIdleHeight);
+        Assert.NotNull(rig.PillBorder.Clip);
+        Assert.Equal(new Thickness(0), rig.PillBorder.BorderThickness);
+        Assert.Equal(0, rig.PillBorder.CornerRadius.TopLeft);
+        Assert.True(rig.PillBorder.CornerRadius.BottomLeft > 0);
+        Assert.True(rig.Eyes.ActualHeight <= IslandLayout.NotchIdleHeight); // the eyes sit inside the shorter strip
+
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Pill);
+        Assert.InRange(rig.Window.Top, floating - 0.5, floating + 0.5); // one physical pixel of rounding at most
+        rig.WaitForPillSize(IslandLayout.IdleWidth, IslandLayout.IdleHeight);
+        Assert.Null(rig.PillBorder.Clip);
+        Assert.Equal(22, rig.PillBorder.CornerRadius.TopLeft);
+    });
+
+    [Fact]
+    public void TheOpenNotchIsAWidePanelWithTabsInsteadOfArrowsAndDots() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Notch);
+        rig.Expand();
+        Assert.True(rig.Window.ActualWidth >= IslandLayout.NotchExpandedMinWidth - 1);
+        Assert.True(rig.Shell.Swiper.ShowsTabs);
+        Assert.False(((FrameworkElement)rig.Shell.Swiper.FindName("PreviousButton")).IsVisible);
+        Assert.False(((FrameworkElement)rig.Shell.Swiper.FindName("NextButton")).IsVisible);
+        Assert.False(((FrameworkElement)rig.Shell.Swiper.FindName("Dots")).IsVisible);
+        Assert.Equal(IslandOutline.MaxBottomRadius, rig.PillBorder.CornerRadius.BottomLeft);
+
+        // A tab changes the page, like a dot did.
+        var tabs = (Panel)rig.Shell.Swiper.FindName("Tabs");
+        ((System.Windows.Controls.Primitives.ToggleButton)tabs.Children[2]).IsChecked = true;
+        rig.Settle();
+        Assert.Equal(2, rig.Shell.Swiper.SelectedIndex);
+
+        rig.Collapse();
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Pill);
+        rig.Expand();
+        Assert.False(rig.Shell.Swiper.ShowsTabs);
+        Assert.True(((FrameworkElement)rig.Shell.Swiper.FindName("NextButton")).IsVisible);
+    });
+
+    [Fact]
+    public void EveryActivityFitsTheNotchAndFastCyclesStayInside() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Notch);
+
+        rig.StartRecording();
+        rig.WaitForPillSize(IslandLayout.NotchRecordingIdleWidth, IslandLayout.NotchIdleHeight);
+        var pause = (FrameworkElement)rig.Pill.FindName("PauseButton");
+        var at = pause.TranslatePoint(new Point(0, 0), rig.PillBorder);
+        Assert.True(at.X >= IslandOutline.Shoulder, $"Pause starts at {at.X}");
+        Assert.True(at.Y >= 0 && at.Y + pause.ActualHeight <= IslandLayout.NotchIdleHeight, $"Pause is {pause.ActualHeight} high at {at.Y}");
+        var time = (FrameworkElement)rig.Pill.FindName("ElapsedText");
+        var timeAt = time.TranslatePoint(new Point(time.ActualWidth, 0), rig.PillBorder);
+        Assert.True(timeAt.X <= rig.PillBorder.ActualWidth - IslandOutline.Shoulder, $"The time ends at {timeAt.X}");
+        rig.StopRecording();
+        rig.WaitForPillSize(IslandLayout.NotchIdleWidth, IslandLayout.NotchIdleHeight);
+
+        rig.StartFocus();
+        rig.WaitForPillSize(IslandLayout.NotchIdleWidth, IslandLayout.NotchIdleHeight);
+        var digits = rig.Countdown.TranslatePoint(new Point(0, 0), rig.PillBorder);
+        Assert.InRange(digits.Y + (rig.Countdown.ActualHeight / 2), (IslandLayout.NotchIdleHeight / 2) - 2, (IslandLayout.NotchIdleHeight / 2) + 2); // centred
+        rig.RunFocus(ct => rig.FocusService.StopAsync(), () => !rig.Focus.IsActive);
+
+        rig.Expand();
+        rig.Collapse();
+        var left = rig.Window.Left; // after one full measure in this style
+        for (var i = 0; i < 20; i++)
+        {
+            rig.Expand();
+            Assert.Equal(left, rig.Window.Left);
+            Assert.InRange(Math.Abs(rig.PillBorder.ActualWidth - rig.PillBorder.Clip!.Bounds.Width), 0, 1);
+            rig.Collapse();
+            Assert.InRange(Math.Abs(rig.PillBorder.ActualHeight - rig.PillBorder.Clip!.Bounds.Height), 0, 1);
+        }
+
+        Assert.Equal(left, rig.Window.Left); // never moves sideways (FE-33), in this style too
+    });
+
+    [Fact]
+    public void RendersTheNotchStatesForReview()
+    {
+        var dir = System.Environment.GetEnvironmentVariable("LUNAR_RENDER_DIR");
+        if (string.IsNullOrEmpty(dir))
+            Assert.Skip("Renders PNGs for a person to look at; set LUNAR_RENDER_DIR to a folder to run it.");
+        RunOnSta(() => Render(dir));
+    }
+
+    private static void Render(string dir)
+    {
+        using var rig = new Rig();
+        void Shot(string name)
+        {
+            var until = DateTime.UtcNow.AddMilliseconds(500);
+            while (DateTime.UtcNow < until)
+            {
+                Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
+                Thread.Sleep(10);
+            }
+
+            rig.Settle();
+            var w = (int)Math.Ceiling(rig.Window.ActualWidth);
+            var h = (int)Math.Ceiling(rig.Window.ActualHeight);
+            var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(w * 2, h * 2, 192, 192, System.Windows.Media.PixelFormats.Pbgra32);
+            var bg = new System.Windows.Shapes.Rectangle { Width = w, Height = h, Fill = System.Windows.Media.Brushes.LightSteelBlue };
+            bg.Measure(new Size(w, h));
+            bg.Arrange(new Rect(0, 0, w, h));
+            bmp.Render(bg);
+            bmp.Render((System.Windows.Media.Visual)rig.Window.Content);
+            var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+            using var f = File.Create(System.IO.Path.Combine(dir, name + ".png"));
+            enc.Save(f);
+        }
+
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Notch);
+        rig.WaitForPillSize(IslandLayout.NotchIdleWidth, IslandLayout.NotchIdleHeight);
+        Shot("1-notch-eyes");
+        rig.StartRecording();
+        rig.WaitForPillSize(IslandLayout.NotchRecordingIdleWidth, IslandLayout.NotchIdleHeight);
+        Shot("2-notch-recording");
+        rig.StopRecording();
+        rig.StartFocus();
+        rig.WaitForPillSize(IslandLayout.NotchIdleWidth, IslandLayout.NotchIdleHeight);
+        Shot("3-notch-focus");
+        rig.RunFocus(ct => rig.FocusService.StopAsync(), () => !rig.Focus.IsActive);
+        rig.Expand();
+        Shot("4-notch-expanded");
+        rig.Collapse();
+        rig.UseStyle(Lunar.Application.Settings.Models.IslandStyle.Pill);
+        rig.Expand();
+        Shot("5-pill-expanded");
     }
 }

@@ -5,6 +5,6 @@ rem PowerShell 7 (pwsh) is used when installed, otherwise the Windows PowerShell
 rem is bypassed for this one run only; no Windows setting is changed. The exit code is passed back.
 setlocal
 set "LUNAR_PS=powershell.exe"
-where pwsh.exe >/dev/null 2>/dev/null && set "LUNAR_PS=pwsh.exe"
+where pwsh.exe >nul 2>nul && set "LUNAR_PS=pwsh.exe"
 "%LUNAR_PS%" -NoProfile -ExecutionPolicy Bypass -File "%~dp0package-installer.ps1" %*
 exit /b %ERRORLEVEL%

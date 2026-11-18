@@ -22,6 +22,7 @@ internal sealed class SettingsWindowLauncher : IDisposable
     private readonly StartupSwitch? _startup;
     private readonly CaptureExclusionGuard? _capture;
     private readonly Lunar.Desktop.Features.Updates.UpdatePromptViewModel? _updates;
+    private readonly Lunar.Desktop.Features.Translate.TranslationSettingsViewModel? _translation;
     private SettingsWindow? _window;
     private SettingsViewModel? _model;
     private bool _disposed;
@@ -36,8 +37,10 @@ internal sealed class SettingsWindowLauncher : IDisposable
         bool interactive = true,
         StartupSwitch? startup = null,
         CaptureExclusionGuard? capture = null,
-        Lunar.Desktop.Features.Updates.UpdatePromptViewModel? updates = null)
+        Lunar.Desktop.Features.Updates.UpdatePromptViewModel? updates = null,
+        Lunar.Desktop.Features.Translate.TranslationSettingsViewModel? translation = null)
     {
+        _translation = translation;
         _settings = settings;
         _environment = environment;
         _folders = folders;
@@ -68,7 +71,7 @@ internal sealed class SettingsWindowLauncher : IDisposable
             return;
         }
 
-        _model = new SettingsViewModel(_settings, _environment, _folders, _post, _diagnosticsInUse, _log, _startup, _capture, _updates);
+        _model = new SettingsViewModel(_settings, _environment, _folders, _post, _diagnosticsInUse, _log, _startup, _capture, _updates) { Translation = _translation };
         _window = new SettingsWindow { DataContext = _model };
         _capture?.Attach(_window); // hidden from screen sharing before it is shown (ADR-0019)
         _window.Closed += OnClosed;

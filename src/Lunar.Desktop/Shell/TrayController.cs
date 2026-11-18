@@ -25,7 +25,7 @@ internal sealed class TrayController : IDisposable
     /// <param name="openSettings">Opens the Settings window; when null the item stays disabled and says so.</param>
     /// <param name="startup">The shared Start with Windows switch; when null the item stays disabled and says so.</param>
     internal TrayController(Action open, Action exit, bool visible = true, Action? openSettings = null,
-        Features.Settings.StartupSwitch? startup = null)
+        Features.Settings.StartupSwitch? startup = null, Action? translate = null)
     {
         _open = open;
         _exit = exit;
@@ -54,6 +54,13 @@ internal sealed class TrayController : IDisposable
         _menu = new Forms.ContextMenuStrip { ShowItemToolTips = true };
         _menu.Opening += OnMenuOpening;
         _menu.Items.AddRange([OpenItem, SettingsItem, StartupItem, new Forms.ToolStripSeparator(), ExitItem]);
+        if (translate is not null)
+        {
+            // ADR-0028 §1: the tray is one of the three ways to ask for a screen translation.
+            TranslateItem = new Forms.ToolStripMenuItem(Strings.Get("Tray.Translate"));
+            TranslateItem.Click += (_, _) => translate();
+            _menu.Items.Insert(1, TranslateItem);
+        }
 
         _icon = new Forms.NotifyIcon { Icon = _iconImage, Text = "Lunar", ContextMenuStrip = _menu };
         _icon.MouseClick += OnIconClick;
@@ -63,6 +70,9 @@ internal sealed class TrayController : IDisposable
     internal bool IsDisposed { get; private set; }
 
     internal Forms.ToolStripMenuItem OpenItem { get; }
+
+    /// <summary>"Translate screen" (ADR-0028), when translation is wired in.</summary>
+    internal Forms.ToolStripMenuItem? TranslateItem { get; }
 
     internal Forms.ToolStripMenuItem SettingsItem { get; }
 

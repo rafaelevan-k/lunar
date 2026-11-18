@@ -81,13 +81,19 @@
     </Style>
   </UserControl.Resources>
 
-  <Grid Margin="40,4,40,6">
+  <Grid x:Name="Layout" Margin="40,4,40,6">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
+    <!-- One column normally; in the open Notch the step stays at the left and its actions stand at the right (ConverterPage.ApplyLayout). -->
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="0" />
+      <ColumnDefinition Width="0" />
+    </Grid.ColumnDefinitions>
 
-    <ScrollViewer x:Name="PageScroll" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+    <ScrollViewer x:Name="PageScroll" Grid.Row="0" Grid.ColumnSpan="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
       <StackPanel Margin="0,0,6,4">
 
         <StackPanel x:Name="FilesStep" Visibility="{Binding IsFilesStep, Converter={StaticResource BoolToVisible}}">
@@ -125,7 +131,7 @@
             <StackPanel x:Name="EmptyFace" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12"
                         Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisible}}"
                         automation:AutomationProperties.Name="{res:Text X.NoFilesYetDropFiles}">
-              <TextBlock Text="&#xE8E5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28" HorizontalAlignment="Center"
+              <TextBlock x:Name="EmptyIcon" Text="&#xE8E5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="28" HorizontalAlignment="Center"
                          Foreground="{DynamicResource Lunar.Brush.Accent}" />
               <TextBlock Text="{res:Text X.DropFilesHere}" Style="{DynamicResource Lunar.Text.Subtitle}" HorizontalAlignment="Center" Margin="0,6,0,0" />
               <TextBlock Text="{res:Text X.PNGJPGJPEGDOCXAnd}" Style="{DynamicResource Lunar.Text.Secondary}"
@@ -263,7 +269,8 @@
         </StackPanel>
         <TextBlock x:Name="TweaksSummaryText" Text="{Binding TweaksSummary}" Style="{DynamicResource Lunar.Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,4" />
         <StackPanel x:Name="TweaksFold" DataContext="{Binding Options}" Margin="0,4,0,0">
-          <StackPanel x:Name="OptionsPanel">
+          <!-- One option block per row in the Pill; two side by side in the open Notch (ConverterPage.UpdateOptionWidth). -->
+          <WrapPanel x:Name="OptionsPanel" Orientation="Horizontal">
             <StackPanel x:Name="QualityBlock" Visibility="{Binding ShowQuality, Converter={StaticResource BoolToVisible}}">
               <TextBlock x:Name="QualityLabel" Text="{Binding QualityText}" Style="{StaticResource OptionLabel}" />
               <Slider Minimum="1" Maximum="100" Value="{Binding JpegQuality, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="10"
@@ -302,27 +309,31 @@
             </StackPanel>
 
             <!-- If a result's name is taken. -->
-            <TextBlock Text="{res:Text X.IfAResultSName}" Style="{StaticResource OptionLabel}" />
-            <ItemsControl ItemsSource="{Binding Collisions.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
-            <TextBlock x:Name="OverwriteWarning" Text="{res:Text X.ExistingResultsWithTheSame}"
-                       Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding ShowOverwriteWarning, Converter={StaticResource BoolToVisible}}" />
-          </StackPanel>
-        </StackPanel>
+            <StackPanel x:Name="CollisionBlock">
+              <TextBlock Text="{res:Text X.IfAResultSName}" Style="{StaticResource OptionLabel}" />
+              <ItemsControl ItemsSource="{Binding Collisions.Options}" ItemTemplate="{StaticResource ChoiceButton}" ItemsPanel="{StaticResource WrapPanelTemplate}" Focusable="False" />
+              <TextBlock x:Name="OverwriteWarning" Text="{res:Text X.ExistingResultsWithTheSame}"
+                         Style="{DynamicResource Lunar.Text.Error}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding ShowOverwriteWarning, Converter={StaticResource BoolToVisible}}" />
+            </StackPanel>
 
-        <!-- Where the results go (also part of the tweaks; always visible so there is never a doubt). -->
-        <TextBlock Text="{res:Text X.SaveResultsIn}" Style="{StaticResource OptionLabel}" Margin="0,10,0,4" />
-        <DockPanel>
-          <Button x:Name="FolderButton" DockPanel.Dock="Right" Content="{res:Text X.Change}" Command="{Binding ChooseFolderCommand}" Margin="8,0,0,0"
-                  Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ChooseTheFolderForThe}" />
-          <TextBlock x:Name="FolderText" Text="{Binding OutputFolder}" ToolTip="{Binding OutputFolder}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis"
-                     VerticalAlignment="Center" />
-        </DockPanel>
+            <!-- Where the results go (also part of the tweaks; always visible so there is never a doubt). It follows the page, not the options. -->
+            <StackPanel x:Name="FolderBlock" DataContext="{Binding DataContext, ElementName=TweaksStep}">
+              <TextBlock Text="{res:Text X.SaveResultsIn}" Style="{StaticResource OptionLabel}" />
+              <DockPanel>
+                <Button x:Name="FolderButton" DockPanel.Dock="Right" Content="{res:Text X.Change}" Command="{Binding ChooseFolderCommand}" Margin="8,0,0,0"
+                        Style="{DynamicResource Lunar.Style.ActionButton}" automation:AutomationProperties.Name="{res:Text X.ChooseTheFolderForThe}" />
+                <TextBlock x:Name="FolderText" Text="{Binding OutputFolder}" ToolTip="{Binding OutputFolder}" Style="{DynamicResource Lunar.Text.Body}" TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" />
+              </DockPanel>
+            </StackPanel>
+          </WrapPanel>
+        </StackPanel>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>
 
     <!-- The bottom bar stays while the steps scroll: the replace question when it is needed, the big Convert button, and why it cannot start when it cannot. -->
-    <StackPanel Grid.Row="1" Margin="0,6,0,0">
+    <StackPanel x:Name="Actions" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,6,0,0">
       <Border x:Name="OverwriteConfirm" Margin="0,0,0,6" Padding="8" CornerRadius="14" BorderThickness="1" BorderBrush="{DynamicResource Lunar.Brush.Error}"
               Background="{DynamicResource Lunar.Brush.Surface}" Visibility="{Binding IsConfirmingOverwrite, Converter={StaticResource BoolToVisible}}"
               automation:AutomationProperties.LiveSetting="Assertive">
@@ -337,11 +348,13 @@
         </StackPanel>
       </Border>
 
-      <!-- One primary action per step: Next, Next, Convert, and Convert more once the conversions are shown. Back is always a quiet button beside it. -->
-      <Grid>
+      <!-- One primary action per step: Next, Next, Convert, and Convert more once the conversions are shown. Back is always a quiet button beside it.
+           In the open Notch the hint joins this row at its left, so the actions take one short row (ConverterPage.ApplyLayout). -->
+      <Grid x:Name="ActionRow">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="0" />
         </Grid.ColumnDefinitions>
         <Button x:Name="BackButton" Grid.Column="0" Content="{res:Text X.Back}" Command="{Binding BackCommand}" Margin="0,0,8,0" Style="{DynamicResource Lunar.Style.ActionButton}"
                 Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisible}}" automation:AutomationProperties.Name="{res:Text X.GoBackOneStep}" />

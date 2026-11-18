@@ -81,7 +81,7 @@ public sealed class SystemPageTests
 
     // The brightness card is part of the page as in the app (FE-32), so every layout test here covers it; null leaves it out.
     private static Rig Create(string colors = "Colors.Dark.xaml", bool start = true, Action<FakeVolumeService, FakeWifiService, FakeBluetoothService>? arrange = null,
-        Lunar.Application.System.Models.BrightnessState? brightness = null, bool withBrightness = true)
+        Lunar.Application.System.Models.BrightnessState? brightness = null, bool withBrightness = true, ICommand? translate = null)
     {
         var volume = new FakeVolumeService();
         var wifi = new FakeWifiService();
@@ -101,7 +101,7 @@ public sealed class SystemPageTests
                 () => "DISPLAY1", new Launcher(), post, new ManualTimer());
         }
 
-        var model = new SystemPageViewModel(volume, wifi, bluetooth, new Clock(), new Launcher(), post) { Brightness = card };
+        var model = new SystemPageViewModel(volume, wifi, bluetooth, new Clock(), new Launcher(), post) { Brightness = card, TranslateCommand = translate };
         var page = new SystemPage { DataContext = model };
         var window = new Window { Width = PageWidth, Height = PageHeight, Content = page, WindowStyle = WindowStyle.None, ShowActivated = false, ShowInTaskbar = false };
         window.Resources.MergedDictionaries.Add(Load("Themes", colors));
@@ -913,7 +913,7 @@ public sealed class SystemPageTests
     public void TheClockIsOneAccessibleItemAndTheZoneIsItsTooltip() => RunOnSta(() =>
     {
         using var rig = Create();
-        var clock = Named<StackPanel>(rig, "Clock");
+        var clock = Named<FrameworkElement>(rig, "Clock");
 
         Assert.Equal("2:05 PM, Wednesday, November 4, 2026", AutomationProperties.GetName(clock));
         Assert.Equal(TimeZoneInfo.Utc.StandardName, AutomationProperties.GetHelpText(clock));
@@ -990,4 +990,88 @@ public sealed class SystemPageTests
             Lunar.Desktop.Resources.Strings.Use("en");
         }
     });
+
+    // 2026-11-18, the owner: in the open Notch the System page must fit without scrolling, tidy and easy to use. The Notch's page area is 648 by 228 DIP
+    // (a 680 by 310 panel less the sides, the eyes strip, the tabs and the bottom margin). The Pill keeps its one column.
+    [Fact]
+    public void InTheOpenNotchThePageFitsWithoutScrollingRadiosFirst() => RunOnSta(() =>
+    {
+        using var rig = Create(translate: new Lunar.Desktop.Shell.RelayCommand(() => { }));
+        rig.Window.Width = 648;
+        rig.Window.Height = 228;
+        Lunar.Desktop.Navigation.CompactLayout.SetIsCompact(rig.Page, true);
+        Settle(rig.Window);
+
+        Assert.True(rig.Page.IsCompact);
+        var scroll = (ScrollViewer)rig.Page.FindName("PageScroll");
+        Assert.True(scroll.ExtentHeight <= scroll.ViewportHeight + 0.5, $"needs {scroll.ExtentHeight} in {scroll.ViewportHeight}");
+        var volume = (FrameworkElement)rig.Page.FindName("VolumeCard");
+        var wifi = (FrameworkElement)rig.Page.FindName("WifiCard");
+        var bluetooth = (FrameworkElement)rig.Page.FindName("BluetoothCard");
+        var volumeAt = volume.TranslatePoint(new Point(0, 0), rig.Page);
+        var wifiAt = wifi.TranslatePoint(new Point(0, 0), rig.Page);
+        var bluetoothAt = bluetooth.TranslatePoint(new Point(0, 0), rig.Page);
+        // The owner's drawing: Wi-Fi | Bluetooth on one row, then one wide card with brightness above volume.
+        Assert.Equal(wifiAt.Y, bluetoothAt.Y, 1);
+        Assert.True(bluetoothAt.X > wifiAt.X + wifi.ActualWidth, "Bluetooth stands beside Wi-Fi");
+        Assert.True(volumeAt.Y > wifiAt.Y + wifi.ActualHeight, "the card is under Wi-Fi and Bluetooth");
+        Assert.Equal(rig.Page.ActualWidth - 80, volume.ActualWidth, 1); // the page's 40 DIP side room, as on the other pages
+        var brightnessRow = (FrameworkElement)rig.Page.FindName("BrightnessRow");
+        var mute = (FrameworkElement)rig.Page.FindName("MuteButton");
+        Assert.True(brightnessRow.TranslatePoint(new Point(0, 0), rig.Page).Y < mute.TranslatePoint(new Point(0, 0), rig.Page).Y, "brightness above volume");
+        var clock = (FrameworkElement)rig.Page.FindName("Clock");
+        var clockCentre = clock.TranslatePoint(new Point(clock.ActualWidth / 2, 0), rig.Page).X;
+        Assert.InRange(clockCentre, (rig.Page.ActualWidth / 2) - 1, (rig.Page.ActualWidth / 2) + 1); // the time and date in the middle
+        Render(rig, "8-system-notch");
+
+        rig.Window.Width = 380;
+        rig.Window.Height = 300;
+        Lunar.Desktop.Navigation.CompactLayout.SetIsCompact(rig.Page, false);
+        Settle(rig.Window);
+        Assert.False(rig.Page.IsCompact);
+        Assert.Equal(volume.TranslatePoint(new Point(0, 0), rig.Page).X, wifi.TranslatePoint(new Point(0, 0), rig.Page).X, 1); // one column again
+        Assert.True(wifi.TranslatePoint(new Point(0, 0), rig.Page).Y > volume.TranslatePoint(new Point(0, 0), rig.Page).Y, "the Pill keeps the volume card first");
+        Assert.True(((FrameworkElement)rig.Page.FindName("BrightnessRow")).TranslatePoint(new Point(0, 0), rig.Page).Y
+            > ((FrameworkElement)rig.Page.FindName("MuteButton")).TranslatePoint(new Point(0, 0), rig.Page).Y, "and volume above brightness");
+        Render(rig, "9-system-pill");
+    });
+
+    // 2026-11-18, the owner: the Translate button in the Pill was untidy. It now sits on the clock's line, the same size as the clock is tall, with the
+    // card edge at its right.
+    [Fact]
+    public void TheTranslateButtonSitsOnTheClocksLineAtTheCardsEdge() => RunOnSta(() =>
+    {
+        using var rig = Create(translate: new Lunar.Desktop.Shell.RelayCommand(() => { }));
+        rig.Window.Height = 300;
+        Settle(rig.Window);
+        var button = (FrameworkElement)rig.Page.FindName("TranslateButton");
+        var clock = (FrameworkElement)rig.Page.FindName("Time");
+        var volume = (FrameworkElement)rig.Page.FindName("VolumeCard");
+        var buttonAt = button.TranslatePoint(new Point(0, 0), rig.Page);
+        var clockAt = clock.TranslatePoint(new Point(0, 0), rig.Page);
+        var cardRight = volume.TranslatePoint(new Point(volume.ActualWidth, 0), rig.Page).X;
+        Assert.True(button.IsVisible);
+        Assert.InRange(buttonAt.Y + (button.ActualHeight / 2), clockAt.Y + (clock.ActualHeight / 2) - 3, clockAt.Y + (clock.ActualHeight / 2) + 3);
+        Assert.Equal(cardRight, buttonAt.X + button.ActualWidth, 1);
+        Assert.True(buttonAt.Y + button.ActualHeight <= volume.TranslatePoint(new Point(0, 0), rig.Page).Y, "the button does not overlap the card");
+    });
+
+    private static void Render(Rig rig, string name)
+    {
+        var dir = System.Environment.GetEnvironmentVariable("LUNAR_RENDER_DIR");
+        if (string.IsNullOrEmpty(dir))
+            return;
+        var w = (int)rig.Window.ActualWidth;
+        var h = (int)rig.Window.ActualHeight;
+        var bmp = new RenderTargetBitmap(w * 2, h * 2, 192, 192, PixelFormats.Pbgra32);
+        var back = new System.Windows.Shapes.Rectangle { Width = w, Height = h, Fill = new SolidColorBrush(Color.FromRgb(11, 12, 16)) };
+        back.Measure(new Size(w, h));
+        back.Arrange(new Rect(0, 0, w, h));
+        bmp.Render(back);
+        bmp.Render(rig.Page);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bmp));
+        using var file = File.Create(System.IO.Path.Combine(dir, name + ".png"));
+        encoder.Save(file);
+    }
 }

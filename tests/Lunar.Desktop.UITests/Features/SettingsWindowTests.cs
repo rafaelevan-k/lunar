@@ -203,8 +203,12 @@ public sealed class SettingsWindowTests
     {
         using var rig = new Rig();
 
-        Assert.Empty(Descendants<TextBox>(rig.Window));
-        Assert.Empty(Descendants<PasswordBox>(rig.Window));
+        // ADR-0028 is the one reviewed exception: the Translation card needs the user's key region and a shortcut, typed. Everything else stays a choice.
+        var translationCard = rig.Named<Border>("TranslationCard");
+        Assert.Equal(["TranslationRegion", "TranslationShortcut", "TranslationSignUp"],
+            Descendants<TextBox>(rig.Window).Select(t => t.Name).Order(StringComparer.Ordinal));
+        Assert.All(Descendants<TextBox>(rig.Window), t => Assert.Contains(t, Descendants<TextBox>(translationCard)));
+        Assert.Equal(["TranslationKeyBox"], Descendants<PasswordBox>(rig.Window).Select(p => p.Name)); // the key, masked, cleared after saving
         Assert.Empty(Descendants<ComboBox>(rig.Window));
     });
 
@@ -591,7 +595,8 @@ public sealed class SettingsWindowTests
         Assert.Equal("Lunar is hidden from screen sharing, screenshots and recordings. This is always on.", line.Text);
         Assert.False(rig.Model.ScreenSharingRefused);
         Assert.DoesNotContain(Descendants<ButtonBase>(rig.Window), b =>
-            NameOf(b).Contains("screen", StringComparison.OrdinalIgnoreCase) || NameOf(b).Contains("capture", StringComparison.OrdinalIgnoreCase));
+            (NameOf(b).Contains("screen", StringComparison.OrdinalIgnoreCase) && !NameOf(b).Contains("translat", StringComparison.OrdinalIgnoreCase)) // ADR-0028's switch is not about sharing
+            || NameOf(b).Contains("capture", StringComparison.OrdinalIgnoreCase));
     });
 
     [Fact]
@@ -815,6 +820,32 @@ public sealed class SettingsWindowTests
         finally
         {
             Lunar.Desktop.Resources.Strings.Use("en");
+        }
+    });
+
+    // 2026-11-18, the owner: the Settings window in a soft black and white instead of near-black with pure white.
+    [Fact]
+    public void TheWindowUsesTheSoftPaletteOverTheLunarOne() => RunOnSta(() =>
+    {
+        using var rig = new Rig();
+        Pump();
+        Assert.Equal("Dark", rig.Window.SoftPalette);
+        var background = ((SolidColorBrush)rig.Window.Background).Color;
+        Assert.Equal((Color)ColorConverter.ConvertFromString("#1B1C20"), background);
+        var dir = System.Environment.GetEnvironmentVariable("LUNAR_RENDER_DIR");
+        if (!string.IsNullOrEmpty(dir))
+        {
+            var root = (FrameworkElement)rig.Window.Content;
+            var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap((int)root.ActualWidth * 2, (int)root.ActualHeight * 2, 192, 192, PixelFormats.Pbgra32);
+            var fill = new System.Windows.Shapes.Rectangle { Width = root.ActualWidth, Height = root.ActualHeight, Fill = rig.Window.Background };
+            fill.Measure(new Size(root.ActualWidth, root.ActualHeight));
+            fill.Arrange(new Rect(0, 0, root.ActualWidth, root.ActualHeight));
+            bmp.Render(fill);
+            bmp.Render(root);
+            var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+            using var file = File.Create(System.IO.Path.Combine(dir, "6-settings-soft.png"));
+            encoder.Save(file);
         }
     });
 }

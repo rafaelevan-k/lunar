@@ -63,6 +63,25 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         }
     }
 
+    private Lunar.Application.Settings.Models.IslandStyle _style;
+
+    /// <summary>The island's outline (ADR-0027). It decides the collapsed pill's height and, with the activity, its width.</summary>
+    public Lunar.Application.Settings.Models.IslandStyle Style
+    {
+        get => _style;
+        set
+        {
+            if (_style == value)
+                return;
+            _style = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Style)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IdleHeight)));
+        }
+    }
+
+    /// <summary>How tall the collapsed pill is: 44 DIP for the Pill, 32 for the Notch.</summary>
+    public double IdleHeight => IslandLayout.IdleHeightFor(_style);
+
     /// <summary>True while fully expanded (Expanded or Busy); false during both animations.</summary>
     public bool IsExpanded => State is IslandVisualState.Expanded or IslandVisualState.Busy;
 

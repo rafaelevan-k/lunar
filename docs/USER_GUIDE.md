@@ -45,13 +45,25 @@ Version 1.0.x · Windows 11 x64.
 
 While closed, the eyes blink and look around. You can turn that off (see Settings).
 
-### While recording or focusing
+### While recording, translating, focusing or playing music
 
 While the island is closed it shows what is running instead of the eyes:
 - **Recording:** Pause and Stop at the left, red sound lines in the middle, the recorded time at the right. The island is a little wider. Pause and Stop work without opening the island; a click on the lines opens it.
 - **Focus session:** the time left in the middle. While paused, the time is dimmed with a pause symbol. A click opens the island.
+- **Screen translation running:** "Translating…" with a Cancel button.
+- **Music or video playing:** the track's picture at the left and sound bars at the right that move with what you hear. The bars take a colour from the picture. When you pause, the bars go flat and the eyes come back after 3 seconds. A click opens the island on the Media page. **Settings → Appearance → Show music in the collapsed island** turns this off.
 
-A recording is shown before a focus session when both run. Opening the island shows the eyes again. When the focus time is over, the eyes come back and smile.
+Order when several run: recording, then translation, then the focus session, then music. Opening the island shows the eyes again. When the focus time is over, the eyes come back and smile.
+
+### Island style: Pill or Notch
+
+**Settings → Appearance → Island style**:
+- **Pill** (the default) is the floating, fully rounded island at the distance you chose from the top of the screen.
+- **Notch** sits against the top edge of the screen: wider and flatter than the Pill (230 by 32), flat on top with small curved shoulders and rounded at the bottom, and always dark.
+  - Open, it is a wide panel hanging from the edge, with the pages as small tabs along its top instead of arrows and dots.
+  - Music makes the closed Notch a little wider: the picture at one end, the bars at the other.
+
+Switching applies at once. If the island is open it closes first. A recording or focus session keeps running. In Notch the distance-from-top setting does not apply, and it comes back when you switch to Pill.
 
 ### Hidden from screen sharing
 
@@ -182,18 +194,45 @@ This page shows your **Claude** 5-hour and weekly limits: the percentage used an
 
 Lunar is not made by, or affiliated with, Anthropic.
 
+## 8a. Screen translation
+
+Lunar can read the text on the screen you are working on and show it translated into **English**, **Indonesian** or **Japanese**, drawn over the original text.
+
+**Before the first use** (one time, free):
+1. Sign in to the Azure portal (https://portal.azure.com) and create a **Translator** resource with the **Free (F0)** tier. Microsoft lists about 2 million characters a month for free; a full screen is usually 1,000 to 5,000 characters. Creating the account and the resource is your step; Lunar never does it for you.
+2. Copy one of its **keys** and, unless the resource is "global", its **region** (for example `southeastasia`).
+3. In Lunar: **Settings → Screen translation**, paste the key, press **Save key**, fill in the region and press **Apply**, then press **Test**.
+
+**To translate:** press **Ctrl+Alt+T**, or the Translate button at the top of the System page, or **Translate screen** in the tray menu. The first time, Lunar asks whether it may send the screen's text to Microsoft; press **Allow**. While it works, the closed island says "Translating…" with Cancel.
+
+**In the translation view:**
+- Each translated passage covers its original text, in a matching colour.
+- Choose **English**, **Indonesian** or **Japanese** at the top to translate the same picture into another language.
+- Hold **Show original** to see the screen as it was.
+- **Copy text** copies the whole translation.
+- **Close**, **Esc** or the shortcut again closes the view.
+
+Good to know:
+- It is a picture of the moment. It does not follow scrolling or changes underneath; close it and translate again.
+- Text already in the chosen language is left as it is.
+- Japanese text needs Windows' Japanese language (OCR) to be installed. Indonesian is read with the English reader.
+- Protected video and some apps show black to Lunar and cannot be read.
+- It is machine translation and can be wrong.
+- If another app already uses Ctrl+Alt+T, Settings says so; type another shortcut, such as `Ctrl+Alt+Y`, and press **Apply**.
+
 ## 9. Settings
 
 Open it from the tray icon → **Settings**. Changes apply at once, except where noted.
 
 | Section | Choices |
 |---|---|
-| Appearance | Theme: Match Windows, Dark or Light. **Reduce motion**: no slides, fades or confetti; Windows' own animation setting is always respected. **Animated eyes**: on or off |
+| Appearance | Theme: Match Windows, Dark or Light. **Island style**: Pill or Notch. **Reduce motion**: no slides, fades or confetti; Windows' own animation setting is always respected. **Animated eyes**: on or off. **Show music in the collapsed island**: on or off |
 | Display | Which display shows Lunar, and the distance from the top of the screen |
 | Start with Windows | On or off (the same switch as in the tray menu) |
 | Conversions | The default folder for converted files |
 | Language | Match Windows, English or Bahasa Indonesia (applies the next time Lunar starts) |
 | Privacy | **Detailed diagnostics**: more detail in the local log files (applies the next time Lunar starts). A line says whether Lunar is hidden from screen sharing (always on, no switch) |
+| Screen translation | On or off; translate into the other language (English ↔ Indonesian), English, Indonesian or Japanese; your Azure Translator key (Save, Test, Remove) and region; the shortcut (see 8a) |
 | Updates | **Check for updates** (on by default): once a day Lunar asks GitHub for the newest release. The line below says which version you have, or offers **Install now** when a newer one is out |
 | Reset all settings | Every setting goes back to its default. This also turns the Usage page off |
 
@@ -203,7 +242,8 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
 
 - No telemetry, and none of your files are uploaded. Conversions run on your PC.
 - Notes and recordings stay on this PC and are never logged or sent anywhere. Lunar windows are kept out of screen sharing and screenshots.
-- Network use: the daily update check (GitHub sees your IP address and that Lunar asked; you can turn it off), the update download when you choose **Install now**, and the Usage page only after you turn it on.
+- Network use: the daily update check (GitHub sees your IP address and that Lunar asked; you can turn it off), the update download when you choose **Install now**, the Usage page only after you turn it on, and screen translation only when you ask, with your own key, after you allowed it (only the text is sent to Microsoft, never a picture).
+- The music bars read only the level of what is playing, never the microphone, and keep nothing.
 - Local logs (`%LocalAppData%\Lunar\Logs`, at most about 7 MB) record what happened, never what you were doing. They never contain file names, file contents, note text, passwords, Wi-Fi names or what you play.
 - The full notice is `PRIVACY.md` in the program folder (`%LocalAppData%\Programs\Lunar`), next to this guide.
 
@@ -222,6 +262,8 @@ Settings are saved only on this PC, in `%LocalAppData%\Lunar\settings.json`. If 
   - Narrator (the screen reader) reading every control;
   - how the island behaves over fullscreen games and videos;
   - Remote Desktop.
+- **Screen translation** needs your own free Azure Translator key and an internet connection, and depends on Microsoft's free allowance. It was not yet checked with a real key.
+- **Music bars** follow everything Windows plays on the default speakers, including notification sounds.
 - **Languages:** English and Bahasa Indonesia.
 
 ## 12. If something goes wrong

@@ -1,13 +1,14 @@
 # Lunar privacy and diagnostics
 
-This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page), ADR-0019 (screen sharing), ADR-0020 (notes), ADR-0021 (brightness), ADR-0022 (recordings), ADR-0023 (Pomodoro and Do Not Disturb) and ADR-0025 (update check).
+This notice describes what Lunar 1.0.x does with your data, and it is installed next to the app. It is based on ADR-0009 (logging), ADR-0014 and ADR-0015 (Usage page), ADR-0019 (screen sharing), ADR-0020 (notes), ADR-0021 (brightness), ADR-0022 (recordings), ADR-0023 (Pomodoro and Do Not Disturb), ADR-0025 (update check), ADR-0026 (music in the island) and ADR-0028 (screen translation).
 
 ## Summary
 
 - Lunar has **no telemetry** and no upload of your files. Nothing about you or your files leaves your computer.
-- Lunar contacts the internet in only two ways:
+- Lunar contacts the internet in only three ways:
   - **the update check:** once a day it asks GitHub for the newest Lunar release (on by default, switch in Settings), and downloads it only when you choose Install now;
-  - **the Usage page:** off by default; it contacts Anthropic only after you turn it on.
+  - **the Usage page:** off by default; it contacts Anthropic only after you turn it on;
+  - **screen translation:** only when you ask for a translation, only with your own Azure key, and only after you allowed it once; only the recognised text is sent, never a picture of the screen.
 - Lunar writes a small local log of **what happened**, never **what you were doing**.
 - Diagnostics (extra detail) are **off** unless you turn them on.
 - Your **notes** and **recordings** stay on this PC and are never logged or sent anywhere.
@@ -79,6 +80,23 @@ During a focus session Lunar turns on Windows Do Not Disturb (alarms only) and a
 - **When you choose Install now**, Lunar downloads `Lunar.msi` from GitHub's own servers into `%LocalAppData%\Lunar\Updates`. It runs the file only if its size and SHA-256 fingerprint match the release, and deletes it otherwise. The downloaded installer is deleted the next time Lunar starts.
 - **Turning it off:** **Settings → Updates → Check for updates**. When it is off, Lunar makes no request to GitHub at all.
 - **Logs:** fixed event names only, never an address, a version history or a file path.
+
+## Music in the collapsed island (ADR-0026)
+
+While music or video plays and the island is collapsed, Lunar reads the **level** of what Windows plays (a loopback copy of the default speakers, never the microphone) to move the bars. The sound is reduced to six numbers about 30 times a second and dropped at once; nothing is stored, logged or sent. The reading stops when the island opens, the music pauses or the pill is not on screen. **Settings → Appearance → Show music in the collapsed island** turns it off.
+
+## Screen translation (ADR-0028)
+
+- **When Lunar looks at the screen:** only when you press the shortcut (Ctrl+Alt+T unless you changed it), the Translate button on the System page or Translate screen in the tray menu. It takes one picture of the display you are working on. Lunar's own windows are never in it.
+- **Reading the text** happens on this PC, with Windows' own OCR.
+- **What is sent:** only the recognised text, over HTTPS, to Microsoft Azure AI Translator at `api.cognitive.microsofttranslator.com`. It goes with your own key, and only after you pressed **Allow** on the one-time question. The picture never leaves the PC. What Microsoft does with the text follows Microsoft's privacy statement (https://privacy.microsoft.com/privacystatement). Microsoft also sees your IP address and the time, like any website.
+- **What is kept:** nothing.
+  - The picture, the text and the translations live only in memory while the overlay is open.
+  - When you close it, the picture is overwritten and the texts are forgotten.
+  - **Copy text** puts the translation on the clipboard only when you press it.
+- **Your key:** stored only on this PC, encrypted for your Windows account (`%LocalAppData%\Lunar	ranslate-key.dat`). It is never shown again, never logged, and sent only to the translator. **Remove key** deletes it, and so does uninstalling when you choose to delete your data.
+- **Turning it off:** **Settings → Screen translation**. When it is off, there is no shortcut, no capture and no request.
+- **Logs:** fixed event names, counts and durations only. Never the text, the key or a window title.
 
 ## Display brightness
 

@@ -5,7 +5,6 @@
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              xmlns:c="clr-namespace:Lunar.Desktop.Controls"
              Focusable="False" IsTabStop="False" Background="Transparent" Cursor="Hand"
-             Width="230" Height="42"
              automation:AutomationProperties.Name="{res:Text Records.Title}">
   <!--
     FE-35, ADR-0024: the collapsed island while recording. Pause and Stop at the left, the frequency lines in the middle, the time at the far right. A click anywhere

@@ -451,4 +451,70 @@ public sealed class ConverterPageTests
             Lunar.Desktop.Resources.Strings.Use("en");
         }
     });
+
+    // 2026-11-18, the owner: in the open Notch the Converter page must fit without scrolling, tidy and easy to use. The Notch's page area is 648 by 228
+    // DIP. Every step is checked: empty, files, format and the tweaks with their notices.
+    [Fact]
+    public void InTheOpenNotchEveryStepFitsWithoutScrollingWithTheActionsAtTheBottomRight() => WithPage("Colors.Dark.xaml", (page, model, window, folder) =>
+    {
+        window.Width = 648;
+        window.Height = 228;
+        Lunar.Desktop.Navigation.CompactLayout.SetIsCompact(page, true);
+        Settle(window);
+        Assert.True(page.IsCompact);
+        var scroll = (ScrollViewer)page.FindName("PageScroll");
+        var actions = (FrameworkElement)page.FindName("Actions");
+
+        void Fits(string step)
+        {
+            Settle(window);
+            RenderPage(page, window, "10-converter-notch-" + step);
+            Assert.True(scroll.ExtentHeight <= scroll.ViewportHeight + 0.5, $"{step}: needs {scroll.ExtentHeight} in {scroll.ViewportHeight}");
+            var actionsAt = actions.TranslatePoint(new Point(0, 0), page);
+            Assert.True(actionsAt.Y + actions.ActualHeight <= page.ActualHeight + 0.5, $"{step}: the actions are inside the page");
+            Assert.True(actions.ActualHeight <= 48, $"{step}: the actions are one short row ({actions.ActualHeight})");
+            var primary = new[] { "NextButton", "ConvertButton" }.Select(n => (FrameworkElement)page.FindName(n)).First(b => b.IsVisible);
+            Assert.Equal(page.ActualWidth - 40, primary.TranslatePoint(new Point(primary.ActualWidth, 0), page).X, 1); // the main action at the right, inside the page's 40 DIP side room
+        }
+
+        Fits("empty");
+        model.AddFiles([MakePng(folder, "holiday-photo.png"), MakePng(folder, "receipt.png")]);
+        Pump(model.WhenCheckedAsync());
+        Fits("files");
+        model.NextCommand.Execute(null);
+        Pump(model.WhenCheckedAsync());
+        Fits("format");
+        Choose(model, FileFormat.Jpg);
+        Fits("format-chosen");
+        model.NextCommand.Execute(null);
+        Pump(model.WhenCheckedAsync());
+        Assert.True(model.IsTweaksStep);
+        Fits("tweaks");
+
+        Lunar.Desktop.Navigation.CompactLayout.SetIsCompact(page, false);
+        window.Width = PageWidth;
+        Settle(window);
+        Assert.False(page.IsCompact);
+        Assert.True(actions.TranslatePoint(new Point(0, 0), page).Y > scroll.TranslatePoint(new Point(0, 0), page).Y, "the Pill keeps the actions under the step");
+        Assert.Equal(TextAlignment.Center, ((TextBlock)page.FindName("StartHintText")).TextAlignment); // the hint is back under the buttons
+    });
+
+    private static void RenderPage(FrameworkElement page, Window window, string name)
+    {
+        var dir = System.Environment.GetEnvironmentVariable("LUNAR_RENDER_DIR");
+        if (string.IsNullOrEmpty(dir))
+            return;
+        var w = (int)window.ActualWidth;
+        var h = (int)window.ActualHeight;
+        var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(w * 2, h * 2, 192, 192, System.Windows.Media.PixelFormats.Pbgra32);
+        var back = new System.Windows.Shapes.Rectangle { Width = w, Height = h, Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(11, 12, 16)) };
+        back.Measure(new Size(w, h));
+        back.Arrange(new Rect(0, 0, w, h));
+        bmp.Render(back);
+        bmp.Render(page);
+        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+        using var file = File.Create(System.IO.Path.Combine(dir, name + ".png"));
+        encoder.Save(file);
+    }
 }

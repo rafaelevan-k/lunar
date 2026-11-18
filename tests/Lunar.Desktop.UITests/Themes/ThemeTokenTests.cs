@@ -136,6 +136,29 @@ public sealed class ThemeTokenTests
         Assert.Empty(offenders);
     }
 
+    // 2026-11-18, the owner: the Settings window in a soft black and white. Softer, still readable: body and secondary text at least 4.5:1 on the
+    // window and on the cards, and clearly less contrast than the Lunar palette's near-black with pure white.
+    [Theory]
+    [InlineData("Dark")]
+    [InlineData("Light")]
+    public void TheSoftSettingsPaletteIsReadableAndSofterThanLunars(string name)
+    {
+        var soft = Load(Path.Combine("Themes", $"Colors.Settings.{name}.xaml")).Root!.Elements()
+            .Where(e => e.Name.LocalName == "Color")
+            .ToDictionary(e => (string)e.Attribute(XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml"))!, e => e.Value.Trim());
+        foreach (var surface in new[] { "Lunar.Color.Background", "Lunar.Color.Surface" })
+        {
+            Assert.True(Contrast(soft["Lunar.Color.TextPrimary"], soft[surface]) >= 4.5, surface);
+            Assert.True(Contrast(soft["Lunar.Color.TextSecondary"], soft[surface]) >= 4.5, surface);
+        }
+
+        var lunar = Load(Path.Combine("Themes", $"Colors.{name}.xaml")).Root!.Elements()
+            .Where(e => e.Name.LocalName == "Color")
+            .ToDictionary(e => (string)e.Attribute(XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml"))!, e => e.Value.Trim());
+        Assert.True(Contrast(soft["Lunar.Color.TextPrimary"], soft["Lunar.Color.Background"])
+            < Contrast(lunar["Lunar.Color.TextPrimary"], lunar["Lunar.Color.Background"]));
+    }
+
     internal static double Contrast(string foreground, string background)
     {
         var a = Luminance(foreground);

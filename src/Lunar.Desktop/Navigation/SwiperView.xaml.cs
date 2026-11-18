@@ -38,6 +38,10 @@ public partial class SwiperView : UserControl
     private SwiperController? _controller;
     private readonly HorizontalWheelGesture _wheel = new();
     private readonly List<RadioButton> _dots = [];
+    private readonly List<RadioButton> _tabs = [];
+
+    // A symbol per page, in page order (System, Media, Pomodoro, Converter, Notes, Usage).
+    private static readonly string[] TabGlyphs = ["\uE713", "\uE8D6", "\uE916", "\uE8AB", "\uE70B", "\uE9D2"];
     private HwndSource? _source;
     private bool _reduceMotion;
     private bool _pressed;
@@ -68,6 +72,23 @@ public partial class SwiperView : UserControl
     /// <summary>The motion setting changed (ADR-0016): the next page change slides or jumps accordingly.</summary>
     public void SetReduceMotion(bool reduceMotion) => _reduceMotion = reduceMotion;
 
+    /// <summary>True when the Notch's tabs are shown instead of the arrows and dots.</summary>
+    internal bool ShowsTabs => Tabs.Visibility == Visibility.Visible;
+
+    /// <summary>
+    /// The Notch style (ADR-0027): tabs along the top instead of the side arrows and the dots, and the pages kept clear of the panel's sides, so nothing
+    /// sits under the shoulders or the rounded corners. Swiping and the arrow keys still change pages. UI thread only.
+    /// </summary>
+    public void SetNotchChrome(bool notch)
+    {
+        Tabs.Visibility = notch ? Visibility.Visible : Visibility.Collapsed;
+        PreviousButton.Visibility = notch ? Visibility.Collapsed : Visibility.Visible;
+        NextButton.Visibility = notch ? Visibility.Collapsed : Visibility.Visible;
+        Dots.Visibility = notch ? Visibility.Collapsed : Visibility.Visible;
+        Viewport.Margin = notch ? new Thickness(16, 0, 16, 14) : new Thickness(0);
+        CompactLayout.SetIsCompact(this, notch);
+    }
+
     /// <summary>Sets the pages and the model they follow. Call once, before the view is shown.</summary>
     public void Initialize(PageNavigationViewModel navigation, IReadOnlyList<FrameworkElement> pages, bool reduceMotion)
     {
@@ -97,6 +118,19 @@ public partial class SwiperView : UserControl
             dot.Checked += (_, _) => navigation.GoTo(index);
             _dots.Add(dot);
             Dots.Children.Add(dot);
+
+            var tab = new RadioButton
+            {
+                Style = (Style)FindResource("NotchTab"),
+                Content = navigation.Titles[i],
+                Tag = i < TabGlyphs.Length ? TabGlyphs[i] : "\uE80F",
+                IsChecked = i == navigation.SelectedIndex,
+                ToolTip = navigation.Titles[i]
+            };
+            System.Windows.Automation.AutomationProperties.SetName(tab, navigation.Titles[i]);
+            tab.Checked += (_, _) => navigation.GoTo(index);
+            _tabs.Add(tab);
+            Tabs.Children.Add(tab);
         }
 
         navigation.PropertyChanged += OnNavigationChanged;
@@ -342,6 +376,8 @@ public partial class SwiperView : UserControl
 
         for (var i = 0; i < _dots.Count; i++)
             _dots[i].IsChecked = i == _navigation.SelectedIndex;
+        for (var i = 0; i < _tabs.Count; i++)
+            _tabs[i].IsChecked = i == _navigation.SelectedIndex;
         UpdateArrows();
         if (_controller is { IsDragging: false })
             SettleTo(_navigation.SelectedIndex);

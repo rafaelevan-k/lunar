@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using Lunar.Desktop.Accessibility;
+using Lunar.Desktop.Features.MediaControls;
 using Lunar.Desktop.Features.Pomodoro;
 using Lunar.Desktop.Features.Recorder;
 using Lunar.Desktop.Resources;
@@ -20,6 +21,10 @@ public sealed class IslandActivityController : IDisposable
     private readonly FrameworkElement _recordingView;
     private readonly PomodoroPageViewModel _focus;
     private readonly FrameworkElement _focusView;
+    private readonly MediaPillViewModel? _media;
+    private readonly FrameworkElement? _mediaView;
+    private Lunar.Desktop.Features.Translate.TranslateCoordinator? _translate;
+    private FrameworkElement? _translateView;
     private bool _wasShown;
     private bool _wasPaused;
     private bool _focusWasActive;
@@ -32,7 +37,9 @@ public sealed class IslandActivityController : IDisposable
         RecordsViewModel records,
         FrameworkElement recordingView,
         PomodoroPageViewModel focus,
-        FrameworkElement focusView)
+        FrameworkElement focusView,
+        MediaPillViewModel? media = null,
+        FrameworkElement? mediaView = null)
     {
         ArgumentNullException.ThrowIfNull(island);
         ArgumentNullException.ThrowIfNull(shell);
@@ -46,6 +53,15 @@ public sealed class IslandActivityController : IDisposable
         _recordingView = recordingView;
         _focus = focus;
         _focusView = focusView;
+        if (media is not null && mediaView is not null)
+        {
+            _media = media;
+            _mediaView = mediaView;
+            _media.PropertyChanged += OnMediaChanged;
+            _media.TrackStarted += OnTrackStarted;
+        }
+
+        _island.PropertyChanged += OnIslandChanged;
         _wasShown = records.ShowsInIsland;
         _wasPaused = records.IsPaused;
         _focusWasActive = focus.IsActive;
@@ -68,6 +84,16 @@ public sealed class IslandActivityController : IDisposable
         _disposed = true;
         _records.PropertyChanged -= OnRecordsChanged;
         _focus.PropertyChanged -= OnFocusChanged;
+        _island.PropertyChanged -= OnIslandChanged;
+        if (_translate is not null)
+            _translate.PropertyChanged -= OnTranslateChanged;
+        if (_media is not null)
+        {
+            _media.PropertyChanged -= OnMediaChanged;
+            _media.TrackStarted -= OnTrackStarted;
+            _media.SetVisible(false);
+        }
+
         _shell.SetIdleActivity(null);
     }
 
@@ -90,17 +116,64 @@ public sealed class IslandActivityController : IDisposable
         }
     }
 
+    /// <summary>Adds the "Translating…" pill (ADR-0028 §12). Call once, on the UI thread.</summary>
+    public void AttachTranslation(Lunar.Desktop.Features.Translate.TranslateCoordinator translate, FrameworkElement view)
+    {
+        ArgumentNullException.ThrowIfNull(translate);
+        ArgumentNullException.ThrowIfNull(view);
+        _translate = translate;
+        _translateView = view;
+        translate.PropertyChanged += OnTranslateChanged;
+        Update();
+    }
+
+    private void OnTranslateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Lunar.Desktop.Features.Translate.TranslateCoordinator.ShowsInIsland) && !_disposed)
+            Update();
+    }
+
+    private void OnMediaChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MediaPillViewModel.ShowsInIsland) && !_disposed)
+            Update();
+    }
+
+    private void OnIslandChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_disposed)
+            return;
+        if (e.PropertyName == nameof(IslandViewModel.State))
+            FollowMediaVisibility();
+        else if (e.PropertyName == nameof(IslandViewModel.Style))
+            Update(); // the same activity is wider in the Notch
+    }
+
+    // Once per track, and only while the media pill is the one on screen; a screen reader never hears every bar.
+    private void OnTrackStarted(object? sender, EventArgs e)
+    {
+        if (!_disposed && Current == IslandActivity.MediaPlaying && _island.State == IslandVisualState.Idle && _media is not null)
+            LiveAnnouncer.Announce(_shell, _media.AccessibleName, "Lunar.Media");
+    }
+
+    /// <summary>The sound bars run only while the media pill is really on screen (ADR-0026 §11).</summary>
+    private void FollowMediaVisibility() =>
+        _media?.SetVisible(Current == IslandActivity.MediaPlaying && _island.State == IslandVisualState.Idle);
+
     private void Update()
     {
         var previous = Current;
-        Current = IslandActivitySelector.Choose(_records.ShowsInIsland, _focus.IsActive);
-        _island.IdleWidth = IslandLayout.IdleWidthFor(Current);
+        Current = IslandActivitySelector.Choose(_records.ShowsInIsland, _translate?.ShowsInIsland == true, _focus.IsActive, _media?.ShowsInIsland == true);
+        _island.IdleWidth = IslandLayout.IdleWidthFor(Current, _island.Style);
         _shell.SetIdleActivity(Current switch
         {
             IslandActivity.Recording => _recordingView,
             IslandActivity.FocusCountdown => _focusView,
+            IslandActivity.MediaPlaying => _mediaView,
+            IslandActivity.Translating => _translateView,
             _ => null
         });
+        FollowMediaVisibility();
         if (Current != previous)
             Changed?.Invoke(this, EventArgs.Empty);
     }

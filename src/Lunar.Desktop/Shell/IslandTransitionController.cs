@@ -46,7 +46,7 @@ public sealed class IslandTransitionController : IDisposable
             return;
         _disposed = true;
         _viewModel.PropertyChanged -= OnViewModelChanged;
-        _window.ResetPill(!_viewModel.IsExpandedLayout, _viewModel.IdleWidth);
+        _window.ResetPill(!_viewModel.IsExpandedLayout, _viewModel.IdleWidth, _viewModel.IdleHeight);
     }
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -54,7 +54,7 @@ public sealed class IslandTransitionController : IDisposable
         if (_disposed)
             return;
 
-        if (e.PropertyName == nameof(IslandViewModel.IdleWidth))
+        if (e.PropertyName is nameof(IslandViewModel.IdleWidth) or nameof(IslandViewModel.IdleHeight))
         {
             ResizeIdlePill();
             return;
@@ -68,14 +68,14 @@ public sealed class IslandTransitionController : IDisposable
         switch (_viewModel.State)
         {
             case IslandVisualState.Expanding:
-                Run(_viewModel.IdleWidth, IslandLayout.IdleHeight, _window.Width, _window.Height, ExpandDuration, () => _viewModel.CompleteExpansion(id), id);
+                Run(_viewModel.IdleWidth, _viewModel.IdleHeight, _window.Width, _window.Height, ExpandDuration, () => _viewModel.CompleteExpansion(id), id);
                 break;
             case IslandVisualState.Collapsing:
-                Run(_window.Width, _window.Height, _viewModel.IdleWidth, IslandLayout.IdleHeight, CollapseDuration, () => _viewModel.CompleteCollapse(id), id);
+                Run(_window.Width, _window.Height, _viewModel.IdleWidth, _viewModel.IdleHeight, CollapseDuration, () => _viewModel.CompleteCollapse(id), id);
                 break;
             default:
                 // Not animating: a completion (or exit) has finished the transition, so the pill takes its resting size.
-                _window.ResetPill(!_viewModel.IsExpandedLayout, _viewModel.IdleWidth);
+                _window.ResetPill(!_viewModel.IsExpandedLayout, _viewModel.IdleWidth, _viewModel.IdleHeight);
                 break;
         }
     }
@@ -88,14 +88,14 @@ public sealed class IslandTransitionController : IDisposable
         var width = _viewModel.IdleWidth;
         if (_reduceMotion)
         {
-            _window.ResetPill(idle: true, width);
+            _window.ResetPill(idle: true, width, _viewModel.IdleHeight);
             return;
         }
 
-        _window.AnimatePill(width, IslandLayout.IdleHeight, width, IslandLayout.IdleHeight, WidthChangeDuration, () =>
+        _window.AnimatePill(width, _viewModel.IdleHeight, width, _viewModel.IdleHeight, WidthChangeDuration, () =>
         {
             if (!_disposed && _viewModel.State == IslandVisualState.Idle)
-                _window.ResetPill(idle: true, _viewModel.IdleWidth);
+                _window.ResetPill(idle: true, _viewModel.IdleWidth, _viewModel.IdleHeight);
         });
     }
 

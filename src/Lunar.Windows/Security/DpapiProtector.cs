@@ -13,29 +13,38 @@ namespace Lunar.Windows.Security;
 internal sealed class DpapiProtector : ISecretProtector
 {
     private const int UiForbidden = 0x1;
-    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("Lunar.UsageToken.v1");
+    private readonly byte[] _entropy;
+
+    /// <summary>The usage token's protector (BE-33).</summary>
+    public DpapiProtector()
+        : this("Lunar.UsageToken.v1")
+    {
+    }
+
+    /// <summary>A protector whose results only it can open: each secret Lunar keeps has its own entropy (ADR-0028 for the translation key).</summary>
+    public DpapiProtector(string entropy) => _entropy = Encoding.UTF8.GetBytes(entropy);
 
     public byte[] Protect(byte[] plain)
     {
         ArgumentNullException.ThrowIfNull(plain);
-        return Run(plain, protect: true);
+        return Run(plain, _entropy, protect: true);
     }
 
     public byte[] Unprotect(byte[] protectedBytes)
     {
         ArgumentNullException.ThrowIfNull(protectedBytes);
-        return Run(protectedBytes, protect: false);
+        return Run(protectedBytes, _entropy, protect: false);
     }
 
-    private static byte[] Run(byte[] input, bool protect)
+    private static byte[] Run(byte[] input, byte[] entropy, bool protect)
     {
         var inHandle = GCHandle.Alloc(input, GCHandleType.Pinned);
-        var entropyHandle = GCHandle.Alloc(Entropy, GCHandleType.Pinned);
+        var entropyHandle = GCHandle.Alloc(entropy, GCHandleType.Pinned);
         var output = new DataBlob();
         try
         {
             var inBlob = new DataBlob { Size = input.Length, Data = inHandle.AddrOfPinnedObject() };
-            var entropyBlob = new DataBlob { Size = Entropy.Length, Data = entropyHandle.AddrOfPinnedObject() };
+            var entropyBlob = new DataBlob { Size = entropy.Length, Data = entropyHandle.AddrOfPinnedObject() };
             var ok = protect
                 ? CryptProtectData(ref inBlob, null, ref entropyBlob, IntPtr.Zero, IntPtr.Zero, UiForbidden, ref output)
                 : CryptUnprotectData(ref inBlob, null, ref entropyBlob, IntPtr.Zero, IntPtr.Zero, UiForbidden, ref output);

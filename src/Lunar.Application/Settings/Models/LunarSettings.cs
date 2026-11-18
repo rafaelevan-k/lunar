@@ -10,6 +10,13 @@ public enum ThemePreference
     Light
 }
 
+/// <summary>The island's outline (ADR-0027): the floating Pill, or the Notch attached to the top edge of the screen.</summary>
+public enum IslandStyle
+{
+    Pill,
+    Notch
+}
+
 public sealed record IslandSettings
 {
     /// <summary>Display device name (<c>DisplayInfo.Id</c>); null means the primary display.</summary>
@@ -27,12 +34,18 @@ public sealed record AppearanceSettings
     public bool EyeAnimationEnabled { get; init; } = true;
 
     public bool AutoCollapse { get; init; } = true;
+
+    /// <summary>Pill (the default) or Notch (ADR-0027). Applies at once.</summary>
+    public IslandStyle IslandStyle { get; init; } = IslandStyle.Pill;
 }
 
 public sealed record MediaSettings
 {
     /// <summary>Opaque id of the preferred media app/session. Never a title, artist or history.</summary>
     public string? PreferredSessionId { get; init; }
+
+    /// <summary>The collapsed island shows the playing track's thumbnail and sound bars instead of the eyes (ADR-0026). On by default.</summary>
+    public bool ShowInPill { get; init; } = true;
 }
 
 public sealed record ConversionSettings
@@ -77,6 +90,31 @@ public sealed record UpdateSettings
     public bool Check { get; init; } = true;
 }
 
+/// <summary>Screen translation (ADR-0028). The key is not here: it is kept encrypted on its own (<c>ITranslationKeyStore</c>).</summary>
+public sealed record TranslateSettings
+{
+    public const string DefaultShortcut = "Ctrl+Alt+T";
+    public const string AzureProvider = "Azure";
+
+    /// <summary>Off: no shortcut, no button, no request.</summary>
+    public bool Enabled { get; init; } = true;
+
+    /// <summary>The language to translate into; null follows Lunar's language (English UI → Indonesian, Indonesian UI → English).</summary>
+    public Lunar.Application.Abstractions.Translate.TranslationLanguage? Target { get; init; }
+
+    /// <summary>The global shortcut, such as "Ctrl+Alt+T".</summary>
+    public string Shortcut { get; init; } = DefaultShortcut;
+
+    /// <summary>The service; only Azure AI Translator in this version.</summary>
+    public string Provider { get; init; } = AzureProvider;
+
+    /// <summary>The Azure resource's region, or null for a global resource. Not private: it names a data centre region.</summary>
+    public string? Region { get; init; }
+
+    /// <summary>The user allowed sending recognised text to the service (the one-time consent screen).</summary>
+    public bool Consented { get; init; }
+}
+
 /// <summary>
 /// User preferences (ADR-0011). Immutable; every default is a safe value, so a missing file or field is never an
 /// error. Values are checked and repaired by <see cref="SettingsRules.Normalize"/>.
@@ -107,4 +145,6 @@ public sealed record LunarSettings
     public FocusSettings Focus { get; init; } = new();
 
     public UpdateSettings Updates { get; init; } = new();
+
+    public TranslateSettings Translate { get; init; } = new();
 }

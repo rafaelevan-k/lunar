@@ -499,4 +499,77 @@ Choose No to keep them for a later reinstall.</value></data>
   <data name="Settings.UpdatesCheck" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Settings.UpdatesHint" xml:space="preserve"><value>Once a day Lunar asks GitHub whether a newer version was released. Nothing is installed until you choose Install now.</value></data>
   <data name="Records.ErrorCouldNotOpen" xml:space="preserve"><value>Windows couldn't open this microphone. It may be in use or blocked.</value></data>
+  <data name="MediaPill.PlayingTitleArtist" xml:space="preserve"><value>Playing: {0} by {1}</value></data>
+  <data name="MediaPill.PlayingTitle" xml:space="preserve"><value>Playing: {0}</value></data>
+  <data name="MediaPill.PlayingFrom" xml:space="preserve"><value>Playing in {0}</value></data>
+  <data name="Settings.ShowMediaInPill" xml:space="preserve"><value>Show music in the collapsed island</value></data>
+  <data name="Settings.ShowMediaInPillHint" xml:space="preserve"><value>While music or video plays, the pill shows its picture and sound bars instead of the eyes.</value></data>
+  <data name="Settings.StyleHeading" xml:space="preserve"><value>Island style</value></data>
+  <data name="Settings.StylePill" xml:space="preserve"><value>Pill</value></data>
+  <data name="Settings.StyleNotch" xml:space="preserve"><value>Notch</value></data>
+  <data name="Settings.OffsetIgnoredInNotch" xml:space="preserve"><value>The Notch style sits at the top edge, so this distance applies only to the Pill.</value></data>
+  <data name="Tray.Translate" xml:space="preserve"><value>Translate screen</value></data>
+  <data name="Translate.Button" xml:space="preserve"><value>Translate the screen</value></data>
+  <data name="Translate.Working" xml:space="preserve"><value>Translating…</value></data>
+  <data name="Translate.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Translate.Allow" xml:space="preserve"><value>Allow</value></data>
+  <data name="Translate.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Translate.OpenSettings" xml:space="preserve"><value>Open Settings</value></data>
+  <data name="Translate.OverlayTitle" xml:space="preserve"><value>Lunar screen translation</value></data>
+  <data name="Translate.Toolbar" xml:space="preserve"><value>Translation tools</value></data>
+  <data name="Translate.ShowOriginal" xml:space="preserve"><value>Show original (hold)</value></data>
+  <data name="Translate.Copy" xml:space="preserve"><value>Copy text</value></data>
+  <data name="Translate.Copied" xml:space="preserve"><value>Translation copied.</value></data>
+  <data name="Translate.CopyFailed" xml:space="preserve"><value>Another app is using the clipboard. Try again.</value></data>
+  <data name="Translate.ToLanguage" xml:space="preserve"><value>Translate into {0}</value></data>
+  <data name="Translate.NothingToTranslate" xml:space="preserve"><value>Everything here is already in this language.</value></data>
+  <data name="Translate.English" xml:space="preserve"><value>English</value></data>
+  <data name="Translate.Indonesian" xml:space="preserve"><value>Indonesian</value></data>
+  <data name="Translate.Japanese" xml:space="preserve"><value>Japanese</value></data>
+  <data name="Translate.TargetAutomatic" xml:space="preserve"><value>The other language</value></data>
+  <data name="Translate.ConsentTitle" xml:space="preserve"><value>Send screen text for translation?</value></data>
+  <data name="Translate.ConsentBody" xml:space="preserve"><value>To translate, Lunar reads the text on your screen on this PC and sends only that text (never a picture of the screen) to Microsoft Azure AI Translator, using your own key. Lunar keeps nothing after you close the translation. What Microsoft does with the text follows its privacy statement:</value></data>
+  <data name="Translate.PrivacyLink" xml:space="preserve"><value>Microsoft privacy statement address</value></data>
+  <data name="Translate.ProblemNoKey" xml:space="preserve"><value>Add your free Azure Translator key in Settings to translate the screen.</value></data>
+  <data name="Translate.ProblemNotConsented" xml:space="preserve"><value>Translation needs your permission to send the screen's text.</value></data>
+  <data name="Translate.ProblemKeyRefused" xml:space="preserve"><value>Azure did not accept the key or its region. Check them in Settings.</value></data>
+  <data name="Translate.ProblemFreeLimit" xml:space="preserve"><value>The free translation allowance is used up for now. Lunar does not switch to a paid plan.</value></data>
+  <data name="Translate.ProblemRateLimited" xml:space="preserve"><value>Too many translations in a short time. Wait a moment and try again.</value></data>
+  <data name="Translate.ProblemNoNetwork" xml:space="preserve"><value>Azure Translator could not be reached. Check the internet connection.</value></data>
+  <data name="Translate.ProblemProvider" xml:space="preserve"><value>Azure Translator gave an answer Lunar could not use. Try again.</value></data>
+  <data name="Translate.ProblemDisabled" xml:space="preserve"><value>Screen translation is turned off in Settings.</value></data>
+  <data name="Translate.ProblemBusy" xml:space="preserve"><value>A translation is already running.</value></data>
+  <data name="Translate.ProblemCapture" xml:space="preserve"><value>Windows did not allow Lunar to read the screen.</value></data>
+  <data name="Translate.ProblemNoRecognizer" xml:space="preserve"><value>Windows has no OCR language for English or Japanese. Add one in Settings &gt; Time and language &gt; Language.</value></data>
+  <data name="Translate.ProblemProtected" xml:space="preserve"><value>The screen came back black. Protected video and some apps cannot be read.</value></data>
+  <data name="Translate.ProblemNoText" xml:space="preserve"><value>No text was found on the screen.</value></data>
+  <data name="Translate.SettingsTitle" xml:space="preserve"><value>Screen translation</value></data>
+  <data name="Translate.SettingsSwitch" xml:space="preserve"><value>Translate the screen</value></data>
+  <data name="Translate.SettingsHint" xml:space="preserve"><value>Reads the active screen on this PC and translates it into English, Indonesian or Japanese, over the original text.</value></data>
+  <data name="Translate.TargetHeading" xml:space="preserve"><value>Translate into</value></data>
+  <data name="Translate.KeyHeading" xml:space="preserve"><value>Azure Translator key</value></data>
+  <data name="Translate.KeyHint" xml:space="preserve"><value>Create a free Translator resource (F0) in the Azure portal, then paste one of its keys here. The key is kept encrypted on this PC only.</value></data>
+  <data name="Translate.SignUpLink" xml:space="preserve"><value>Azure portal address for a Translator resource</value></data>
+  <data name="Translate.KeyBox" xml:space="preserve"><value>Translation key</value></data>
+  <data name="Translate.SaveKey" xml:space="preserve"><value>Save key</value></data>
+  <data name="Translate.TestKey" xml:space="preserve"><value>Test</value></data>
+  <data name="Translate.RemoveKey" xml:space="preserve"><value>Remove key</value></data>
+  <data name="Translate.KeySaved" xml:space="preserve"><value>A key is saved.</value></data>
+  <data name="Translate.KeyMissing" xml:space="preserve"><value>No key is saved.</value></data>
+  <data name="Translate.KeySavedNow" xml:space="preserve"><value>The key was saved.</value></data>
+  <data name="Translate.KeyInvalid" xml:space="preserve"><value>That does not look like a Translator key. Copy it again from the Azure portal.</value></data>
+  <data name="Translate.KeyRemoved" xml:space="preserve"><value>The key was removed.</value></data>
+  <data name="Translate.KeyRemoveFailed" xml:space="preserve"><value>The key could not be removed. Try again.</value></data>
+  <data name="Translate.KeyTesting" xml:space="preserve"><value>Testing the key with one word…</value></data>
+  <data name="Translate.KeyWorks" xml:space="preserve"><value>The key works.</value></data>
+  <data name="Translate.RegionLabel" xml:space="preserve"><value>Region (empty for global)</value></data>
+  <data name="Translate.RegionInvalid" xml:space="preserve"><value>The region should be one word, for example southeastasia.</value></data>
+  <data name="Translate.RegionSaved" xml:space="preserve"><value>The region was saved.</value></data>
+  <data name="Translate.Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Translate.ShortcutLabel" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="Translate.ShortcutWorks" xml:space="preserve"><value>{0} translates the screen.</value></data>
+  <data name="Translate.ShortcutTaken" xml:space="preserve"><value>Another app already uses this shortcut. Choose another one.</value></data>
+  <data name="Translate.ShortcutRefused" xml:space="preserve"><value>Windows did not accept this shortcut.</value></data>
+  <data name="Translate.ShortcutInvalid" xml:space="preserve"><value>Write a shortcut like Ctrl+Alt+T, with Ctrl, Alt or Win.</value></data>
+  <data name="Translate.PrivacyNote" xml:space="preserve"><value>Only the recognised text is sent, only when you ask, and only after you allowed it once. Lunar keeps no picture, text or translation.</value></data>
 </root>

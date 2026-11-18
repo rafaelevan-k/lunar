@@ -10,6 +10,18 @@ public partial class RecordingPillView : UserControl
     {
         InitializeComponent();
         MouseLeftButtonUp += OnMouseLeftButtonUp;
+        SizeChanged += (_, e) => FitToHeight(e.NewSize.Height);
+    }
+
+    // ADR-0027: the Notch pill is 32 DIP high, so the buttons and lines shrink with it and stay centred.
+    private void FitToHeight(double height)
+    {
+        if (!double.IsFinite(height) || height <= 0)
+            return;
+        var button = Math.Clamp(height - 8, 20, 28);
+        PauseButton.Width = PauseButton.Height = button;
+        StopButton.Width = StopButton.Height = button;
+        Levels.Height = Math.Clamp(height - 14, 14, 26);
     }
 
     /// <summary>Run by a click on the pill outside the buttons.</summary>

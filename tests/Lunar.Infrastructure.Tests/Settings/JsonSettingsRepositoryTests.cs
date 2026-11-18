@@ -606,4 +606,33 @@ public sealed class JsonSettingsRepositoryTests : IDisposable
                 _events.Add(diagnosticEvent);
         }
     }
+
+    // Sprint 10 (ADR-0026, ADR-0027): additive fields. An older file looks exactly as before; a saved choice comes back; an unknown style is the Pill.
+    [Fact]
+    public async Task TheSprintTenAppearanceFieldsAreAdditive()
+    {
+        WriteRaw(MainPath, ValidJson());
+        var older = await Create().LoadAsync(Token);
+        Assert.Equal(IslandStyle.Pill, older.Value.Settings.Appearance.IslandStyle);
+        Assert.True(older.Value.Settings.Media.ShowInPill);
+        Assert.Equal(SettingsRecovery.None, older.Value.Recovery);
+
+        var chosen = Custom() with
+        {
+            Appearance = Custom().Appearance with { IslandStyle = IslandStyle.Notch },
+            Media = Custom().Media with { ShowInPill = false }
+        };
+        var repository = Create();
+        Assert.True((await repository.SaveAsync(chosen, Token)).IsSuccess);
+        var root = (JsonObject)JsonNode.Parse(await File.ReadAllBytesAsync(MainPath, Token))!;
+        Assert.Equal("Notch", (string)root["appearance"]!["islandStyle"]!);
+        Assert.False((bool)root["media"]!["showInPill"]!);
+        Assert.Equal(chosen, (await repository.LoadAsync(Token)).Value.Settings);
+
+        WriteRaw(MainPath, """{ "schemaVersion": 1, "appearance": { "islandStyle": "Oval" }, "media": { "showInPill": 1 } }""");
+        var wrong = await Create().LoadAsync(Token);
+        Assert.Equal(IslandStyle.Pill, wrong.Value.Settings.Appearance.IslandStyle);
+        Assert.True(wrong.Value.Settings.Media.ShowInPill);
+        Assert.Equal(SettingsRecovery.ValuesReset, wrong.Value.Recovery);
+    }
 }
