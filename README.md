@@ -8,7 +8,7 @@
 
 Lunar is a small pill at the top of your screen. It blinks and glances around while you work. Click it and it opens into
 everything you reach for all day: sound and brightness, what's playing, a focus timer, a voice recorder, notes and a
-file converter. Close it and it gets out of your way again.
+file converter. Close it and it gets out of your way again. It can even translate what's on your screen.
 
 It runs entirely on your PC, needs no account, sends no telemetry, uses almost no CPU, and **stays invisible when you
 share your screen**.
@@ -28,9 +28,15 @@ administrator rights needed.
   turns it off while you pause, and puts everything back exactly as it was when you finish.
 - **A recorder that lives in the island.** Press Record and close the island. It shows live red sound lines, the time,
   and Pause and Stop buttons that work without opening anything. Your recordings are saved as ordinary MP3 files.
-- **The island shows what's happening.** While recording or focusing, the closed island turns into a live recorder or
-  countdown. When your focus time is over, the eyes come back and smile.
-- **Private by design.** Your files, notes and recordings never leave your PC. There is no account and no telemetry.
+- **The island shows what's happening.** While music plays, the closed island shows the track's picture and sound bars
+  that move with what you hear. While recording or focusing, it turns into a live recorder or countdown. When your
+  focus time is over, the eyes come back and smile.
+- **Pill or Notch, your choice.** Keep the floating pill, or switch to a Notch that sits against the top edge of the
+  screen and opens into a wide panel with the pages as tabs along its top.
+- **Translate your screen in place.** Press **Ctrl+Alt+T** and Lunar reads the text on your screen and shows it in
+  English, Indonesian or Japanese, right over the original text. It reads the screen on your PC and sends only the text,
+  with your own free Microsoft Azure key, after you allow it once.
+- **Private by design.** Your files, notes and recordings never leave your PC. There is no Lunar account and no telemetry.
   Logs never contain file names, note text, audio or what you listen to.
 - **Light as a feather.** Sitting idle, Lunar uses about **0.04 % CPU** and about 95 MB of private memory, measured over
   five minutes on a typical laptop.
@@ -46,19 +52,22 @@ Click the eyes, then swipe or use the arrow keys to move between six pages:
 
 | Page | What you get |
 |---|---|
-| **System** | Clock, volume and mute, screen brightness, Wi-Fi and Bluetooth. Everything follows changes you make elsewhere, like your keyboard's volume keys |
+| **System** | Clock, volume and mute, screen brightness, Wi-Fi and Bluetooth, and the Translate button. Everything follows changes you make elsewhere, like your keyboard's volume keys |
 | **Media** | What's playing in any app that supports Windows media controls, with artwork, play/pause, previous, next, seeking, and switching between apps |
 | **Pomodoro** | A focus timer from 1 to 180 minutes with quick presets. Do Not Disturb while it runs, a countdown in the closed island, and a pixel-art egg that hops while you focus and cracks into a sunny-side-up egg at the end |
 | **File converter** | Convert between PNG, JPG and PDF, or turn pictures into a Word document, entirely offline. Drop in a batch, follow the queue, cancel or retry. Your originals are never touched |
 | **Notes & Records** | Quick plain-text notes that save as you type, with Undo after a delete. The voice recorder: pick a microphone or let Windows choose, and get MP3 files in `Music\Lunar Recordings` or any folder you like |
 | **Usage** *(optional)* | Your Claude 5-hour and weekly limits at a glance, with a small notice when a limit resets. Off until you turn it on |
 
-### New in 1.0.6
+### New in 1.1.1
 
-- **Pomodoro** with Windows Do Not Disturb and a countdown in the closed island
-- **Voice recorder** with live sound lines, Pause and Stop in the closed island
-- **Automatic update check** with Install now or Later
-- Smoother opening and closing of the island, and bolder buttons
+- **Music in the island:** the track's picture and live sound bars in the closed island while music or video plays
+- **Island style:** the floating Pill, or a Notch at the top edge that opens into a wide panel with tabs
+- **Screen translation:** read the active screen and see it in English, Indonesian or Japanese, over the original text
+  (Ctrl+Alt+T; needs your own free Azure Translator key)
+- A softer look for the Settings window
+
+Earlier: the Pomodoro timer with Do Not Disturb, the voice recorder and the automatic update check (1.0.6).
 
 ## Install
 
@@ -81,12 +90,15 @@ Click the eyes, then swipe or use the arrow keys to move between six pages:
 ## Your privacy
 
 - Everything runs on your PC. Files, notes and recordings are never uploaded.
-- Lunar contacts the internet in only two ways:
+- Lunar contacts the internet in only three ways:
   - **The daily update check.** GitHub sees that someone asked. You can turn it off in Settings → Updates.
   - **The optional Usage page**, only after you switch it on.
+  - **Screen translation**, only when you ask for a translation. It sends the recognised text, never a picture of your
+    screen, to Microsoft Azure AI Translator with your own key, and only after you allowed it once. Nothing is kept.
 - No account and no telemetry. The local log records what happened, never what you were doing.
 - Lunar opens your microphone only when you press Record, and Windows shows its own microphone indicator.
-  Please tell people before you record them.
+  Please tell people before you record them. The music bars read only the level of what is playing, never the
+  microphone.
 
 Read the full [privacy notice](docs/PRIVACY.md) and the [user guide](docs/USER_GUIDE.md). Both are also installed next
 to the app.
@@ -100,6 +112,8 @@ to the app.
 - Lunar turns on Do Not Disturb through a Windows feature Microsoft doesn't document. If Windows says no, the timer
   still runs and tells you.
 - Being invisible to screen capture means you can't screenshot Lunar either.
+- Screen translation needs your own Azure Translator key (Microsoft's free tier) and an internet connection. Japanese
+  needs Windows' Japanese language for reading. It is machine translation and can be wrong.
 - The Usage page uses an Anthropic address that isn't officially documented, so it may stop working. Lunar is not
   affiliated with Anthropic.
 - Lunar has been tested on Windows 11 with a single monitor.
@@ -121,9 +135,9 @@ A modular monolith with dependencies pointing inward:
 src/
   Lunar.Domain          pure business rules, no UI / OS / I/O
   Lunar.Application     use cases, models and ports (interfaces); depends only on Domain
-  Lunar.Windows         Windows adapters: display, audio, microphone, network, Bluetooth, media, PDF, Do Not Disturb, installer hand-off
+  Lunar.Windows         Windows adapters: display, audio (incl. playback levels), microphone, network, Bluetooth, media, PDF, Do Not Disturb, screen capture, OCR, shortcut, installer hand-off
   Lunar.Conversion      file conversion providers, planner, queue and output transaction
-  Lunar.Infrastructure  settings, logging, notes, recordings, Start with Windows, usage source, update feed
+  Lunar.Infrastructure  settings, logging, notes, recordings, Start with Windows, usage source, update feed, translator
   Lunar.Desktop         WPF views, view models, themes and the composition root (the executable)
 packaging/              WiX installer project, third-party notices and licence texts
 tests/                  one test project per layer; architecture tests enforce the reference rules
@@ -149,8 +163,8 @@ dotnet run --project src/Lunar.Desktop -c Release
 Build and check the installer. You must first review and accept the WiX OSMF EULA:
 
 ```powershell
-./scripts/package-installer.ps1 -Version 1.0.6 -OutputDirectory artifacts/installer-1.0.6 -WixTermsReviewedByOwner -AcceptWixEula
-./scripts/Test-ReleasePackage.ps1 -MsiPath artifacts/installer-1.0.6/Lunar.msi -ExpectedVersion 1.0.6
+./scripts/package-installer.ps1 -Version 1.1.1 -OutputDirectory artifacts/installer-1.1.1 -WixTermsReviewedByOwner -AcceptWixEula
+./scripts/Test-ReleasePackage.ps1 -MsiPath artifacts/installer-1.1.1/Lunar.msi -ExpectedVersion 1.1.1
 ```
 
 **Publishing a release that Lunar can offer as an update:**
