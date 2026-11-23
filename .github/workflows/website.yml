@@ -1,0 +1,66 @@
+name: Website
+
+# When a release is published, asks Vercel to rebuild the Lunar website (rafaelevan-k/lunar-website), so its
+# version, date, size and SHA-256 follow the new release. The website reads those from GitHub's API at build time.
+# The Deploy Hook URL lives only in the repository secret VERCEL_DEPLOY_HOOK_URL; it is never printed.
+# Run it by hand ("Run workflow") to rebuild the website without a new release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    # A prerelease never becomes "latest", so the website would not change.
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait until Lunar.msi and its checksum are attached
+        if: ${{ github.event_name == 'release' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The website build falls back to the previous release if Lunar.msi is missing, so wait for it.
+          for attempt in $(seq 1 20); do
+            assets=$(gh api "repos/$REPO/releases/tags/$TAG" \
+              --jq '[.assets[] | select(.state == "uploaded") | .name] | join(",")')
+            if [[ ",$assets," == *",Lunar.msi,"* && ",$assets," == *",Lunar.msi.sha256,"* ]]; then
+              echo "Release $TAG has Lunar.msi and Lunar.msi.sha256."
+              exit 0
+            fi
+            echo "Attempt $attempt: assets are [$assets]; waiting 30 s."
+            sleep 30
+          done
+          echo "::error::Release $TAG still lacks Lunar.msi or Lunar.msi.sha256 after 10 minutes. Attach them, then run this workflow by hand."
+          exit 1
+
+      - name: Ask Vercel to rebuild the website
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${HOOK:-}" ]]; then
+            echo "::warning::The VERCEL_DEPLOY_HOOK_URL secret is not set, so the website was not rebuilt."
+            exit 0
+          fi
+          # Only the status code is shown; the hook URL and Vercel's reply stay out of the log.
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --max-time 30 --retry 3 --retry-all-errors --request POST "$HOOK")
+          if [[ "$status" != 2* ]]; then
+            echo "::error::Vercel answered HTTP $status to the Deploy Hook."
+            exit 1
+          fi
+          echo "Vercel accepted the rebuild (HTTP $status)."
